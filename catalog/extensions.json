@@ -1,0 +1,64 @@
+[
+  {
+    "id": "streetsidesoftware.code-spell-checker",
+    "name": "Code Spell Checker",
+    "dependencies": [],
+    "source": "https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "Zignd.html-css-class-completion",
+    "name": "IntelliSense for CSS class names in HTML",
+    "dependencies": [],
+    "source": "https://marketplace.visualstudio.com/items?itemName=Zignd.html-css-class-completion",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "ritwickdey.LiveServer",
+    "name": "Live Server",
+    "dependencies": [],
+    "source": "https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "ms-python.python",
+    "name": "Python",
+    "dependencies": [],
+    "source": "https://marketplace.visualstudio.com/items?itemName=ms-python.python",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "ms-python.vscode-pylance",
+    "name": "Pylance",
+    "dependencies": [
+      "ms-python.python"
+    ],
+    "source": "https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "ms-python.debugpy",
+    "name": "Python Debugger",
+    "dependencies": [
+      "ms-python.python"
+    ],
+    "source": "https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "ms-python.vscode-python-envs",
+    "name": "Python Environments",
+    "dependencies": [
+      "ms-python.python"
+    ],
+    "source": "https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs",
+    "verifiedAt": "2026-10-28"
+  },
+  {
+    "id": "MS-CEINTL.vscode-language-pack-ru",
+    "name": "Russian Language Pack for Visual Studio Code",
+    "dependencies": [],
+    "source": "https://marketplace.visualstudio.com/items?itemName=MS-CEINTL.vscode-language-pack-ru",
+    "verifiedAt": "2026-10-28"
+  }
+]

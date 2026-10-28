@@ -1,0 +1,4378 @@
+[
+  {
+    "id": "chrome",
+    "name": "Google Chrome",
+    "publisher": "Google",
+    "category": "browsers",
+    "description": "Быстрый браузер для повседневных задач",
+    "website": "https://www.google.com/chrome/",
+    "aliases": [],
+    "icon": "googlechrome",
+    "color": "#df594b",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "156.0.8078.48",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Google.Chrome",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Google.Chrome",
+      "displayNames": [
+        "Google Chrome"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.google.com/chrome/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/Chrome"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "safari",
+    "name": "Apple Safari",
+    "publisher": "Apple",
+    "category": "browsers",
+    "description": "Браузер для экосистемы Apple",
+    "website": "https://www.apple.com/safari/",
+    "aliases": [],
+    "icon": "safari",
+    "color": "#2f98f7",
+    "type": "desktop",
+    "platforms": [
+      "macos",
+      "ios"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Apple Safari"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Apple не поддерживает актуальную версию Safari для Windows. Старый Windows-дистрибутив не предлагается.",
+    "sources": [
+      "https://www.apple.com/safari/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "edge",
+    "name": "Microsoft Edge",
+    "publisher": "Microsoft",
+    "category": "browsers",
+    "description": "Браузер с интеграцией в Windows",
+    "website": "https://www.microsoft.com/edge",
+    "aliases": [],
+    "icon": "microsoftedge",
+    "color": "#20b0aa",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "156.0.4314.50",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Microsoft.Edge",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Microsoft.Edge",
+      "displayNames": [
+        "Microsoft Edge"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.microsoft.com/edge",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/Microsoft/Edge"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "firefox",
+    "name": "Mozilla Firefox",
+    "publisher": "Mozilla",
+    "category": "browsers",
+    "description": "Открытый браузер с защитой приватности",
+    "website": "https://www.mozilla.org/firefox/",
+    "aliases": [],
+    "icon": "firefoxbrowser",
+    "color": "#ff8436",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "157.0.1",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Mozilla.Firefox",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Mozilla.Firefox",
+      "displayNames": [
+        "Mozilla Firefox"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.mozilla.org/firefox/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/Mozilla/Firefox"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "brave",
+    "name": "Brave",
+    "publisher": "Brave Software",
+    "category": "browsers",
+    "description": "Приватность и блокировка рекламы",
+    "website": "https://brave.com/",
+    "aliases": [],
+    "icon": "brave",
+    "color": "#ff663d",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "155.1.97.56",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Brave.Brave",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Brave.Brave",
+      "displayNames": [
+        "Brave"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://brave.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/b/Brave/Brave"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "tor",
+    "name": "Tor Browser",
+    "publisher": "The Tor Project",
+    "category": "browsers",
+    "description": "Приватный доступ через сеть Tor",
+    "website": "https://www.torproject.org/",
+    "aliases": [],
+    "icon": "torbrowser",
+    "color": "#a66bd4",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "15.0.26",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "TorProject.TorBrowser",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "TorProject.TorBrowser",
+      "displayNames": [
+        "Tor Browser"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.torproject.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/TorProject/TorBrowser"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "yandex",
+    "name": "Яндекс Браузер",
+    "publisher": "Яндекс",
+    "category": "browsers",
+    "description": "Браузер с сервисами Яндекса",
+    "website": "https://browser.yandex.ru/",
+    "aliases": [],
+    "icon": "yandex",
+    "color": "#f33",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "26.10.0.1854",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Yandex.Browser",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Yandex.Browser",
+      "displayNames": [
+        "Yandex",
+        "Yandex Browser",
+        "Яндекс"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://browser.yandex.ru/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/y/Yandex/Browser"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "opera",
+    "name": "Opera",
+    "publisher": "Opera",
+    "category": "browsers",
+    "description": "Браузер с удобной боковой панелью",
+    "website": "https://www.opera.com/",
+    "aliases": [],
+    "icon": "opera",
+    "color": "#f63452",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "137.0.6036.39",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Opera.Opera",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Opera.Opera",
+      "displayNames": [
+        "Opera Stable"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.opera.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/Opera/Opera"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "vivaldi",
+    "name": "Vivaldi",
+    "publisher": "Vivaldi Technologies",
+    "category": "browsers",
+    "description": "Гибко настраиваемый браузер",
+    "website": "https://vivaldi.com/",
+    "aliases": [],
+    "icon": "vivaldi",
+    "color": "#ef4753",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "8.2.4133.94",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Vivaldi.Vivaldi",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Vivaldi.Vivaldi",
+      "displayNames": [
+        "Vivaldi"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://vivaldi.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/v/Vivaldi/Vivaldi"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "arc",
+    "name": "Arc",
+    "publisher": "The Browser Company",
+    "category": "browsers",
+    "description": "Пространства и вертикальные вкладки",
+    "website": "https://arc.net/",
+    "aliases": [],
+    "icon": "arc",
+    "color": "#a285ef",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "1.127.0.297",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "TheBrowserCompany.Arc",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "TheBrowserCompany.Arc",
+      "displayNames": [
+        "Arc"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Развитие продукта ограничено. Перед использованием проверьте актуальный статус поддержки у The Browser Company.",
+    "sources": [
+      "https://arc.net/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/TheBrowserCompany/Arc"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "duckduckgo",
+    "name": "DuckDuckGo Browser",
+    "publisher": "DuckDuckGo",
+    "category": "browsers",
+    "description": "Браузер с защитой от отслеживания",
+    "website": "https://duckduckgo.com/app",
+    "aliases": [],
+    "icon": "duckduckgo",
+    "color": "#de5833",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "0.177.4.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "DuckDuckGo.DesktopBrowser",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "DuckDuckGo.DesktopBrowser",
+      "displayNames": [
+        "DuckDuckGo"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://duckduckgo.com/app",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/d/DuckDuckGo/DesktopBrowser"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "vscode",
+    "name": "Visual Studio Code",
+    "publisher": "Microsoft",
+    "category": "development",
+    "description": "Лёгкий редактор. Большие возможности.",
+    "website": "https://code.visualstudio.com/",
+    "aliases": [],
+    "icon": "visualstudiocode",
+    "color": "#28a9ef",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "1.142.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Microsoft.VisualStudioCode",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "user"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Microsoft.VisualStudioCode",
+      "displayNames": [
+        "Microsoft Visual Studio Code"
+      ]
+    },
+    "options": [
+      {
+        "id": "scope",
+        "label": "Область установки",
+        "type": "select",
+        "default": "user",
+        "values": [
+          "user"
+        ],
+        "help": "Текущий пользователь. Расширения устанавливаются в его профиль."
+      }
+    ],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://code.visualstudio.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/Microsoft/VisualStudioCode",
+      "https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker",
+      "https://marketplace.visualstudio.com/items?itemName=Zignd.html-css-class-completion",
+      "https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer",
+      "https://marketplace.visualstudio.com/items?itemName=ms-python.python",
+      "https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance",
+      "https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy",
+      "https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs",
+      "https://marketplace.visualstudio.com/items?itemName=MS-CEINTL.vscode-language-pack-ru"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": 450
+  },
+  {
+    "id": "webstorm",
+    "name": "JetBrains WebStorm",
+    "publisher": "JetBrains",
+    "category": "development",
+    "description": "IDE для JavaScript и TypeScript",
+    "website": "https://www.jetbrains.com/webstorm/",
+    "aliases": [],
+    "icon": "webstorm",
+    "color": "#04d7c3",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Бесплатно для индивидуального некоммерческого использования по условиям JetBrains. Коммерческая разработка требует подписки.",
+    "version": "2026.2.3",
+    "editions": [
+      {
+        "id": "default",
+        "name": "Актуальная редакция",
+        "description": "Точные возможности и условия лицензии — у JetBrains. Вход и активация после установки."
+      }
+    ],
+    "install": {
+      "method": "winget",
+      "packageId": "JetBrains.WebStorm",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "JetBrains.WebStorm",
+      "displayNames": [
+        "WebStorm",
+        "JetBrains WebStorm"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.jetbrains.com/webstorm/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/j/JetBrains/WebStorm",
+      "https://www.jetbrains.com/webstorm/buy/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "idea",
+    "name": "JetBrains IntelliJ IDEA",
+    "publisher": "JetBrains",
+    "category": "development",
+    "description": "Среда разработки для Java и Kotlin",
+    "website": "https://www.jetbrains.com/idea/",
+    "aliases": [
+      "IntelliJ IDEA Community",
+      "IntelliJ IDEA Ultimate"
+    ],
+    "icon": "intellijidea",
+    "color": "#ed547d",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Единая IntelliJ IDEA: базовые возможности Java и Kotlin бесплатны для коммерческих и некоммерческих проектов. Расширенные возможности Ultimate — по подписке.",
+    "version": "2026.2.3",
+    "editions": [
+      {
+        "id": "default",
+        "name": "IntelliJ IDEA · единая поставка",
+        "description": "Бесплатное ядро Java / Kotlin. Ultimate активируется по подписке; отдельная Community сохранена как поисковый псевдоним."
+      }
+    ],
+    "install": {
+      "method": "winget",
+      "packageId": "JetBrains.IntelliJIDEA",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "JetBrains.IntelliJIDEA",
+      "displayNames": [
+        "IntelliJ IDEA",
+        "IntelliJ IDEA Community Edition",
+        "IntelliJ IDEA Ultimate Edition"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.jetbrains.com/idea/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/j/JetBrains/IntelliJIDEA",
+      "https://lp.jetbrains.com/intellij-idea-unified-faq/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "pycharm",
+    "name": "JetBrains PyCharm",
+    "publisher": "JetBrains",
+    "category": "development",
+    "description": "IDE для Python и работы с данными",
+    "website": "https://www.jetbrains.com/pycharm/",
+    "aliases": [
+      "PyCharm Community",
+      "PyCharm Professional"
+    ],
+    "icon": "pycharm",
+    "color": "#a8d950",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Единая PyCharm: базовые возможности бесплатны, Pro-возможности — по подписке или пробному доступу. Условия — у JetBrains.",
+    "version": "2026.2.3",
+    "editions": [
+      {
+        "id": "default",
+        "name": "PyCharm · единая поставка",
+        "description": "Бесплатные базовые возможности; Pro активируется после установки. Community и Professional сохранены как поисковые псевдонимы."
+      }
+    ],
+    "install": {
+      "method": "winget",
+      "packageId": "JetBrains.PyCharm",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "JetBrains.PyCharm",
+      "displayNames": [
+        "PyCharm",
+        "PyCharm Community Edition",
+        "PyCharm Professional Edition"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.jetbrains.com/pycharm/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/j/JetBrains/PyCharm"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "phpstorm",
+    "name": "JetBrains PhpStorm",
+    "publisher": "JetBrains",
+    "category": "development",
+    "description": "Профессиональная среда для PHP",
+    "website": "https://www.jetbrains.com/phpstorm/",
+    "aliases": [],
+    "icon": "phpstorm",
+    "color": "#ae66f6",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "2026.2.3",
+    "editions": [
+      {
+        "id": "default",
+        "name": "PhpStorm",
+        "description": "Коммерческая подписка JetBrains; пробный период по условиям издателя."
+      }
+    ],
+    "install": {
+      "method": "winget",
+      "packageId": "JetBrains.PhpStorm",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "JetBrains.PhpStorm",
+      "displayNames": [
+        "PhpStorm",
+        "JetBrains PhpStorm"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.jetbrains.com/phpstorm/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/j/JetBrains/PhpStorm"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "visual-studio",
+    "name": "Microsoft Visual Studio 2026",
+    "publisher": "Microsoft",
+    "category": "development",
+    "description": "Полная среда разработки для Windows",
+    "website": "https://visualstudio.microsoft.com/vs/",
+    "aliases": [
+      "VS 2026"
+    ],
+    "icon": "visualstudio",
+    "color": "#b582e8",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "18.11.2",
+    "editions": [
+      {
+        "id": "community",
+        "name": "Community",
+        "description": "Для индивидуальных разработчиков, обучения и open source; для организаций действуют ограничения лицензии.",
+        "packageId": "Microsoft.VisualStudio.Community",
+        "verified": true
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "description": "Для профессиональной разработки; требуется действующая коммерческая лицензия.",
+        "packageId": "Microsoft.VisualStudio.Professional",
+        "verified": true
+      },
+      {
+        "id": "enterprise",
+        "name": "Enterprise",
+        "description": "Для корпоративных команд; требуется лицензия Enterprise.",
+        "packageId": "Microsoft.VisualStudio.Enterprise",
+        "verified": true
+      }
+    ],
+    "install": {
+      "method": "winget",
+      "packageId": "Microsoft.VisualStudio.Community",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Microsoft.VisualStudio.Community",
+      "displayNames": [
+        "Visual Studio Community 2026",
+        "Visual Studio Professional 2026",
+        "Visual Studio Enterprise 2026"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Профиль «Классические и мобильные приложения — полный набор» использует официальный каталог выбранной редакции, .vsconfig и флаги includeRecommended / includeOptional. Окончательный расчёт и несовместимости проверяет Visual Studio Installer; автоматическая перезагрузка запрещена.",
+    "sources": [
+      "https://visualstudio.microsoft.com/vs/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/m/Microsoft/VisualStudio/Community"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "xcode",
+    "name": "Xcode",
+    "publisher": "Apple",
+    "category": "development",
+    "description": "Для macOS, разработка для платформ Apple",
+    "website": "https://developer.apple.com/xcode/",
+    "aliases": [],
+    "icon": "xcode",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Xcode"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Доступен только для macOS. В Windows можно открыть официальный источник и требования.",
+    "sources": [
+      "https://developer.apple.com/xcode/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "android-studio",
+    "name": "Android Studio",
+    "publisher": "Google",
+    "category": "development",
+    "description": "Официальная IDE для Android",
+    "website": "https://developer.android.com/studio",
+    "aliases": [],
+    "icon": "androidstudio",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2026.2.1.8",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Google.AndroidStudio",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Google.AndroidStudio",
+      "displayNames": [
+        "Android Studio"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Устанавливается только IDE. Android SDK, Android Emulator и образы устройств выбираются в SDK Manager; лицензии принимаются отдельно.",
+    "sources": [
+      "https://developer.android.com/studio",
+      "https://developer.android.com/studio/intro/update",
+      "https://developer.android.com/studio/run/emulator",
+      "https://developer.android.com/studio/intro/update#sdk-manager",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/AndroidStudio"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "sublime",
+    "name": "Sublime Text",
+    "publisher": "Sublime HQ",
+    "category": "development",
+    "description": "Быстрый редактор кода и текста",
+    "website": "https://www.sublimetext.com/",
+    "aliases": [],
+    "icon": "sublimetext",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "4.0.0.421500",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "SublimeHQ.SublimeText.4",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "SublimeHQ.SublimeText.4",
+      "displayNames": [
+        "Sublime Text"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.sublimetext.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/SublimeHQ/SublimeText/4"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "notepad",
+    "name": "Notepad++",
+    "publisher": "Don Ho",
+    "category": "development",
+    "description": "Компактный редактор для Windows",
+    "website": "https://notepad-plus-plus.org/",
+    "aliases": [],
+    "icon": "notepadplusplus",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "8.9.8.1",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Notepad++.Notepad++",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Notepad++.Notepad++",
+      "displayNames": [
+        "Notepad++"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://notepad-plus-plus.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/Notepad++/Notepad++"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "vim",
+    "name": "Vim",
+    "publisher": "Vim project",
+    "category": "development",
+    "description": "Классический модальный редактор",
+    "website": "https://www.vim.org/",
+    "aliases": [],
+    "icon": "vim",
+    "color": "#8c94b1",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "9.2.1186",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "vim.vim",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "vim.vim",
+      "displayNames": [
+        "Vim"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.vim.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/v/vim/vim"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "neovim",
+    "name": "Neovim",
+    "publisher": "Neovim project",
+    "category": "development",
+    "description": "Расширяемый модальный редактор",
+    "website": "https://neovim.io/",
+    "aliases": [],
+    "icon": "neovim",
+    "color": "#8c94b1",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "0.12.6",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Neovim.Neovim",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Neovim.Neovim",
+      "displayNames": [
+        "Neovim"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://neovim.io/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/Neovim/Neovim"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "eclipse",
+    "name": "Eclipse IDE",
+    "publisher": "Eclipse Foundation",
+    "category": "development",
+    "description": "Среда разработки Java и плагинов",
+    "website": "https://www.eclipse.org/ide/",
+    "aliases": [],
+    "icon": "eclipseide",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2026-09",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "EclipseFoundation.Eclipse.Java",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "EclipseFoundation.Eclipse.Java",
+      "displayNames": [
+        "Eclipse IDE"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.eclipse.org/ide/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/e/EclipseFoundation/Eclipse/Java"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "git",
+    "name": "Git",
+    "publisher": "The Git Development Community",
+    "category": "development",
+    "description": "Контроль версий для ваших проектов",
+    "website": "https://git-scm.com/",
+    "aliases": [],
+    "icon": "git",
+    "color": "#f26849",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2.56.0.3",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Git.Git",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Git.Git",
+      "displayNames": [
+        "Git"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://git-scm.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Git/Git"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "publisher": "GitHub / Microsoft",
+    "category": "development",
+    "description": "Веб-платформа для кода и совместной работы",
+    "website": "https://github.com/",
+    "aliases": [],
+    "icon": "github",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "GitHub"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Открывается веб-платформа. GitHub Desktop — отдельная запись. CLI и сервер не устанавливаются.",
+    "sources": [
+      "https://github.com/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "publisher": "GitLab",
+    "category": "development",
+    "description": "Веб-платформа для DevSecOps",
+    "website": "https://gitlab.com/",
+    "aliases": [],
+    "icon": "gitlab",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "GitLab"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Открывается GitLab.com. GitLab Self-Managed и CLI не включены в эту задачу.",
+    "sources": [
+      "https://gitlab.com/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "bitbucket",
+    "name": "Bitbucket",
+    "publisher": "Atlassian",
+    "category": "development",
+    "description": "Веб-платформа для Git-репозиториев",
+    "website": "https://bitbucket.org/",
+    "aliases": [],
+    "icon": "bitbucket",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Bitbucket"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Открывается веб-платформа. Серверные продукты и CLI не включены.",
+    "sources": [
+      "https://bitbucket.org/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "github-desktop",
+    "name": "GitHub Desktop",
+    "publisher": "GitHub / Microsoft",
+    "category": "development",
+    "description": "Наглядная работа с Git на компьютере",
+    "website": "https://desktop.github.com/",
+    "aliases": [],
+    "icon": "github",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "3.6.10",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "GitHub.GitHubDesktop",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "GitHub.GitHubDesktop",
+      "displayNames": [
+        "GitHub Desktop"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://desktop.github.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/GitHub/GitHubDesktop"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "tortoisegit",
+    "name": "TortoiseGit",
+    "publisher": "TortoiseGit team",
+    "category": "development",
+    "description": "Git прямо в Проводнике Windows",
+    "website": "https://tortoisegit.org/",
+    "aliases": [],
+    "icon": "git",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2.19.1.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "TortoiseGit.TortoiseGit",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "TortoiseGit.TortoiseGit",
+      "displayNames": [
+        "TortoiseGit"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://tortoisegit.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/TortoiseGit/TortoiseGit"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "zeal",
+    "name": "Zeal",
+    "publisher": "Zeal contributors",
+    "category": "development",
+    "description": "Документация разработчика офлайн",
+    "website": "https://zealdocs.org/",
+    "aliases": [],
+    "icon": "zeal",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "0.9.1",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "OlegShparber.Zeal",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "OlegShparber.Zeal",
+      "displayNames": [
+        "Zeal"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://zealdocs.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/OlegShparber/Zeal"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "python",
+    "name": "Python 3.12",
+    "publisher": "Python Software Foundation",
+    "category": "development",
+    "description": "Язык для автоматизации, данных и разработки",
+    "website": "https://www.python.org/downloads/release/python-31210/",
+    "aliases": [
+      "Python 3.12.16",
+      "питон"
+    ],
+    "icon": "python",
+    "color": "#e5bf53",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "3.12.10",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Python.Python.3.12",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Python.Python.3.12",
+      "displayNames": [
+        "Python 3.12"
+      ]
+    },
+    "options": [
+      {
+        "id": "pip",
+        "label": "Установить pip",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "id": "path",
+        "label": "Добавить Python в PATH",
+        "type": "boolean",
+        "default": true
+      },
+      {
+        "id": "scope",
+        "label": "Область установки",
+        "type": "select",
+        "default": "user",
+        "values": [
+          "user",
+          "machine"
+        ]
+      }
+    ],
+    "dependencies": [],
+    "notes": "Ветка 3.12: последний релиз 3.12.16 (исходный код). Последний официальный традиционный Windows-установщик — 3.12.10. Устанавливается именно 3.12.10.",
+    "sources": [
+      "https://www.python.org/downloads/release/python-31210/",
+      "https://peps.python.org/pep-0693/",
+      "https://docs.python.org/3.12/using/windows.html",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/p/Python/Python/3/12"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": 26,
+    "diskMb": 120
+  },
+  {
+    "id": "atom",
+    "name": "Atom",
+    "publisher": "GitHub",
+    "category": "development",
+    "description": "Архивный редактор. Поддержка завершена",
+    "website": "https://github.com/atom/atom/releases",
+    "aliases": [],
+    "icon": "atom",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "1.60.0 (архив)",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Atom"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Поддержка прекращена 15 декабря 2022 года. Только официальный архив GitHub; автоматическая установка отключена.",
+    "sources": [
+      "https://github.com/atom/atom/releases",
+      "https://github.com/atom/atom/releases/tag/v1.60.0"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "docker",
+    "name": "Docker Desktop",
+    "publisher": "Docker",
+    "category": "virtualization",
+    "description": "Контейнеры и локальная среда разработки",
+    "website": "https://www.docker.com/products/docker-desktop/",
+    "aliases": [],
+    "icon": "docker",
+    "color": "#39a5f7",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "4.97.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Docker.DockerDesktop",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Docker.DockerDesktop",
+      "displayNames": [
+        "Docker Desktop"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Docker Desktop требует аппаратной виртуализации, WSL 2 или Hyper-V и подходящей редакции Windows. Коммерческое использование в крупных организациях может требовать подписки. Компоненты ОС не включаются автоматически.",
+    "sources": [
+      "https://www.docker.com/products/docker-desktop/",
+      "https://docs.docker.com/desktop/setup/install/windows-install/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/d/Docker/DockerDesktop"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "podman",
+    "name": "Podman",
+    "publisher": "Containers project / Red Hat",
+    "category": "virtualization",
+    "description": "CLI для контейнеров и виртуальная машина",
+    "website": "https://podman.io/",
+    "aliases": [],
+    "icon": "podman",
+    "color": "#ab83d3",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "5.8.3",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "RedHat.Podman",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "RedHat.Podman",
+      "displayNames": [
+        "Podman"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Этот пакет — Podman CLI. Podman Desktop и podman machine — отдельные явно выбираемые шаги; виртуальная машина автоматически не создаётся.",
+    "sources": [
+      "https://podman.io/",
+      "https://podman-desktop.io/downloads",
+      "https://docs.podman.io/en/latest/markdown/podman-machine-init.1.html",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/r/RedHat/Podman"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "virtualbox",
+    "name": "VirtualBox",
+    "publisher": "Oracle",
+    "category": "virtualization",
+    "description": "Виртуальные машины на вашем компьютере",
+    "website": "https://www.virtualbox.org/",
+    "aliases": [],
+    "icon": "virtualbox",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "7.2.22",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Oracle.VirtualBox",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Oracle.VirtualBox",
+      "displayNames": [
+        "Oracle VM VirtualBox",
+        "VirtualBox"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Проверьте аппаратную виртуализацию и совместимость с Hyper-V. Extension Pack не включён и имеет отдельную лицензию.",
+    "sources": [
+      "https://www.virtualbox.org/",
+      "https://www.virtualbox.org/manual/ch10.html",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/Oracle/VirtualBox"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "vmware",
+    "name": "VMware Workstation Pro",
+    "publisher": "Broadcom",
+    "category": "virtualization",
+    "description": "Настольный гипервизор для Windows",
+    "website": "https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion",
+    "aliases": [
+      "VMware",
+      "VMware Player",
+      "VMware Workstation"
+    ],
+    "icon": "vmware",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [
+      {
+        "id": "workstation",
+        "name": "Workstation Pro · Windows",
+        "description": "Workstation Pro для Windows / Linux. Бесплатно по текущим условиям Broadcom; доступ к загрузке может требовать аккаунт."
+      },
+      {
+        "id": "fusion",
+        "name": "Fusion Pro · macOS",
+        "description": "Для macOS; установка на Windows недоступна."
+      }
+    ],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "VMware Workstation"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "В Windows выбран Workstation Pro; Fusion Pro — для macOS. Workstation Pro бесплатен для личного, образовательного и коммерческого использования по условиям Broadcom. Загрузка через официальный портал может потребовать аккаунт.",
+    "sources": [
+      "https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "jira",
+    "name": "Jira",
+    "publisher": "Atlassian",
+    "category": "productivity",
+    "description": "Планирование проектов и задач в браузере",
+    "website": "https://www.atlassian.com/software/jira",
+    "aliases": [],
+    "icon": "jira",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Jira"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Официальный универсальный настольный клиент Windows не подтверждён. Используется веб-платформа; серверное развёртывание не включено.",
+    "sources": [
+      "https://www.atlassian.com/software/jira"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "trello",
+    "name": "Trello",
+    "publisher": "Atlassian",
+    "category": "productivity",
+    "description": "Доски и задачи. Есть клиент Microsoft Store",
+    "website": "https://trello.com/",
+    "aliases": [],
+    "icon": "trello",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Trello"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Официальный клиент Windows доступен в Microsoft Store. Здесь по умолчанию используется веб-версия; клиент устанавливается отдельно через официальный сайт.",
+    "sources": [
+      "https://trello.com/",
+      "https://support.atlassian.com/trello/docs/trello-desktop-apps/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "youtrack",
+    "name": "YouTrack",
+    "publisher": "JetBrains",
+    "category": "productivity",
+    "description": "Веб-трекер задач и база знаний",
+    "website": "https://www.jetbrains.com/youtrack/",
+    "aliases": [],
+    "icon": "youtrack",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "YouTrack"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Официальный настольный клиент не подтверждён. Открывается веб-сервис, сервер устанавливается отдельно.",
+    "sources": [
+      "https://www.jetbrains.com/youtrack/",
+      "https://youtrack-support.jetbrains.com/hc/en-us/community/posts/11656565550994-Desktop-application-YouTrack"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "notion",
+    "name": "Notion",
+    "publisher": "Notion Labs",
+    "category": "productivity",
+    "description": "Заметки, проекты и база знаний",
+    "website": "https://www.notion.com/desktop",
+    "aliases": [],
+    "icon": "notion",
+    "color": "#dedee4",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "7.41.1",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Notion.Notion",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Notion.Notion",
+      "displayNames": [
+        "Notion"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.notion.com/desktop",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/n/Notion/Notion"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "wordcraft",
+    "name": "WordCraft",
+    "publisher": "ArtCraft",
+    "category": "documents",
+    "description": "Текстовый редактор ArtCraft",
+    "website": "https://getartcraft.com/apps/wordcraft",
+    "aliases": [],
+    "icon": "wordcraft",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "WordCraft"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.",
+    "sources": [
+      "https://getartcraft.com/apps/wordcraft"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "gridcraft",
+    "name": "GridCraft",
+    "publisher": "ArtCraft",
+    "category": "documents",
+    "description": "Электронные таблицы ArtCraft",
+    "website": "https://getartcraft.com/apps/gridcraft",
+    "aliases": [],
+    "icon": "gridcraft",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "GridCraft"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.",
+    "sources": [
+      "https://getartcraft.com/apps/gridcraft"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "deckcraft",
+    "name": "DeckCraft",
+    "publisher": "ArtCraft",
+    "category": "documents",
+    "description": "Презентации ArtCraft",
+    "website": "https://getartcraft.com/apps/deckcraft",
+    "aliases": [],
+    "icon": "deckcraft",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "DeckCraft"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.",
+    "sources": [
+      "https://getartcraft.com/apps/deckcraft"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "word",
+    "name": "Microsoft Word",
+    "publisher": "Microsoft",
+    "category": "documents",
+    "description": "Текстовый процессор в составе Microsoft 365",
+    "website": "https://www.microsoft.com/microsoft-365/word",
+    "aliases": [
+      "Office",
+      "Microsoft 365"
+    ],
+    "icon": "microsoftword",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Microsoft Word"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Microsoft Word устанавливается в составе выбранного пакета Microsoft 365 / Office. Требуются лицензия, учётная запись и выбор состава на сайте Microsoft.",
+    "sources": [
+      "https://www.microsoft.com/microsoft-365/word"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "google-docs",
+    "name": "Google Документы",
+    "publisher": "Google",
+    "category": "documents",
+    "description": "Совместная работа с документами онлайн",
+    "website": "https://docs.google.com/",
+    "aliases": [
+      "Google Docs",
+      "Google Документы"
+    ],
+    "icon": "googledocs",
+    "color": "#8c94b1",
+    "type": "web",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Google Документы"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Открывается веб-сервис. Можно создать обычный интернет-ярлык .url; автоматическая установка PWA не выполняется.",
+    "sources": [
+      "https://docs.google.com/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "libreoffice",
+    "name": "LibreOffice Writer",
+    "publisher": "The Document Foundation",
+    "category": "documents",
+    "description": "Документы в составе свободного офисного пакета",
+    "website": "https://www.libreoffice.org/",
+    "aliases": [],
+    "icon": "libreoffice",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "26.8.1.1",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "TheDocumentFoundation.LibreOffice",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "TheDocumentFoundation.LibreOffice",
+      "displayNames": [
+        "LibreOffice"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Устанавливается весь пакет LibreOffice: Writer, Calc, Impress, Draw, Base и Math.",
+    "sources": [
+      "https://www.libreoffice.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/TheDocumentFoundation/LibreOffice"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "onlyoffice",
+    "name": "ONLYOFFICE",
+    "publisher": "Ascensio System SIA",
+    "category": "documents",
+    "description": "Документы, таблицы и презентации",
+    "website": "https://www.onlyoffice.com/desktop.aspx",
+    "aliases": [],
+    "icon": "onlyoffice",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "10.0.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "ONLYOFFICE.DesktopEditors",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "ONLYOFFICE.DesktopEditors",
+      "displayNames": [
+        "ONLYOFFICE Desktop Editors"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Устанавливается ONLYOFFICE Desktop Editors: документы, таблицы, презентации и PDF.",
+    "sources": [
+      "https://www.onlyoffice.com/desktop.aspx",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/ONLYOFFICE/DesktopEditors"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "wps",
+    "name": "WPS Office Writer",
+    "publisher": "Kingsoft",
+    "category": "documents",
+    "description": "Текстовый редактор в составе WPS Office",
+    "website": "https://www.wps.com/",
+    "aliases": [],
+    "icon": "wpsoffice",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "12.2.0.23196",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "Kingsoft.WPSOffice",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "Kingsoft.WPSOffice",
+      "displayNames": [
+        "WPS Office"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Устанавливается WPS Office: Writer, Spreadsheets и Presentation. Дополнительные функции и условия зависят от редакции.",
+    "sources": [
+      "https://www.wps.com/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/k/Kingsoft/WPSOffice"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "myoffice",
+    "name": "МойОфис Текст",
+    "publisher": "Новые облачные технологии",
+    "category": "documents",
+    "description": "Текстовый редактор в пакете МойОфис",
+    "website": "https://myoffice.ru/",
+    "aliases": [],
+    "icon": "myoffice",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "МойОфис Текст"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://myoffice.ru/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "r7",
+    "name": "Р7-Офис",
+    "publisher": "Р7",
+    "category": "documents",
+    "description": "Офисный пакет для документов и таблиц",
+    "website": "https://r7-office.ru/",
+    "aliases": [],
+    "icon": "r7",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Р7-Офис"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://r7-office.ru/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "photocraft",
+    "name": "PhotoCraft",
+    "publisher": "ArtCraft",
+    "category": "graphics",
+    "description": "Растровый редактор ArtCraft",
+    "website": "https://getartcraft.com/apps/photocraft",
+    "aliases": [],
+    "icon": "photocraft",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "PhotoCraft"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.",
+    "sources": [
+      "https://getartcraft.com/apps/photocraft"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "gimp",
+    "name": "GIMP",
+    "publisher": "The GIMP Development Team",
+    "category": "graphics",
+    "description": "Свободный редактор изображений",
+    "website": "https://www.gimp.org/",
+    "aliases": [],
+    "icon": "gimp",
+    "color": "#a7a49d",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "3.2.6.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "GIMP.GIMP.3",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "GIMP.GIMP.3",
+      "displayNames": [
+        "GIMP"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.gimp.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/GIMP/GIMP/3"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "autocad",
+    "name": "AutoCAD",
+    "publisher": "Autodesk",
+    "category": "cad",
+    "description": "Профессиональное проектирование и чертежи",
+    "website": "https://www.autodesk.com/products/autocad/overview",
+    "aliases": [],
+    "icon": "autodesk",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Подписка Autodesk / Flex. Пробная версия AutoCAD — 15 дней по текущим условиям Autodesk; нужен Autodesk Account.",
+    "version": "Уточняется в источнике",
+    "editions": [
+      {
+        "id": "autocad",
+        "name": "AutoCAD",
+        "description": "Полная версия по подписке Autodesk. Доступные toolsets и состав выберите в Autodesk Account."
+      },
+      {
+        "id": "autocad-lt",
+        "name": "AutoCAD LT",
+        "description": "Отдельный продукт для 2D-проектирования. Лицензия и дистрибутив выбираются у Autodesk."
+      }
+    ],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "AutoCAD"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.autodesk.com/products/autocad/overview",
+      "https://www.autodesk.com/products/autocad/free-trial"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "kompas",
+    "name": "КОМПАС-3D",
+    "publisher": "АСКОН",
+    "category": "cad",
+    "description": "Трёхмерное моделирование и конструкторская документация",
+    "website": "https://kompas.ru/",
+    "aliases": [],
+    "icon": "kompas",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "КОМПАС-3D"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://kompas.ru/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "solidworks",
+    "name": "SolidWorks",
+    "publisher": "Dassault Systèmes",
+    "category": "cad",
+    "description": "Параметрическое моделирование деталей и сборок",
+    "website": "https://www.solidworks.com/",
+    "aliases": [],
+    "icon": "solidworks",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческие лицензии SOLIDWORKS Design. Дистрибутив и активация зависят от выбранного пакета и условий поставщика.",
+    "version": "Уточняется в источнике",
+    "editions": [
+      {
+        "id": "standard",
+        "name": "SOLIDWORKS Design Standard",
+        "description": "Коммерческий пакет. Возможности, тип лицензии и доступность уточняются на официальной странице перед загрузкой."
+      },
+      {
+        "id": "professional",
+        "name": "SOLIDWORKS Design Professional",
+        "description": "Коммерческий пакет. Возможности, тип лицензии и доступность уточняются на официальной странице перед загрузкой."
+      },
+      {
+        "id": "premium",
+        "name": "SOLIDWORKS Design Premium",
+        "description": "Коммерческий пакет. Возможности, тип лицензии и доступность уточняются на официальной странице перед загрузкой."
+      },
+      {
+        "id": "ultimate",
+        "name": "SOLIDWORKS Design Ultimate",
+        "description": "Коммерческий пакет. Возможности, тип лицензии и доступность уточняются на официальной странице перед загрузкой."
+      }
+    ],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "SolidWorks"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.solidworks.com/",
+      "https://www.solidworks.com/solution/solidworks-design-packages-find-your-best-fit"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "inventor",
+    "name": "Autodesk Inventor",
+    "publisher": "Autodesk",
+    "category": "cad",
+    "description": "Машиностроительное проектирование",
+    "website": "https://www.autodesk.com/products/inventor/overview",
+    "aliases": [],
+    "icon": "autodesk",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Autodesk Inventor"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.autodesk.com/products/inventor/overview"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "fusion",
+    "name": "Autodesk Fusion",
+    "publisher": "Autodesk",
+    "category": "cad",
+    "description": "Проектирование и производство в единой среде",
+    "website": "https://www.autodesk.com/products/fusion-360/overview",
+    "aliases": [
+      "Fusion 360"
+    ],
+    "icon": "autodesk",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Autodesk Fusion"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.autodesk.com/products/fusion-360/overview"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "nanocad",
+    "name": "nanoCAD",
+    "publisher": "Нанософт",
+    "category": "cad",
+    "description": "Платформа проектирования с поддержкой DWG",
+    "website": "https://nanocad.ru/",
+    "aliases": [],
+    "icon": "nanocad",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "nanoCAD"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://nanocad.ru/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "catia",
+    "name": "CATIA",
+    "publisher": "Dassault Systèmes",
+    "category": "cad",
+    "description": "Инженерное проектирование сложных изделий",
+    "website": "https://www.3ds.com/products/catia",
+    "aliases": [],
+    "icon": "catia",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "CATIA"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.3ds.com/products/catia"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "creo",
+    "name": "PTC Creo",
+    "publisher": "PTC",
+    "category": "cad",
+    "description": "Параметрическая САПР для разработки изделий",
+    "website": "https://www.ptc.com/en/products/creo",
+    "aliases": [],
+    "icon": "creo",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "PTC Creo"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.ptc.com/en/products/creo"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "freecad",
+    "name": "FreeCAD",
+    "publisher": "FreeCAD community",
+    "category": "cad",
+    "description": "Свободное параметрическое 3D-моделирование",
+    "website": "https://www.freecad.org/",
+    "aliases": [],
+    "icon": "freecad",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "1.1.4",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "FreeCAD.FreeCAD",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "FreeCAD.FreeCAD",
+      "displayNames": [
+        "FreeCAD"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.freecad.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/f/FreeCAD/FreeCAD"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "librecad",
+    "name": "LibreCAD",
+    "publisher": "LibreCAD community",
+    "category": "cad",
+    "description": "Свободная САПР для двумерных чертежей",
+    "website": "https://librecad.org/",
+    "aliases": [],
+    "icon": "librecad",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2.2.1.6",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "LibreCAD.LibreCAD",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "LibreCAD.LibreCAD",
+      "displayNames": [
+        "LibreCAD"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://librecad.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/l/LibreCAD/LibreCAD"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "openscad",
+    "name": "OpenSCAD",
+    "publisher": "OpenSCAD developers",
+    "category": "cad",
+    "description": "Твердотельное моделирование через код",
+    "website": "https://openscad.org/",
+    "aliases": [],
+    "icon": "openscad",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "2021.01",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "OpenSCAD.OpenSCAD",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "OpenSCAD.OpenSCAD",
+      "displayNames": [
+        "OpenSCAD"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://openscad.org/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/o/OpenSCAD/OpenSCAD"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "archicad",
+    "name": "Archicad",
+    "publisher": "Graphisoft",
+    "category": "cad",
+    "description": "BIM-проектирование зданий",
+    "website": "https://graphisoft.com/solutions/archicad",
+    "aliases": [],
+    "icon": "archicad",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Archicad"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://graphisoft.com/solutions/archicad"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "revit",
+    "name": "Revit",
+    "publisher": "Autodesk",
+    "category": "cad",
+    "description": "Информационное моделирование зданий",
+    "website": "https://www.autodesk.com/products/revit/overview",
+    "aliases": [],
+    "icon": "autodesk",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "trial",
+    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Revit"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://www.autodesk.com/products/revit/overview"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "mysql",
+    "name": "MySQL",
+    "publisher": "Oracle",
+    "category": "databases",
+    "description": "Сервер реляционной базы данных",
+    "website": "https://dev.mysql.com/downloads/installer/",
+    "aliases": [],
+    "icon": "mysql",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "MySQL Server"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 3306
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://dev.mysql.com/downloads/installer/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "postgres",
+    "name": "PostgreSQL",
+    "publisher": "PostgreSQL Global Development Group",
+    "category": "databases",
+    "description": "Реляционная СУБД для приложений",
+    "website": "https://www.postgresql.org/download/windows/",
+    "aliases": [],
+    "icon": "postgresql",
+    "color": "#60a2ce",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "PostgreSQL"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 5432
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://www.postgresql.org/download/windows/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "sqlserver",
+    "name": "Microsoft SQL Server",
+    "publisher": "Microsoft",
+    "category": "databases",
+    "description": "Сервер баз данных с выбором редакции",
+    "website": "https://www.microsoft.com/sql-server/sql-server-downloads",
+    "aliases": [],
+    "icon": "microsoftsqlserver",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "SQL Server 2025: Standard Developer и Enterprise Developer бесплатны только для разработки и тестирования вне production. Express — бесплатная редакция с ограничениями. Производственные коммерческие редакции требуют лицензии Microsoft.",
+    "version": "Уточняется в источнике",
+    "editions": [
+      {
+        "id": "standard-developer",
+        "name": "Standard Developer 2025",
+        "description": "Бесплатно для непроизводственной разработки и тестирования."
+      },
+      {
+        "id": "enterprise-developer",
+        "name": "Enterprise Developer 2025",
+        "description": "Возможности Enterprise для непроизводственной разработки и тестирования."
+      },
+      {
+        "id": "express",
+        "name": "Express 2025",
+        "description": "Бесплатная ограниченная редакция для разработки и небольших рабочих приложений."
+      },
+      {
+        "id": "commercial",
+        "name": "Коммерческая редакция",
+        "description": "Редакция, дистрибутив и лицензия выбираются на сайте Microsoft."
+      }
+    ],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "Microsoft SQL Server 2025",
+        "Microsoft SQL Server 2022"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 1433
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://www.microsoft.com/sql-server/sql-server-downloads"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "oracle",
+    "name": "Oracle AI Database",
+    "publisher": "Oracle",
+    "category": "databases",
+    "description": "Сервер баз данных для корпоративных систем",
+    "website": "https://www.oracle.com/database/free/",
+    "aliases": [
+      "Oracle Database",
+      "Oracle Database Free"
+    ],
+    "icon": "oracle",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Oracle AI Database Free — бесплатная редакция по условиям Oracle с лимитами ресурсов. Коммерческие редакции и дополнения лицензируются отдельно.",
+    "version": "Уточняется в источнике",
+    "editions": [
+      {
+        "id": "free",
+        "name": "Oracle AI Database 26ai Free",
+        "description": "Бесплатная редакция: до 2 CPU, 2 ГБ RAM и 12 ГБ данных по текущим условиям Oracle. Windows x64 или Linux."
+      },
+      {
+        "id": "commercial",
+        "name": "Коммерческая редакция Oracle",
+        "description": "Лицензия, редакция и дистрибутив выбираются на официальном портале Oracle."
+      }
+    ],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "Oracle Database"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 1521
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://www.oracle.com/database/free/",
+      "https://www.oracle.com/database/technologies/oracle-database-software-downloads.html"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "sqlite",
+    "name": "SQLite",
+    "publisher": "SQLite authors",
+    "category": "databases",
+    "description": "Встраиваемая СУБД и консольные инструменты",
+    "website": "https://sqlite.org/download.html",
+    "aliases": [],
+    "icon": "sqlite",
+    "color": "#8c94b1",
+    "type": "developer-tool",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "3.53.4",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "SQLite.SQLite",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "SQLite.SQLite",
+      "displayNames": [
+        "SQLite"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Встраиваемая СУБД, не сервер. Устанавливаются официальные консольные инструменты; служба и порт не создаются.",
+    "sources": [
+      "https://sqlite.org/download.html",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/SQLite/SQLite"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "publisher": "MongoDB",
+    "category": "databases",
+    "description": "Сервер документной базы данных",
+    "website": "https://www.mongodb.com/try/download/community",
+    "aliases": [],
+    "icon": "mongodb",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "MongoDB"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 27017
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://www.mongodb.com/try/download/community"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "redis",
+    "name": "Redis",
+    "publisher": "Redis",
+    "category": "databases",
+    "description": "Хранилище данных. Windows: WSL или контейнер",
+    "website": "https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/",
+    "aliases": [],
+    "icon": "redis",
+    "color": "#8c94b1",
+    "type": "container",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Redis"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Официального нативного Redis Server для Windows нет в этой интеграции. Выберите WSL или контейнер; локальный сервер запускается по инструкции отдельно.",
+    "sources": [
+      "https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/",
+      "https://redis.io/docs/latest/operate/oss_and_stack/install/archive/install-redis/install-redis-on-windows/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "cassandra",
+    "name": "Apache Cassandra",
+    "publisher": "Apache Software Foundation",
+    "category": "databases",
+    "description": "Распределённая БД. Windows: контейнер",
+    "website": "https://cassandra.apache.org/doc/latest/cassandra/getting_started/installing.html",
+    "aliases": [],
+    "icon": "apachecassandra",
+    "color": "#8c94b1",
+    "type": "container",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Apache Cassandra"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Нативная установка Windows не автоматизирована. Рекомендуемый здесь путь — официальный контейнер; создание кластера требует отдельной настройки.",
+    "sources": [
+      "https://cassandra.apache.org/doc/latest/cassandra/getting_started/installing.html"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "clickhouse",
+    "name": "ClickHouse",
+    "publisher": "ClickHouse",
+    "category": "databases",
+    "description": "Аналитическая СУБД. Windows: WSL или контейнер",
+    "website": "https://clickhouse.com/docs/install",
+    "aliases": [],
+    "icon": "clickhouse",
+    "color": "#8c94b1",
+    "type": "container",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "ClickHouse"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "В Windows используйте WSL или официальный контейнер. Локальные данные и существующие экземпляры автоматически не меняются.",
+    "sources": [
+      "https://clickhouse.com/docs/install",
+      "https://hub.docker.com/r/clickhouse/clickhouse-server/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "mariadb",
+    "name": "MariaDB",
+    "publisher": "MariaDB Foundation",
+    "category": "databases",
+    "description": "Открытый сервер реляционных баз данных",
+    "website": "https://mariadb.org/download/",
+    "aliases": [],
+    "icon": "mariadb",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "MariaDB"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 3306
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://mariadb.org/download/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "dynamodb",
+    "name": "Amazon DynamoDB",
+    "publisher": "Amazon Web Services",
+    "category": "databases",
+    "description": "Облачная NoSQL-база данных AWS",
+    "website": "https://console.aws.amazon.com/dynamodbv2/",
+    "aliases": [],
+    "icon": "amazondynamodb",
+    "color": "#8c94b1",
+    "type": "cloud",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Amazon DynamoDB"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Это облачная консоль AWS; ресурсы не создаются. DynamoDB Local — отдельное локальное окружение без связи с облачными данными.",
+    "sources": [
+      "https://console.aws.amazon.com/dynamodbv2/",
+      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "firebase",
+    "name": "Firebase Realtime Database",
+    "publisher": "Google",
+    "category": "databases",
+    "description": "Облачная база данных реального времени",
+    "website": "https://console.firebase.google.com/",
+    "aliases": [],
+    "icon": "firebase",
+    "color": "#8c94b1",
+    "type": "cloud",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux",
+      "web"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "web",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Firebase Realtime Database"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Это облачная консоль Firebase; проекты не создаются. Emulator Suite — отдельная локальная среда, нужны Node.js, Firebase CLI и Java для некоторых эмуляторов.",
+    "sources": [
+      "https://console.firebase.google.com/",
+      "https://firebase.google.com/docs/emulator-suite/install_and_configure"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "neo4j",
+    "name": "Neo4j",
+    "publisher": "Neo4j",
+    "category": "databases",
+    "description": "Графовая база данных и локальная среда",
+    "website": "https://neo4j.com/download/",
+    "aliases": [],
+    "icon": "neo4j",
+    "color": "#8c94b1",
+    "type": "database-server",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "Уточняется в источнике",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": false,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry-and-service",
+      "packageId": null,
+      "displayNames": [
+        "Neo4j"
+      ]
+    },
+    "options": [
+      {
+        "id": "edition",
+        "label": "Редакция / версия",
+        "type": "text",
+        "default": "",
+        "help": "Выбирается в официальном установщике; автоматическое обновление сервера отключено."
+      },
+      {
+        "id": "port",
+        "label": "Порт",
+        "type": "number",
+        "default": 7687
+      },
+      {
+        "id": "dataDir",
+        "label": "Каталог данных",
+        "type": "text",
+        "default": "",
+        "help": "Не меняем существующие данные. Примените в официальном мастере."
+      },
+      {
+        "id": "serviceName",
+        "label": "Имя службы",
+        "type": "text",
+        "default": ""
+      },
+      {
+        "id": "autostart",
+        "label": "Автозапуск службы",
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "dependencies": [],
+    "notes": "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.",
+    "sources": [
+      "https://neo4j.com/download/"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  },
+  {
+    "id": "dbeaver",
+    "name": "DBeaver",
+    "publisher": "DBeaver",
+    "category": "databases",
+    "description": "Универсальный клиент для баз данных",
+    "website": "https://dbeaver.io/",
+    "aliases": [],
+    "icon": "dbeaver",
+    "color": "#b99777",
+    "type": "desktop",
+    "platforms": [
+      "windows",
+      "macos",
+      "linux"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "free",
+    "licenseNote": "Условия использования — на сайте издателя.",
+    "version": "26.2.0",
+    "editions": [],
+    "install": {
+      "method": "winget",
+      "packageId": "DBeaver.DBeaver.Community",
+      "source": "winget",
+      "verifiedAt": "2026-10-28",
+      "verification": "verified",
+      "download": true,
+      "scope": "default"
+    },
+    "detection": {
+      "method": "winget-export-and-registry",
+      "packageId": "DBeaver.DBeaver.Community",
+      "displayNames": [
+        "DBeaver"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "",
+    "sources": [
+      "https://dbeaver.io/",
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/d/DBeaver/DBeaver/Community"
+    ],
+    "checkedAt": "2026-10-28",
+    "downloadMb": null,
+    "diskMb": null
+  }
+]

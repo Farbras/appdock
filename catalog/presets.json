@@ -1,0 +1,197 @@
+[
+  {
+    "id": "python-dev",
+    "name": "Python-разработка",
+    "description": "Редактор, интерпретатор и контроль версий.",
+    "icon": "Code2",
+    "items": [
+      {
+        "appId": "vscode",
+        "options": {},
+        "extensions": [
+          "streetsidesoftware.code-spell-checker",
+          "Zignd.html-css-class-completion",
+          "ritwickdey.LiveServer",
+          "ms-python.python",
+          "ms-python.vscode-pylance",
+          "ms-python.debugpy",
+          "ms-python.vscode-python-envs",
+          "MS-CEINTL.vscode-language-pack-ru"
+        ],
+        "action": "install"
+      },
+      {
+        "appId": "python",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      },
+      {
+        "appId": "git",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "web-dev",
+    "name": "Веб-разработка",
+    "description": "Лёгкий старт для сайтов и веб-приложений.",
+    "icon": "Globe",
+    "items": [
+      {
+        "appId": "vscode",
+        "options": {},
+        "extensions": [
+          "streetsidesoftware.code-spell-checker",
+          "Zignd.html-css-class-completion",
+          "ritwickdey.LiveServer",
+          "ms-python.python",
+          "ms-python.vscode-pylance",
+          "ms-python.debugpy",
+          "ms-python.vscode-python-envs",
+          "MS-CEINTL.vscode-language-pack-ru"
+        ],
+        "action": "install"
+      },
+      {
+        "appId": "git",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      },
+      {
+        "appId": "chrome",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "java-dev",
+    "name": "Java-разработка",
+    "description": "IDE для Java и управление исходным кодом. JDK выберите в IDE.",
+    "icon": "Coffee",
+    "items": [
+      {
+        "appId": "idea",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      },
+      {
+        "appId": "git",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "android-dev",
+    "name": "Разработка Android",
+    "description": "IDE и Git. SDK и образы выберите отдельно в SDK Manager.",
+    "icon": "Smartphone",
+    "items": [
+      {
+        "appId": "android-studio",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      },
+      {
+        "appId": "git",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "databases",
+    "name": "Базы данных",
+    "description": "Универсальный клиент и встраиваемая СУБД. Сервер выберите отдельно.",
+    "icon": "Database",
+    "items": [
+      {
+        "appId": "dbeaver",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      },
+      {
+        "appId": "sqlite",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "containers",
+    "name": "Контейнеры и виртуализация",
+    "description": "Один контейнерный движок. Требования Windows проверяются перед запуском.",
+    "icon": "Boxes",
+    "items": [
+      {
+        "appId": "docker",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "documents",
+    "name": "Документы и презентации",
+    "description": "Один свободный офисный пакет для документов, таблиц и презентаций.",
+    "icon": "FileText",
+    "items": [
+      {
+        "appId": "libreoffice",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "graphics",
+    "name": "Графика",
+    "description": "Свободный редактор изображений.",
+    "icon": "Palette",
+    "items": [
+      {
+        "appId": "gimp",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  },
+  {
+    "id": "engineering",
+    "name": "САПР и проектирование",
+    "description": "Свободная параметрическая САПР.",
+    "icon": "Ruler",
+    "items": [
+      {
+        "appId": "freecad",
+        "options": {},
+        "extensions": [],
+        "action": "install"
+      }
+    ],
+    "builtin": true
+  }
+]

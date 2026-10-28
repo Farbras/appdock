@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AppDock",
+  "version": "0.1.0",
+  "identifier": "app.appdock.desktop",
+  "build": { "beforeDevCommand": "npm run dev", "devUrl": "http://127.0.0.1:1420", "beforeBuildCommand": "npm run build", "frontendDist": "../dist" },
+  "app": {
+    "windows": [{ "title": "AppDock", "width": 1500, "height": 960, "minWidth": 1020, "minHeight": 700, "center": true, "backgroundColor": "#101116" }],
+    "security": { "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src ipc: http://ipc.localhost" }
+  },
+  "bundle": { "active": true, "targets": ["nsis"], "icon": ["icons/icon.ico", "icons/icon.png"], "shortDescription": "Программы для вашего компьютера", "category": "Utility", "windows": { "nsis": { "displayLanguageSelector": false, "languages": ["Russian"], "installMode": "currentUser" }, "webviewInstallMode": { "type": "downloadBootstrapper", "silent": true } } }
+}

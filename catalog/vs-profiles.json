@@ -1,0 +1,1995 @@
+{
+  "checkedAt": "2026-10-28",
+  "version": "18.10.3",
+  "source": "Microsoft Visual Studio Installer local catalog cache",
+  "sha256": "7c3ba7bdc81a44b65b98dbc1c7cebc3d49249624a642f08ee7e8ae6fb7534867",
+  "verification": "local-installer-cache",
+  "channel": "https://aka.ms/vs/18/stable/channel",
+  "editions": [
+    {
+      "id": "community",
+      "productId": "Microsoft.VisualStudio.Product.Community",
+      "workloads": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "name": "Разработка классических приложений .NET"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "name": "Разработка классических приложений на C++"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "name": "Разработка с помощью .NET Multi-Platform App UI"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "name": "Разработка приложений WinUI"
+        }
+      ],
+      "components": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.MSBuild",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.Compiler",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.DevelopmentPrerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.ClickOnce",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.CLR",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TextTemplating",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.10.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.DevelopmentTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.NuGet",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.ClickOnce.Publish",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.DeveloperTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.EntityFramework",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DiagnosticTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliCode",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Debugger.JustInTime",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DotNetModelBuilder",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.VisualStudio.GitHub.Copilot",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Copilot.DotNet.Skills",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Microsoft.NET.AppModernization",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.Microsoft.NET.AppModernization",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.Desktop",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.6.2-4.7.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.6.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.PortableLibrary",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Wcf.Tooling",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IISExpress",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.TypeScript",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TypeScript.TSServer",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.Diagnostics",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.RazorExtension",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.DataSources",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSODBC.SQL",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.LocalDB.Runtime",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.SSDT",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSSQL.CMDLnUtils",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.Web.LibraryManager",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.WebTemplates",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DockerTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WebDeploy",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.AppInsights.Tools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.LiveShare.2022",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.Blend",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATL",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATLMFC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Preview.Tools.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Incredibuild",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.IncredibuildMenu",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Redist.14.Latest",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.CppBuildInsights",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.DiagnosticTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics.Tools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11Sdk.WindowsPerformanceToolkit",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CMake.Project",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.CMake",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForBoostTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForGoogleTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ASAN",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.26100",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Vcpkg",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CLI.Support",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.Clang",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.28000",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.22621",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.143.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.142.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.All",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Android",
+          "type": "Required"
+        },
+        {
+          "id": "maui.blazor",
+          "type": "Required"
+        },
+        {
+          "id": "maui.core",
+          "type": "Required"
+        },
+        {
+          "id": "android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot",
+          "type": "Required"
+        },
+        {
+          "id": "Component.OpenJDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.iOS",
+          "type": "Required"
+        },
+        {
+          "id": "ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.MacCatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Windows",
+          "type": "Required"
+        },
+        {
+          "id": "maui.windows",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Blazor",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Shared",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.TemplateEngine",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Android.SDK.MAUI",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.CSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.8.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.VC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.Cpp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.Support",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VisualStudioData",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v143",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v142",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v141",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows10SDK.IpOverUsb",
+          "type": "Optional"
+        }
+      ],
+      "excluded": [
+        {
+          "id": "Microsoft.PythonTools.BuildCore.Vsix",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliTrace.FrontEnd",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.LiveUnitTesting",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent.Targeted",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Managed",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Native",
+          "reason": "Недоступен в редакции community"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CoreIDE",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeMobile",
+          "reason": "Поддержка этой нагрузки прекращена Microsoft. Не добавляется в установку."
+        },
+        {
+          "id": "Microsoft.Component.Netfx.Native",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.VCTools",
+          "reason": "Нагрузка не предлагается в community"
+        }
+      ],
+      "diskMb": null
+    },
+    {
+      "id": "professional",
+      "productId": "Microsoft.VisualStudio.Product.Professional",
+      "workloads": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "name": "Разработка классических приложений .NET"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "name": "Разработка классических приложений на C++"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "name": "Разработка с помощью .NET Multi-Platform App UI"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "name": "Разработка приложений WinUI"
+        }
+      ],
+      "components": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.MSBuild",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.Compiler",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.DevelopmentPrerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.ClickOnce",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.CLR",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TextTemplating",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.10.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.DevelopmentTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.NuGet",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.ClickOnce.Publish",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.DeveloperTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.EntityFramework",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DiagnosticTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliCode",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Debugger.JustInTime",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DotNetModelBuilder",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.VisualStudio.GitHub.Copilot",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Copilot.DotNet.Skills",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Microsoft.NET.AppModernization",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.Microsoft.NET.AppModernization",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.Desktop",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.6.2-4.7.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.6.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.PortableLibrary",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Wcf.Tooling",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IISExpress",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.TypeScript",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TypeScript.TSServer",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.Diagnostics",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.RazorExtension",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.DataSources",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSODBC.SQL",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.LocalDB.Runtime",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.SSDT",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSSQL.CMDLnUtils",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.Web.LibraryManager",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.WebTemplates",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DockerTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WebDeploy",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.AppInsights.Tools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.LiveShare.2022",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.Blend",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATL",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATLMFC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Preview.Tools.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Incredibuild",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.IncredibuildMenu",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Redist.14.Latest",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.CppBuildInsights",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.DiagnosticTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics.Tools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11Sdk.WindowsPerformanceToolkit",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CMake.Project",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.CMake",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForBoostTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForGoogleTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ASAN",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.26100",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Vcpkg",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CLI.Support",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.Clang",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.28000",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.22621",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.143.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.142.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.All",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Android",
+          "type": "Required"
+        },
+        {
+          "id": "maui.blazor",
+          "type": "Required"
+        },
+        {
+          "id": "maui.core",
+          "type": "Required"
+        },
+        {
+          "id": "android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot",
+          "type": "Required"
+        },
+        {
+          "id": "Component.OpenJDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.iOS",
+          "type": "Required"
+        },
+        {
+          "id": "ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.MacCatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Windows",
+          "type": "Required"
+        },
+        {
+          "id": "maui.windows",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Blazor",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Shared",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.TemplateEngine",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Android.SDK.MAUI",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.CSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.8.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.VC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.Cpp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.Support",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VisualStudioData",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v143",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v142",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v141",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows10SDK.IpOverUsb",
+          "type": "Optional"
+        }
+      ],
+      "excluded": [
+        {
+          "id": "Microsoft.PythonTools.BuildCore.Vsix",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliTrace.FrontEnd",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.LiveUnitTesting",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent.Targeted",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Managed",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Native",
+          "reason": "Недоступен в редакции professional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CoreIDE",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeMobile",
+          "reason": "Поддержка этой нагрузки прекращена Microsoft. Не добавляется в установку."
+        },
+        {
+          "id": "Microsoft.Component.Netfx.Native",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.VCTools",
+          "reason": "Нагрузка не предлагается в professional"
+        }
+      ],
+      "diskMb": null
+    },
+    {
+      "id": "enterprise",
+      "productId": "Microsoft.VisualStudio.Product.Enterprise",
+      "workloads": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "name": "Разработка классических приложений .NET"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "name": "Разработка классических приложений на C++"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "name": "Разработка с помощью .NET Multi-Platform App UI"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "name": "Разработка приложений WinUI"
+        }
+      ],
+      "components": [
+        {
+          "id": "Microsoft.VisualStudio.Workload.ManagedDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ManagedDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.MSBuild",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.Compiler",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.DevelopmentPrerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Component.ClickOnce",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.CLR",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TextTemplating",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.10.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.DevelopmentTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.NuGet",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.ClickOnce.Publish",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.DeveloperTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.EntityFramework",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DiagnosticTools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliCode",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IntelliTrace.FrontEnd",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Debugger.JustInTime",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.LiveUnitTesting",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DotNetModelBuilder",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.VisualStudio.GitHub.Copilot",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Copilot.DotNet.Skills",
+          "type": "Recommended"
+        },
+        {
+          "id": "ComponentGroup.Microsoft.NET.AppModernization",
+          "type": "Recommended"
+        },
+        {
+          "id": "Component.Microsoft.NET.AppModernization",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.Desktop",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.6.2-4.7.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.6.2.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.7.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.PortableLibrary",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Wcf.Tooling",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.IISExpress",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.TypeScript",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.TypeScript.TSServer",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.JavaScript.Diagnostics",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.RazorExtension",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.DataSources",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSODBC.SQL",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.LocalDB.Runtime",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.SQL.SSDT",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.MSSQL.CMDLnUtils",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Microsoft.Web.LibraryManager",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Web",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.FSharp.WebTemplates",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DockerTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WebDeploy",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.AppInsights.Tools",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Microsoft.VisualStudio.LiveShare.2022",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.ComponentGroup.Blend",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.SDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.Net.Component.4.8.1.TargetingPack",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Managed",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.ClassDesigner",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.CodeClone",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.CodeMap",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.GraphDocument",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.DependencyValidation.Enterprise",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeDesktop",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATL",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ATLMFC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Preview.Tools.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.Incredibuild",
+          "type": "Optional"
+        },
+        {
+          "id": "Component.IncredibuildMenu",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Core",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.ArchitectureTools.Native",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Redist.14.Latest",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.CppBuildInsights",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.DiagnosticTools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics.Tools",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11Sdk.WindowsPerformanceToolkit",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CMake.Project",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.CMake",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForBoostTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.TestAdapterForGoogleTest",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.ASAN",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.26100",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Vcpkg",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CLI.Support",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Llvm.Clang",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.28000",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows11SDK.22621",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.143.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.VC.Tools.142.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.x86.x64",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NetCrossPlat",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.All",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Android",
+          "type": "Required"
+        },
+        {
+          "id": "maui.blazor",
+          "type": "Required"
+        },
+        {
+          "id": "maui.core",
+          "type": "Required"
+        },
+        {
+          "id": "android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot.net9",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.mono.tooling",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.android.aot",
+          "type": "Required"
+        },
+        {
+          "id": "Component.OpenJDK",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.iOS",
+          "type": "Required"
+        },
+        {
+          "id": "ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.ios.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.MacCatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst",
+          "type": "Required"
+        },
+        {
+          "id": "microsoft.net.runtime.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "runtimes.maccatalyst.net9",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Windows",
+          "type": "Required"
+        },
+        {
+          "id": "maui.windows",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Blazor",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.Maui.Shared",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.TemplateEngine",
+          "type": "Required"
+        },
+        {
+          "id": "Component.Android.SDK.MAUI",
+          "type": "Recommended"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.Universal",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.Prerequisites",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.CSharp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Graphics",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.NetCore.Component.Runtime.8.0",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.WindowsAppDevelopment.VC",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.WindowsAppSdkSupport.Cpp",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.Support",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VisualStudioData",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.UWP.VC.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64EC",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v143",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.44.17.14.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v142",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.14.29.16.11.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.ComponentGroup.UWP.VC.v141",
+          "type": "Optional"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.v141.ARM64",
+          "type": "Required"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.Windows10SDK.IpOverUsb",
+          "type": "Optional"
+        }
+      ],
+      "excluded": [
+        {
+          "id": "Microsoft.PythonTools.BuildCore.Vsix",
+          "reason": "Недоступен в редакции enterprise"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent",
+          "reason": "Недоступен в редакции enterprise"
+        },
+        {
+          "id": "Microsoft.SqlServer.SSMS.Copilot.SSMSAgent.Targeted",
+          "reason": "Недоступен в редакции enterprise"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Component.VC.CoreIDE",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.NativeMobile",
+          "reason": "Поддержка этой нагрузки прекращена Microsoft. Не добавляется в установку."
+        },
+        {
+          "id": "Microsoft.Component.Netfx.Native",
+          "reason": "Отсутствует в каталоге x64; проверяется Installer"
+        },
+        {
+          "id": "Microsoft.VisualStudio.Workload.VCTools",
+          "reason": "Нагрузка не предлагается в enterprise"
+        }
+      ],
+      "diskMb": null
+    }
+  ]
+}

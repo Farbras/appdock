@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Основное окно AppDock. Системные операции доступны только через валидируемые Rust-команды.","local":true,"windows":["main"],"permissions":["core:default"]}}

@@ -1,0 +1,20 @@
+# Проверка первичных источников · 28.10.2026
+
+В `integration-checks.json` находятся реальные ответы установленного WinGet для всех используемых ID, включая редакции Visual Studio. Пакет не становится проверенным только потому, что его ID внесён в исходный код.
+
+- [WinGet download](https://learn.microsoft.com/en-us/windows/package-manager/winget/download): отдельная загрузка и ограничения offline distribution.
+- [WinGet install](https://learn.microsoft.com/en-us/windows/package-manager/winget/install): точные ID, источники, параметры и проверки установщика.
+- [VS Code CLI](https://code.visualstudio.com/docs/configure/command-line) и [официальный обработчик аргументов](https://github.com/microsoft/vscode/blob/main/src/vs/platform/environment/node/argv.ts): установка расширений и флаг исключения невыбранных зависимостей пакета.
+- [Marketplace](https://marketplace.visualstudio.com/): все 8 страниц перечислены в `catalog/extensions.json`, включая [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs).
+- [Python 3.12.10](https://www.python.org/downloads/release/python-31210/), [PEP 693](https://peps.python.org/pep-0693/), [параметры Windows Installer Python](https://docs.python.org/3.12/using/windows.html): разделение ветки и последнего традиционного Windows-установщика.
+- [Компоненты Visual Studio](https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?preserve-view=true&view=vs-2026), [командные параметры Installer](https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio): редакции, `.vsconfig`, рекомендуемые и дополнительные компоненты. Снимок собран из локального кэша Microsoft Installer с собственным SHA-256 и версией 18.10.3; независимая криптографическая проверка подписи кэша не заявляется.
+- [ArtCraft Crafting Apps](https://getartcraft.com/apps): отдельные приложения семейства, [WordCraft](https://getartcraft.com/apps/wordcraft), [GridCraft](https://getartcraft.com/apps/gridcraft), [DeckCraft](https://getartcraft.com/apps/deckcraft), [PhotoCraft](https://getartcraft.com/apps/photocraft). Сайты с похожими названиями не используются как установочные источники.
+- [Trello desktop apps](https://support.atlassian.com/trello/docs/trello-desktop-apps/): Windows-клиент существует в Microsoft Store. [Ответ JetBrains о YouTrack](https://youtrack-support.jetbrains.com/hc/en-us/community/posts/11656565550994-Desktop-application-YouTrack): отдельный клиент не подтверждён.
+- [Workstation и Fusion](https://blogs.vmware.com/cloud-foundation/2024/11/11/vmware-fusion-and-workstation-are-now-free-for-all-users/) и [Broadcom download/licensing](https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hyper.html): различие настольных продуктов и бесплатное использование по условиям поставщика.
+- [Unified IntelliJ IDEA](https://lp.jetbrains.com/intellij-idea-unified-faq/), [WebStorm licensing](https://www.jetbrains.com/webstorm/buy/): привычные названия редакций сохранены как псевдонимы, лицензионные условия не подменяются установкой.
+- [AutoCAD trial](https://www.autodesk.com/products/autocad/free-trial), [SOLIDWORKS Design packages](https://www.solidworks.com/solution/solidworks-design-packages-find-your-best-fit): реальные варианты и условия отображаются до ручной загрузки.
+- [Tauri Windows prerequisites](https://v2.tauri.app/start/prerequisites/), [NSIS packaging](https://v2.tauri.app/distribute/windows-installer/): нативная сборка и установщик Windows.
+- [Официальные релизы Atom](https://github.com/atom/atom/releases): стабильный архив 1.60.0, отдельно от beta-релиза; продукт снят с поддержки.
+- [SQL Server downloads](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) и [Oracle AI Database Free](https://www.oracle.com/database/free/): варианты серверных редакций и привычное название Oracle Database в поисковых псевдонимах.
+
+Остальные первичные URL находятся непосредственно в каждой записи каталога. Переход по ссылке и проверка ID не являются сквозным испытанием установки продукта.

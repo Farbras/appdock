@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","identifier":"default","description":"Основное окно AppDock. Системные операции доступны только через валидируемые Rust-команды.","windows":["main"],"permissions":["core:default"]}
