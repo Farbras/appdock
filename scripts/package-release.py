@@ -52,7 +52,7 @@ with zipfile.ZipFile(portable, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as ar
 
 sources = out / f'AppDock-{version}-source.zip'
 tracked = subprocess.run(
-    ['git', 'ls-files', '-z'], cwd=root, check=True, capture_output=True
+    ['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=root, check=True, capture_output=True
 ).stdout.decode('utf-8').split('\0')
 with zipfile.ZipFile(sources, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for name in sorted(filter(None, tracked)):

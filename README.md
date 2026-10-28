@@ -4,13 +4,13 @@
 
 ## Скачать и запустить
 
-**[Скачать установщик AppDock для Windows x64](https://github.com/Farbras/appdock/releases/download/v0.1.0/AppDock_0.1.0_x64-setup.exe)**
+**[Скачать установщик AppDock для Windows x64](https://github.com/Farbras/appdock/releases/download/v0.1.1/AppDock_0.1.1_x64-setup.exe)**
 
 1. Скачайте установщик по ссылке выше.
-2. Откройте `AppDock_0.1.0_x64-setup.exe` и завершите установку.
+2. Откройте `AppDock_0.1.1_x64-setup.exe` и завершите установку.
 3. Запустите AppDock через меню «Пуск».
 
-Для запуска без установки скачайте **[ZIP с готовым AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.1.0/AppDock-0.1.0-windows-x64.zip)**, распакуйте архив в отдельную папку и откройте `AppDock.exe`. Также доступен [отдельный AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.1.0/AppDock.exe).
+Для запуска без установки скачайте **[ZIP с готовым AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.1.1/AppDock-0.1.1-windows-x64.zip)**, распакуйте архив в отдельную папку и откройте `AppDock.exe`. Также доступен [отдельный AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.1.1/AppDock.exe).
 
 Готовая версия рассчитана на Windows 11 x64. Для отображения интерфейса нужен Microsoft Edge WebView2 Runtime; установщик скачает его при отсутствии. Для установки программ из каталога нужен WinGet / App Installer и доступ в интернет. Node.js, Rust и инструменты сборки для запуска готовой программы не нужны.
 
@@ -41,9 +41,9 @@ npm run desktop
 npm run bundle
 ```
 
-Результаты стандартной сборки: `src-tauri/target/release/appdock.exe` и `src-tauri/target/release/bundle/nsis/AppDock_0.1.0_x64-setup.exe`. NSIS устанавливает AppDock для текущего пользователя; приложение не требует запуска целиком от администратора. Пакетные установщики запрашивают собственный UAC. Сертификат подписи выпуска не настроен.
+Результаты стандартной сборки: `src-tauri/target/release/appdock.exe` и `src-tauri/target/release/bundle/nsis/AppDock_0.1.1_x64-setup.exe`. NSIS устанавливает AppDock для текущего пользователя; приложение не требует запуска целиком от администратора. Пакетные установщики запрашивают собственный UAC. Сертификат подписи выпуска не настроен.
 
-После сборки `python scripts/package-release.py` подготовит в `releases/AppDock-0.1.0/` установщик, отдельный `.exe`, ZIP для запуска без установки, архив исходников и файл SHA-256. Для этого шага нужен Python 3.
+После сборки `python scripts/package-release.py` подготовит в `releases/AppDock-0.1.1/` установщик, отдельный `.exe`, ZIP для запуска без установки, архив исходников и файл SHA-256. Для этого шага нужен Python 3.
 
 Если нет системных Build Tools, `scripts/build-env.ps1` умеет использовать уже подготовленные инструменты из `.tools`. Их архивы получены с серверов Microsoft, проверены по SHA-256 каталога Microsoft / SHA-512 метаданных NuGet и распакованы локально. Разработка не требует повторной установки Visual Studio или изменения её компонентов.
 

@@ -101,7 +101,7 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
                         (p["PackageIdentifier"].as_str(), p["Version"].as_str())
                     {
                         installed.push(Installed {
-                            package_id: id.into(),
+                            package_id: canonical_package_id(id, &catalog).into(),
                             version: version.into(),
                             available_version: None,
                         });
@@ -171,10 +171,9 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
             for app in &mut installed {
                 for line in text.lines() {
                     let parts: Vec<_> = line.split_whitespace().collect();
-                    if parts
-                        .iter()
-                        .any(|p| p.eq_ignore_ascii_case(&app.package_id))
-                    {
+                    if parts.iter().any(|p| {
+                        canonical_package_id(p, &catalog).eq_ignore_ascii_case(&app.package_id)
+                    }) {
                         let available = if parts
                             .last()
                             .is_some_and(|p| p.eq_ignore_ascii_case("winget"))
@@ -219,6 +218,19 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
         }
     }
     Ok(installed)
+}
+// A product can change its preferred installer while retaining detection of
+// the previous WinGet package (for example Chrome MSI -> versioned EXE).
+fn canonical_package_id<'a>(id: &'a str, catalog: &'a [Value]) -> &'a str {
+    catalog
+        .iter()
+        .find(|a| {
+            a["detection"]["packageId"]
+                .as_str()
+                .is_some_and(|p| p.eq_ignore_ascii_case(id))
+        })
+        .and_then(|a| a["install"]["packageId"].as_str())
+        .unwrap_or(id)
 }
 fn matches_display_name(name: &str, target: &str) -> bool {
     let name = name.to_lowercase();
@@ -334,6 +346,30 @@ pub fn pause_briefly() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn chrome_msi_detection_maps_to_preferred_exe_without_matching_other_channels() {
+        let catalog = catalog::apps();
+        assert_eq!(
+            canonical_package_id("Google.Chrome", &catalog),
+            "Google.Chrome.EXE"
+        );
+        assert_eq!(
+            canonical_package_id("google.chrome", &catalog),
+            "Google.Chrome.EXE"
+        );
+        assert_eq!(
+            canonical_package_id("Google.Chrome.EXE", &catalog),
+            "Google.Chrome.EXE"
+        );
+        assert_eq!(
+            canonical_package_id("Google.Chrome.Beta", &catalog),
+            "Google.Chrome.Beta"
+        );
+        assert_eq!(
+            canonical_package_id("Microsoft.VisualStudioCode", &catalog),
+            "Microsoft.VisualStudioCode"
+        );
+    }
     #[test]
     fn versions_do_not_guess_unknown_or_downgrade() {
         assert!(version_less("1.2.9", "1.2.10"));

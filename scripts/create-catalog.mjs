@@ -3,7 +3,7 @@ const date = '2026-10-28';
 // Candidate package IDs become executable integrations only after verify-integrations.mjs.
 const rows = [
 // id | name | publisher | category | description | official URL | candidate WinGet ID | icon
-['chrome','Google Chrome','Google','browsers','Быстрый браузер для повседневных задач','https://www.google.com/chrome/','Google.Chrome','googlechrome'],
+['chrome','Google Chrome','Google','browsers','Быстрый браузер для повседневных задач','https://www.google.com/chrome/','Google.Chrome.EXE','googlechrome'],
 ['safari','Apple Safari','Apple','browsers','Браузер для экосистемы Apple','https://www.apple.com/safari/','','safari'],
 ['edge','Microsoft Edge','Microsoft','browsers','Браузер с интеграцией в Windows','https://www.microsoft.com/edge','Microsoft.Edge','microsoftedge'],
 ['firefox','Mozilla Firefox','Mozilla','browsers','Открытый браузер с защитой приватности','https://www.mozilla.org/firefox/','Mozilla.Firefox','firefoxbrowser'],
@@ -125,7 +125,7 @@ const apps = rows.map(([id,name,publisher,category,description,website,packageId
  license:commercial.includes(id)?'trial':'free',licenseNote:commercial.includes(id)?'Коммерческая лицензия / пробный период. Активация выполняется в продукте.':'Условия использования — на сайте издателя.',
  version:id==='python'?'3.12.10':'Уточняется в источнике',editions:[],
  install:{method:packageId?'winget':web.includes(id)||cloud.includes(id)?'web':'manual',packageId:packageId||null,source:packageId?'winget':null,verifiedAt:null,verification:'unverified',download:false,scope:'default'},
- detection:{method:packageId?'winget-export':'manual',packageId:packageId||null},
+ detection:{method:packageId?'winget-export':'manual',packageId:id==='chrome'?'Google.Chrome':packageId||null},
  options:[],dependencies:[],notes:notes[id]||'',sources:[website],checkedAt:date,downloadMb:null,diskMb:null,
 }));
 const app = id => apps.find(a=>a.id===id);

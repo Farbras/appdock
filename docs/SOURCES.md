@@ -4,6 +4,8 @@
 
 - [WinGet download](https://learn.microsoft.com/en-us/windows/package-manager/winget/download): отдельная загрузка и ограничения offline distribution.
 - [WinGet install](https://learn.microsoft.com/en-us/windows/package-manager/winget/install): точные ID, источники, параметры и проверки установщика.
+- [Коды WinGet](https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md) и [обновление источников](https://learn.microsoft.com/en-us/windows/package-manager/winget/source): `0x8A150011` — несовпадение хеша, `0x8A150014` — пакет не найден; ограниченный повтор после обновления источника.
+- [Chrome EXE в WinGet](https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/Chrome/EXE): стабильный браузер с версионным URL Google, используемый вместо изменяемого MSI-дистрибутива.
 - [VS Code CLI](https://code.visualstudio.com/docs/configure/command-line) и [официальный обработчик аргументов](https://github.com/microsoft/vscode/blob/main/src/vs/platform/environment/node/argv.ts): установка расширений и флаг исключения невыбранных зависимостей пакета.
 - [Marketplace](https://marketplace.visualstudio.com/): все 8 страниц перечислены в `catalog/extensions.json`, включая [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs).
 - [Python 3.12.10](https://www.python.org/downloads/release/python-31210/), [PEP 693](https://peps.python.org/pep-0693/), [параметры Windows Installer Python](https://docs.python.org/3.12/using/windows.html): разделение ветки и последнего традиционного Windows-установщика.

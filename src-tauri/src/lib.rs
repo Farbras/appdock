@@ -2,6 +2,7 @@ mod catalog;
 mod engine;
 mod models;
 mod system;
+mod winget;
 use engine::Shared;
 use models::*;
 use tauri::{Manager, State};

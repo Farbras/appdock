@@ -1,6 +1,6 @@
 [package]
 name = "appdock"
-version = "0.1.0"
+version = "0.1.1"
 description = "AppDock — каталог и установка программ для Windows 11"
 authors = ["AppDock contributors"]
 edition = "2021"

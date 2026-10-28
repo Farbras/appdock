@@ -1,4 +1,4 @@
-use crate::{catalog, models::*, system};
+use crate::{catalog, models::*, system, winget};
 use serde_json::Value;
 use std::{
     collections::HashSet,
@@ -364,6 +364,34 @@ fn execute(shared: &Shared, app: &AppHandle, task: Task) {
         update(shared, app, &task.id, "error", &message)
     }
 }
+fn run_winget(
+    shared: &Shared,
+    app: &AppHandle,
+    task: &Task,
+    command: std::process::Command,
+) -> Result<i32, String> {
+    let args = command
+        .get_args()
+        .map(std::ffi::OsStr::to_os_string)
+        .collect();
+    winget::run_with_recovery(
+        args,
+        |args| {
+            append(shared, app, &task.id, &format!("WinGet: {args:?}"));
+            let mut command = system::command("winget");
+            command.args(args);
+            let code = run_command(shared, app, task, command)?;
+            append(
+                shared,
+                app,
+                &task.id,
+                &format!("WinGet завершился: 0x{:08X}", code as u32),
+            );
+            Ok(code)
+        },
+        |message| append(shared, app, &task.id, message),
+    )
+}
 fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), String> {
     let a = catalog::app(&task.app_id)?;
     let data = lock(shared).data_dir.clone();
@@ -538,9 +566,9 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
     } else if let Some(v) = &task.selection.version {
         show.args(["--version", v]);
     }
-    let shown = run_command(shared, app, task, show)?;
+    let shown = run_winget(shared, app, task, show)?;
     if shown != 0 {
-        return Err(format!("Проверка точного пакета {package} в источнике winget не пройдена (0x{:08X}). Проверьте сеть и доступность источника.",shown as u32));
+        return Err(winget::failure(shown, &package));
     }
     let installed = system::scan(&data)?;
     let current = installed
@@ -676,7 +704,7 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
         }
         update(shared,app,&task.id,"installing","WinGet выполняет установку; при необходимости подтвердите штатный UAC. Автоматическая перезагрузка не разрешена.");
     }
-    let code = run_command(shared, app, task, cmd)?;
+    let code = run_winget(shared, app, task, cmd)?;
     let unsigned = code as u32;
     if unsigned == 0x8A15002B {
         update(
@@ -693,8 +721,7 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
         return Ok(());
     }
     if code != 0 {
-        let hint=match unsigned {0x800704C7=>"Отказ UAC или отмена установки. Подтвердите запрос Windows и повторите.",0x80070070=>"Недостаточно места на диске.",0x8A150011=>"Хеш установщика не совпал с манифестом. Проверка не отключалась. Повторите позже.",_=>"Проверьте журнал, сеть, лицензию и требования пакета; независимые задачи продолжатся."};
-        return Err(format!("Код WinGet: 0x{unsigned:08X}. {hint}"));
+        return Err(winget::failure(code, &package));
     }
     if task.action == "download" {
         update(

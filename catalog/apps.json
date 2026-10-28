@@ -20,11 +20,11 @@
     ],
     "license": "free",
     "licenseNote": "Условия использования — на сайте издателя.",
-    "version": "156.0.8078.48",
+    "version": "156.0.8078.74",
     "editions": [],
     "install": {
       "method": "winget",
-      "packageId": "Google.Chrome",
+      "packageId": "Google.Chrome.EXE",
       "source": "winget",
       "verifiedAt": "2026-10-28",
       "verification": "verified",
@@ -43,7 +43,7 @@
     "notes": "",
     "sources": [
       "https://www.google.com/chrome/",
-      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/Chrome"
+      "https://github.com/microsoft/winget-pkgs/tree/master/manifests/g/Google/Chrome/EXE"
     ],
     "checkedAt": "2026-10-28",
     "downloadMb": null,
