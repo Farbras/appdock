@@ -19,10 +19,47 @@ pub fn command(program: impl AsRef<std::ffi::OsStr>) -> Command {
     c
 }
 pub fn output(program: &str, args: &[&str]) -> Result<Output, String> {
-    command(program)
-        .args(args)
-        .output()
-        .map_err(|e| format!("Не удалось запустить {program}: {e}"))
+    bounded_output(command(program).args(args), 45)
+}
+pub fn bounded_output(cmd: &mut Command, seconds: u64) -> Result<Output, String> {
+    use std::io::Read;
+    use std::process::Stdio;
+    let mut child = cmd
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Не удалось запустить диагностику: {e}"))?;
+    let mut out = child.stdout.take().ok_or("Нет stdout")?;
+    let mut err = child.stderr.take().ok_or("Нет stderr")?;
+    let stdout = std::thread::spawn(move || {
+        let mut b = vec![];
+        let _ = out.read_to_end(&mut b);
+        b
+    });
+    let stderr = std::thread::spawn(move || {
+        let mut b = vec![];
+        let _ = err.read_to_end(&mut b);
+        b
+    });
+    let began = std::time::Instant::now();
+    let status = loop {
+        if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
+            break status;
+        }
+        if began.elapsed().as_secs() >= seconds {
+            let _ = child.kill();
+            let _ = child.wait();
+            return Err(format!(
+                "Диагностика превысила {seconds} с. Проверьте WinGet и повторите проверку."
+            ));
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    };
+    Ok(Output {
+        status,
+        stdout: stdout.join().unwrap_or_default(),
+        stderr: stderr.join().unwrap_or_default(),
+    })
 }
 pub fn powershell(script: &str) -> Result<Value, String> {
     let text=format!("[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; $ErrorActionPreference='Stop'; {script}");
@@ -74,18 +111,20 @@ pub fn info() -> SystemInfo {
 }
 pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
     let path = data_dir.join(format!("scan-{}.json", uuid::Uuid::new_v4()));
-    let r = command("winget")
-        .args(["export", "--output"])
-        .arg(&path)
-        .args([
-            "--include-versions",
-            "--source",
-            "winget",
-            "--accept-source-agreements",
-            "--disable-interactivity",
-        ])
-        .output()
-        .ok();
+    let r = bounded_output(
+        command("winget")
+            .args(["export", "--output"])
+            .arg(&path)
+            .args([
+                "--include-versions",
+                "--source",
+                "winget",
+                "--accept-source-agreements",
+                "--disable-interactivity",
+            ]),
+        45,
+    )
+    .ok();
     let parsed = std::fs::read_to_string(&path)
         .ok()
         .and_then(|s| serde_json::from_str::<Value>(s.trim_start_matches('\u{feff}')).ok());
@@ -101,6 +140,8 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
                         (p["PackageIdentifier"].as_str(), p["Version"].as_str())
                     {
                         installed.push(Installed {
+                            instance_id: None,
+                            edition: None,
                             package_id: canonical_package_id(id, &catalog).into(),
                             version: version.into(),
                             available_version: None,
@@ -116,6 +157,9 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
         return Err("Не удалось считать ни WinGet, ни реестр установленных программ".into());
     }
     for a in &catalog {
+        if a["id"] == "visual-studio" {
+            continue;
+        }
         let package = a["install"]["packageId"]
             .as_str()
             .map(String::from)
@@ -144,6 +188,8 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
             });
         if let Some(record) = detected {
             installed.push(Installed {
+                instance_id: None,
+                edition: None,
                 package_id: package,
                 version: record["DisplayVersion"]
                     .as_str()
@@ -169,26 +215,7 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
         if upgrades.status.success() {
             let text = String::from_utf8_lossy(&upgrades.stdout);
             for app in &mut installed {
-                for line in text.lines() {
-                    let parts: Vec<_> = line.split_whitespace().collect();
-                    if parts.iter().any(|p| {
-                        canonical_package_id(p, &catalog).eq_ignore_ascii_case(&app.package_id)
-                    }) {
-                        let available = if parts
-                            .last()
-                            .is_some_and(|p| p.eq_ignore_ascii_case("winget"))
-                        {
-                            parts.get(parts.len().saturating_sub(2))
-                        } else {
-                            parts.last()
-                        };
-                        if let Some(v) = available {
-                            if v.chars().next().is_some_and(|c| c.is_ascii_digit()) {
-                                app.available_version = Some((*v).into())
-                            }
-                        }
-                    }
-                }
+                app.available_version = parse_available_version(&text, &app.package_id, &catalog);
             }
         }
     }
@@ -211,13 +238,114 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
             })
         }) {
             installed.push(Installed {
+                instance_id: None,
+                edition: None,
                 package_id: format!("appdock:{id}"),
                 version: "Обнаружена служба; версию проверьте в мастере".into(),
                 available_version: None,
             })
         }
     }
+    if let Ok(path) = vswhere() {
+        let mut cmd = command(path);
+        cmd.args([
+            "-products",
+            "*",
+            "-version",
+            "[18.0,19.0)",
+            "-format",
+            "json",
+            "-utf8",
+        ]);
+        if let Ok(output) = bounded_output(&mut cmd, 45) {
+            if output.status.success() {
+                if let Ok(records) = serde_json::from_slice::<Vec<Value>>(&output.stdout) {
+                    let a = catalog::app("visual-studio")?;
+                    let before = installed.clone();
+                    if !records.is_empty() {
+                        installed.retain(|i| {
+                            !a["editions"].as_array().is_some_and(|eds| {
+                                eds.iter().any(|e| {
+                                    e["packageId"]
+                                        .as_str()
+                                        .is_some_and(|p| p.eq_ignore_ascii_case(&i.package_id))
+                                })
+                            })
+                        });
+                    }
+                    for record in records {
+                        let edition = record["productId"]
+                            .as_str()
+                            .unwrap_or("")
+                            .rsplit('.')
+                            .next()
+                            .unwrap_or("")
+                            .to_lowercase();
+                        if let Some(package) = a["editions"]
+                            .as_array()
+                            .and_then(|eds| eds.iter().find(|e| e["id"] == edition))
+                            .and_then(|e| e["packageId"].as_str())
+                        {
+                            installed.push(Installed {
+                                instance_id: record["instanceId"].as_str().map(String::from),
+                                edition: Some(edition),
+                                package_id: package.into(),
+                                version: record["installationVersion"]
+                                    .as_str()
+                                    .unwrap_or("Версия не подтверждена")
+                                    .into(),
+                                available_version: before
+                                    .iter()
+                                    .find(|i| i.package_id.eq_ignore_ascii_case(package))
+                                    .and_then(|i| i.available_version.clone()),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
     Ok(installed)
+}
+pub fn parse_available_version(text: &str, package: &str, catalog: &[Value]) -> Option<String> {
+    let mut clean = String::new();
+    let mut escape = false;
+    for ch in text.chars() {
+        if ch == '\u{1b}' {
+            escape = true;
+            continue;
+        }
+        if escape {
+            if ch.is_ascii_alphabetic() {
+                escape = false;
+            }
+            continue;
+        }
+        clean.push(ch);
+    }
+    clean.lines().find_map(|line| {
+        let parts: Vec<_> = line.split_whitespace().collect();
+        let pos = parts
+            .iter()
+            .position(|id| canonical_package_id(id, catalog).eq_ignore_ascii_case(package))?;
+        let tail = parts.get(pos + 1..)?;
+        if tail.len() < 2 {
+            return None;
+        }
+        let numbers: Vec<_> = tail
+            .iter()
+            .filter(|v| v.chars().next().is_some_and(|c| c.is_ascii_digit()))
+            .collect();
+        if numbers.len() >= 2
+            || (numbers.len() == 1
+                && ["unknown", "неизвестно", "неизвестная"]
+                    .contains(&tail[0].to_lowercase().as_str()))
+        {
+            numbers.last().map(|v| (**v).to_string())
+        } else {
+            None
+        }
+    })
 }
 // A product can change its preferred installer while retaining detection of
 // the previous WinGet package (for example Chrome MSI -> versioned EXE).
@@ -295,7 +423,11 @@ pub fn code_command() -> Result<Command, String> {
     Ok(cli)
 }
 pub fn download_dir(data_dir: &Path) -> PathBuf {
-    data_dir.join("downloads")
+    std::fs::read(data_dir.join("download-folder.json"))
+        .ok()
+        .and_then(|s| serde_json::from_slice::<PathBuf>(&s).ok())
+        .filter(|p| p.is_absolute() && p.is_dir())
+        .unwrap_or_else(|| data_dir.join("downloads"))
 }
 pub fn vswhere() -> Result<PathBuf, String> {
     ["ProgramFiles(x86)", "ProgramFiles"]
@@ -325,7 +457,7 @@ pub fn vs_instance(edition: &str, components: &[String]) -> Result<Option<PathBu
     if !components.is_empty() {
         cmd.arg("-requires").args(components);
     }
-    let result = cmd.output().map_err(|e| e.to_string())?;
+    let result = bounded_output(&mut cmd, 45)?;
     if !result.status.success() {
         return Err("Не удалось проверить компоненты через vswhere".into());
     }
@@ -375,6 +507,38 @@ mod tests {
         assert!(version_less("1.2.9", "1.2.10"));
         assert!(!version_less("2.0", "1.9"));
         assert!(!version_less("Unknown", "1.2"));
+    }
+    #[test]
+    fn upgrade_output_formats_do_not_guess_truncated_ids() {
+        let catalog = catalog::apps();
+        for line in [
+            "Chrome Google.Chrome.EXE 100.0 101.0 winget",
+            "Chrome\tGoogle.Chrome\t100.0\t101.0\twinget",
+            "\u{1b}[32mChrome Google.Chrome.EXE < 100.0 101.0 winget\u{1b}[0m",
+            "Chrome Google.Chrome.EXE Unknown 101.0 winget",
+            "Имя Google.Chrome.EXE Неизвестно 101.0",
+        ] {
+            assert_eq!(
+                parse_available_version(line, "Google.Chrome.EXE", &catalog),
+                Some("101.0".into())
+            );
+        }
+        assert_eq!(
+            parse_available_version(
+                "Chrome Google.Chrome.E… 100.0 101.0 winget",
+                "Google.Chrome.EXE",
+                &catalog
+            ),
+            None
+        );
+        assert_eq!(
+            parse_available_version(
+                "Chrome Google.Chrome.EXE 100.0 winget",
+                "Google.Chrome.EXE",
+                &catalog
+            ),
+            None
+        );
     }
     #[test]
     fn occupied_port_is_detected() {

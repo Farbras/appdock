@@ -1,179 +1,1246 @@
-import fs from 'node:fs';
-const date = '2026-10-28';
+import fs from "node:fs";
+const date = ""; // Unverified entries have no verification timestamp.
 // Candidate package IDs become executable integrations only after verify-integrations.mjs.
 const rows = [
-// id | name | publisher | category | description | official URL | candidate WinGet ID | icon
-['chrome','Google Chrome','Google','browsers','Быстрый браузер для повседневных задач','https://www.google.com/chrome/','Google.Chrome.EXE','googlechrome'],
-['safari','Apple Safari','Apple','browsers','Браузер для экосистемы Apple','https://www.apple.com/safari/','','safari'],
-['edge','Microsoft Edge','Microsoft','browsers','Браузер с интеграцией в Windows','https://www.microsoft.com/edge','Microsoft.Edge','microsoftedge'],
-['firefox','Mozilla Firefox','Mozilla','browsers','Открытый браузер с защитой приватности','https://www.mozilla.org/firefox/','Mozilla.Firefox','firefoxbrowser'],
-['brave','Brave','Brave Software','browsers','Приватность и блокировка рекламы','https://brave.com/','Brave.Brave','brave'],
-['tor','Tor Browser','The Tor Project','browsers','Приватный доступ через сеть Tor','https://www.torproject.org/','TorProject.TorBrowser','torbrowser'],
-['yandex','Яндекс Браузер','Яндекс','browsers','Браузер с сервисами Яндекса','https://browser.yandex.ru/','Yandex.Browser','yandex'],
-['opera','Opera','Opera','browsers','Браузер с удобной боковой панелью','https://www.opera.com/','Opera.Opera','opera'],
-['vivaldi','Vivaldi','Vivaldi Technologies','browsers','Гибко настраиваемый браузер','https://vivaldi.com/','Vivaldi.Vivaldi','vivaldi'],
-['arc','Arc','The Browser Company','browsers','Пространства и вертикальные вкладки','https://arc.net/','TheBrowserCompany.Arc','arc'],
-['duckduckgo','DuckDuckGo Browser','DuckDuckGo','browsers','Браузер с защитой от отслеживания','https://duckduckgo.com/app','DuckDuckGo.DesktopBrowser','duckduckgo'],
-['vscode','Visual Studio Code','Microsoft','development','Лёгкий редактор. Большие возможности.','https://code.visualstudio.com/','Microsoft.VisualStudioCode','visualstudiocode'],
-['webstorm','JetBrains WebStorm','JetBrains','development','IDE для JavaScript и TypeScript','https://www.jetbrains.com/webstorm/','JetBrains.WebStorm','webstorm'],
-['idea','JetBrains IntelliJ IDEA','JetBrains','development','Среда разработки для Java и Kotlin','https://www.jetbrains.com/idea/','JetBrains.IntelliJIDEA','intellijidea'],
-['pycharm','JetBrains PyCharm','JetBrains','development','IDE для Python и работы с данными','https://www.jetbrains.com/pycharm/','JetBrains.PyCharm','pycharm'],
-['phpstorm','JetBrains PhpStorm','JetBrains','development','Профессиональная среда для PHP','https://www.jetbrains.com/phpstorm/','JetBrains.PhpStorm','phpstorm'],
-['visual-studio','Microsoft Visual Studio 2026','Microsoft','development','Полная среда разработки для Windows','https://visualstudio.microsoft.com/vs/','Microsoft.VisualStudio.Community','visualstudio'],
-['xcode','Xcode','Apple','development','Для macOS, разработка для платформ Apple','https://developer.apple.com/xcode/','','xcode'],
-['android-studio','Android Studio','Google','development','Официальная IDE для Android','https://developer.android.com/studio','Google.AndroidStudio','androidstudio'],
-['sublime','Sublime Text','Sublime HQ','development','Быстрый редактор кода и текста','https://www.sublimetext.com/','SublimeHQ.SublimeText.4','sublimetext'],
-['notepad','Notepad++','Don Ho','development','Компактный редактор для Windows','https://notepad-plus-plus.org/','Notepad++.Notepad++','notepadplusplus'],
-['vim','Vim','Vim project','development','Классический модальный редактор','https://www.vim.org/','vim.vim','vim'],
-['neovim','Neovim','Neovim project','development','Расширяемый модальный редактор','https://neovim.io/','Neovim.Neovim','neovim'],
-['eclipse','Eclipse IDE','Eclipse Foundation','development','Среда разработки Java и плагинов','https://www.eclipse.org/ide/','EclipseFoundation.Eclipse.Java','eclipseide'],
-['git','Git','The Git Development Community','development','Контроль версий для ваших проектов','https://git-scm.com/','Git.Git','git'],
-['github','GitHub','GitHub / Microsoft','development','Веб-платформа для кода и совместной работы','https://github.com/','','github'],
-['gitlab','GitLab','GitLab','development','Веб-платформа для DevSecOps','https://gitlab.com/','','gitlab'],
-['bitbucket','Bitbucket','Atlassian','development','Веб-платформа для Git-репозиториев','https://bitbucket.org/','','bitbucket'],
-['github-desktop','GitHub Desktop','GitHub / Microsoft','development','Наглядная работа с Git на компьютере','https://desktop.github.com/','GitHub.GitHubDesktop','github'],
-['tortoisegit','TortoiseGit','TortoiseGit team','development','Git прямо в Проводнике Windows','https://tortoisegit.org/','TortoiseGit.TortoiseGit','git'],
-['zeal','Zeal','Zeal contributors','development','Документация разработчика офлайн','https://zealdocs.org/','OlegShparber.Zeal','zeal'],
-['python','Python 3.12','Python Software Foundation','development','Язык для автоматизации, данных и разработки','https://www.python.org/downloads/release/python-31210/','Python.Python.3.12','python'],
-['atom','Atom','GitHub','development','Архивный редактор. Поддержка завершена','https://github.com/atom/atom/releases','','atom'],
-['docker','Docker Desktop','Docker','virtualization','Контейнеры и локальная среда разработки','https://www.docker.com/products/docker-desktop/','Docker.DockerDesktop','docker'],
-['podman','Podman','Containers project / Red Hat','virtualization','CLI для контейнеров и виртуальная машина','https://podman.io/','RedHat.Podman','podman'],
-['virtualbox','VirtualBox','Oracle','virtualization','Виртуальные машины на вашем компьютере','https://www.virtualbox.org/','Oracle.VirtualBox','virtualbox'],
-['vmware','VMware Workstation Pro','Broadcom','virtualization','Настольный гипервизор для Windows','https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion','','vmware'],
-['jira','Jira','Atlassian','productivity','Планирование проектов и задач в браузере','https://www.atlassian.com/software/jira','','jira'],
-['trello','Trello','Atlassian','productivity','Доски и задачи. Есть клиент Microsoft Store','https://trello.com/','','trello'],
-['youtrack','YouTrack','JetBrains','productivity','Веб-трекер задач и база знаний','https://www.jetbrains.com/youtrack/','','youtrack'],
-['notion','Notion','Notion Labs','productivity','Заметки, проекты и база знаний','https://www.notion.com/desktop','Notion.Notion','notion'],
-['wordcraft','WordCraft','ArtCraft / Brandon Thomas','documents','Текстовый редактор ArtCraft','https://getartcraft.com/apps/wordcraft','','wordcraft'],
-['gridcraft','GridCraft','ArtCraft / Brandon Thomas','documents','Электронные таблицы ArtCraft','https://getartcraft.com/apps/gridcraft','','gridcraft'],
-['deckcraft','DeckCraft','ArtCraft / Brandon Thomas','documents','Презентации ArtCraft','https://getartcraft.com/apps/deckcraft','','deckcraft'],
-['word','Microsoft Word','Microsoft','documents','Текстовый процессор в составе Microsoft 365','https://www.microsoft.com/microsoft-365/word','','microsoftword'],
-['google-docs','Google Документы','Google','documents','Совместная работа с документами онлайн','https://docs.google.com/','','googledocs'],
-['libreoffice','LibreOffice Writer','The Document Foundation','documents','Документы в составе свободного офисного пакета','https://www.libreoffice.org/','TheDocumentFoundation.LibreOffice','libreoffice'],
-['onlyoffice','ONLYOFFICE','Ascensio System SIA','documents','Документы, таблицы и презентации','https://www.onlyoffice.com/desktop.aspx','ONLYOFFICE.DesktopEditors','onlyoffice'],
-['wps','WPS Office Writer','Kingsoft','documents','Текстовый редактор в составе WPS Office','https://www.wps.com/','Kingsoft.WPSOffice','wpsoffice'],
-['myoffice','МойОфис Текст','Новые облачные технологии','documents','Текстовый редактор в пакете МойОфис','https://myoffice.ru/','','myoffice'],
-['r7','Р7-Офис','Р7','documents','Офисный пакет для документов и таблиц','https://r7-office.ru/','','r7'],
-['photocraft','PhotoCraft','ArtCraft / Brandon Thomas','graphics','Растровый редактор ArtCraft','https://getartcraft.com/apps/photocraft','','photocraft'],
-['gimp','GIMP','The GIMP Development Team','graphics','Свободный редактор изображений','https://www.gimp.org/','GIMP.GIMP.3','gimp'],
-['autocad','AutoCAD','Autodesk','cad','Профессиональное проектирование и чертежи','https://www.autodesk.com/products/autocad/overview','','autodesk'],
-['kompas','КОМПАС-3D','АСКОН','cad','Трёхмерное моделирование и конструкторская документация','https://kompas.ru/','','kompas'],
-['solidworks','SolidWorks','Dassault Systèmes','cad','Параметрическое моделирование деталей и сборок','https://www.solidworks.com/','','solidworks'],
-['inventor','Autodesk Inventor','Autodesk','cad','Машиностроительное проектирование','https://www.autodesk.com/products/inventor/overview','','autodesk'],
-['fusion','Autodesk Fusion','Autodesk','cad','Проектирование и производство в единой среде','https://www.autodesk.com/products/fusion-360/overview','','autodesk'],
-['nanocad','nanoCAD','Нанософт','cad','Платформа проектирования с поддержкой DWG','https://nanocad.ru/','','nanocad'],
-['catia','CATIA','Dassault Systèmes','cad','Инженерное проектирование сложных изделий','https://www.3ds.com/products/catia','','catia'],
-['creo','PTC Creo','PTC','cad','Параметрическая САПР для разработки изделий','https://www.ptc.com/en/products/creo','','creo'],
-['freecad','FreeCAD','FreeCAD community','cad','Свободное параметрическое 3D-моделирование','https://www.freecad.org/','FreeCAD.FreeCAD','freecad'],
-['librecad','LibreCAD','LibreCAD community','cad','Свободная САПР для двумерных чертежей','https://librecad.org/','LibreCAD.LibreCAD','librecad'],
-['openscad','OpenSCAD','OpenSCAD developers','cad','Твердотельное моделирование через код','https://openscad.org/','OpenSCAD.OpenSCAD','openscad'],
-['archicad','Archicad','Graphisoft','cad','BIM-проектирование зданий','https://graphisoft.com/solutions/archicad','','archicad'],
-['revit','Revit','Autodesk','cad','Информационное моделирование зданий','https://www.autodesk.com/products/revit/overview','','autodesk'],
-['mysql','MySQL','Oracle','databases','Сервер реляционной базы данных','https://dev.mysql.com/downloads/installer/','','mysql'],
-['postgres','PostgreSQL','PostgreSQL Global Development Group','databases','Реляционная СУБД для приложений','https://www.postgresql.org/download/windows/','','postgresql'],
-['sqlserver','Microsoft SQL Server','Microsoft','databases','Сервер баз данных с выбором редакции','https://www.microsoft.com/sql-server/sql-server-downloads','','microsoftsqlserver'],
-['oracle','Oracle Database','Oracle','databases','Сервер баз данных для корпоративных систем','https://www.oracle.com/database/technologies/oracle-database-software-downloads.html','','oracle'],
-['sqlite','SQLite','SQLite authors','databases','Встраиваемая СУБД и консольные инструменты','https://sqlite.org/download.html','SQLite.SQLite','sqlite'],
-['mongodb','MongoDB','MongoDB','databases','Сервер документной базы данных','https://www.mongodb.com/try/download/community','','mongodb'],
-['redis','Redis','Redis','databases','Хранилище данных. Windows: WSL или контейнер','https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/','','redis'],
-['cassandra','Apache Cassandra','Apache Software Foundation','databases','Распределённая БД. Windows: контейнер','https://cassandra.apache.org/doc/latest/cassandra/getting_started/installing.html','','apachecassandra'],
-['clickhouse','ClickHouse','ClickHouse','databases','Аналитическая СУБД. Windows: WSL или контейнер','https://clickhouse.com/docs/install','','clickhouse'],
-['mariadb','MariaDB','MariaDB Foundation','databases','Открытый сервер реляционных баз данных','https://mariadb.org/download/','','mariadb'],
-['dynamodb','Amazon DynamoDB','Amazon Web Services','databases','Облачная NoSQL-база данных AWS','https://console.aws.amazon.com/dynamodbv2/','','amazondynamodb'],
-['firebase','Firebase Realtime Database','Google','databases','Облачная база данных реального времени','https://console.firebase.google.com/','','firebase'],
-['neo4j','Neo4j','Neo4j','databases','Графовая база данных и локальная среда','https://neo4j.com/download/','','neo4j'],
-['dbeaver','DBeaver','DBeaver','databases','Универсальный клиент для баз данных','https://dbeaver.io/','DBeaver.DBeaver.Community','dbeaver'],
+  // id | name | publisher | category | description | official URL | candidate WinGet ID | icon
+  [
+    "chrome",
+    "Google Chrome",
+    "Google",
+    "browsers",
+    "Быстрый браузер для повседневных задач",
+    "https://www.google.com/chrome/",
+    "Google.Chrome.EXE",
+    "googlechrome",
+  ],
+  [
+    "safari",
+    "Apple Safari",
+    "Apple",
+    "browsers",
+    "Браузер для экосистемы Apple",
+    "https://www.apple.com/safari/",
+    "",
+    "safari",
+  ],
+  [
+    "edge",
+    "Microsoft Edge",
+    "Microsoft",
+    "browsers",
+    "Браузер с интеграцией в Windows",
+    "https://www.microsoft.com/edge",
+    "Microsoft.Edge",
+    "microsoftedge",
+  ],
+  [
+    "firefox",
+    "Mozilla Firefox",
+    "Mozilla",
+    "browsers",
+    "Открытый браузер с защитой приватности",
+    "https://www.mozilla.org/firefox/",
+    "Mozilla.Firefox",
+    "firefoxbrowser",
+  ],
+  [
+    "brave",
+    "Brave",
+    "Brave Software",
+    "browsers",
+    "Приватность и блокировка рекламы",
+    "https://brave.com/",
+    "Brave.Brave",
+    "brave",
+  ],
+  [
+    "tor",
+    "Tor Browser",
+    "The Tor Project",
+    "browsers",
+    "Приватный доступ через сеть Tor",
+    "https://www.torproject.org/",
+    "TorProject.TorBrowser",
+    "torbrowser",
+  ],
+  [
+    "yandex",
+    "Яндекс Браузер",
+    "Яндекс",
+    "browsers",
+    "Браузер с сервисами Яндекса",
+    "https://browser.yandex.ru/",
+    "Yandex.Browser",
+    "yandex",
+  ],
+  [
+    "opera",
+    "Opera",
+    "Opera",
+    "browsers",
+    "Браузер с удобной боковой панелью",
+    "https://www.opera.com/",
+    "Opera.Opera",
+    "opera",
+  ],
+  [
+    "vivaldi",
+    "Vivaldi",
+    "Vivaldi Technologies",
+    "browsers",
+    "Гибко настраиваемый браузер",
+    "https://vivaldi.com/",
+    "Vivaldi.Vivaldi",
+    "vivaldi",
+  ],
+  [
+    "arc",
+    "Arc",
+    "The Browser Company",
+    "browsers",
+    "Пространства и вертикальные вкладки",
+    "https://arc.net/",
+    "TheBrowserCompany.Arc",
+    "arc",
+  ],
+  [
+    "duckduckgo",
+    "DuckDuckGo Browser",
+    "DuckDuckGo",
+    "browsers",
+    "Браузер с защитой от отслеживания",
+    "https://duckduckgo.com/app",
+    "DuckDuckGo.DesktopBrowser",
+    "duckduckgo",
+  ],
+  [
+    "vscode",
+    "Visual Studio Code",
+    "Microsoft",
+    "development",
+    "Лёгкий редактор. Большие возможности.",
+    "https://code.visualstudio.com/",
+    "Microsoft.VisualStudioCode",
+    "visualstudiocode",
+  ],
+  [
+    "webstorm",
+    "JetBrains WebStorm",
+    "JetBrains",
+    "development",
+    "IDE для JavaScript и TypeScript",
+    "https://www.jetbrains.com/webstorm/",
+    "JetBrains.WebStorm",
+    "webstorm",
+  ],
+  [
+    "idea",
+    "JetBrains IntelliJ IDEA",
+    "JetBrains",
+    "development",
+    "Среда разработки для Java и Kotlin",
+    "https://www.jetbrains.com/idea/",
+    "JetBrains.IntelliJIDEA",
+    "intellijidea",
+  ],
+  [
+    "pycharm",
+    "JetBrains PyCharm",
+    "JetBrains",
+    "development",
+    "IDE для Python и работы с данными",
+    "https://www.jetbrains.com/pycharm/",
+    "JetBrains.PyCharm",
+    "pycharm",
+  ],
+  [
+    "phpstorm",
+    "JetBrains PhpStorm",
+    "JetBrains",
+    "development",
+    "Профессиональная среда для PHP",
+    "https://www.jetbrains.com/phpstorm/",
+    "JetBrains.PhpStorm",
+    "phpstorm",
+  ],
+  [
+    "visual-studio",
+    "Microsoft Visual Studio 2026",
+    "Microsoft",
+    "development",
+    "Полная среда разработки для Windows",
+    "https://visualstudio.microsoft.com/vs/",
+    "Microsoft.VisualStudio.Community",
+    "visualstudio",
+  ],
+  [
+    "xcode",
+    "Xcode",
+    "Apple",
+    "development",
+    "Для macOS, разработка для платформ Apple",
+    "https://developer.apple.com/xcode/",
+    "",
+    "xcode",
+  ],
+  [
+    "android-studio",
+    "Android Studio",
+    "Google",
+    "development",
+    "Официальная IDE для Android",
+    "https://developer.android.com/studio",
+    "Google.AndroidStudio",
+    "androidstudio",
+  ],
+  [
+    "sublime",
+    "Sublime Text",
+    "Sublime HQ",
+    "development",
+    "Быстрый редактор кода и текста",
+    "https://www.sublimetext.com/",
+    "SublimeHQ.SublimeText.4",
+    "sublimetext",
+  ],
+  [
+    "notepad",
+    "Notepad++",
+    "Don Ho",
+    "development",
+    "Компактный редактор для Windows",
+    "https://notepad-plus-plus.org/",
+    "Notepad++.Notepad++",
+    "notepadplusplus",
+  ],
+  [
+    "vim",
+    "Vim",
+    "Vim project",
+    "development",
+    "Классический модальный редактор",
+    "https://www.vim.org/",
+    "vim.vim",
+    "vim",
+  ],
+  [
+    "neovim",
+    "Neovim",
+    "Neovim project",
+    "development",
+    "Расширяемый модальный редактор",
+    "https://neovim.io/",
+    "Neovim.Neovim",
+    "neovim",
+  ],
+  [
+    "eclipse",
+    "Eclipse IDE",
+    "Eclipse Foundation",
+    "development",
+    "Среда разработки Java и плагинов",
+    "https://www.eclipse.org/ide/",
+    "EclipseFoundation.Eclipse.Java",
+    "eclipseide",
+  ],
+  [
+    "git",
+    "Git",
+    "The Git Development Community",
+    "development",
+    "Контроль версий для ваших проектов",
+    "https://git-scm.com/",
+    "Git.Git",
+    "git",
+  ],
+  [
+    "github",
+    "GitHub",
+    "GitHub / Microsoft",
+    "development",
+    "Веб-платформа для кода и совместной работы",
+    "https://github.com/",
+    "",
+    "github",
+  ],
+  [
+    "gitlab",
+    "GitLab",
+    "GitLab",
+    "development",
+    "Веб-платформа для DevSecOps",
+    "https://gitlab.com/",
+    "",
+    "gitlab",
+  ],
+  [
+    "bitbucket",
+    "Bitbucket",
+    "Atlassian",
+    "development",
+    "Веб-платформа для Git-репозиториев",
+    "https://bitbucket.org/",
+    "",
+    "bitbucket",
+  ],
+  [
+    "github-desktop",
+    "GitHub Desktop",
+    "GitHub / Microsoft",
+    "development",
+    "Наглядная работа с Git на компьютере",
+    "https://desktop.github.com/",
+    "GitHub.GitHubDesktop",
+    "github",
+  ],
+  [
+    "tortoisegit",
+    "TortoiseGit",
+    "TortoiseGit team",
+    "development",
+    "Git прямо в Проводнике Windows",
+    "https://tortoisegit.org/",
+    "TortoiseGit.TortoiseGit",
+    "git",
+  ],
+  [
+    "zeal",
+    "Zeal",
+    "Zeal contributors",
+    "development",
+    "Документация разработчика офлайн",
+    "https://zealdocs.org/",
+    "OlegShparber.Zeal",
+    "zeal",
+  ],
+  [
+    "python",
+    "Python 3.12",
+    "Python Software Foundation",
+    "development",
+    "Язык для автоматизации, данных и разработки",
+    "https://www.python.org/downloads/release/python-31210/",
+    "Python.Python.3.12",
+    "python",
+  ],
+  [
+    "atom",
+    "Atom",
+    "GitHub",
+    "development",
+    "Архивный редактор. Поддержка завершена",
+    "https://github.com/atom/atom/releases",
+    "",
+    "atom",
+  ],
+  [
+    "docker",
+    "Docker Desktop",
+    "Docker",
+    "virtualization",
+    "Контейнеры и локальная среда разработки",
+    "https://www.docker.com/products/docker-desktop/",
+    "Docker.DockerDesktop",
+    "docker",
+  ],
+  [
+    "podman",
+    "Podman",
+    "Containers project / Red Hat",
+    "virtualization",
+    "CLI для контейнеров и виртуальная машина",
+    "https://podman.io/",
+    "RedHat.Podman",
+    "podman",
+  ],
+  [
+    "virtualbox",
+    "VirtualBox",
+    "Oracle",
+    "virtualization",
+    "Виртуальные машины на вашем компьютере",
+    "https://www.virtualbox.org/",
+    "Oracle.VirtualBox",
+    "virtualbox",
+  ],
+  [
+    "vmware",
+    "VMware Workstation Pro",
+    "Broadcom",
+    "virtualization",
+    "Настольный гипервизор для Windows",
+    "https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion",
+    "",
+    "vmware",
+  ],
+  [
+    "jira",
+    "Jira",
+    "Atlassian",
+    "productivity",
+    "Планирование проектов и задач в браузере",
+    "https://www.atlassian.com/software/jira",
+    "",
+    "jira",
+  ],
+  [
+    "trello",
+    "Trello",
+    "Atlassian",
+    "productivity",
+    "Доски и задачи. Есть клиент Microsoft Store",
+    "https://trello.com/",
+    "",
+    "trello",
+  ],
+  [
+    "youtrack",
+    "YouTrack",
+    "JetBrains",
+    "productivity",
+    "Веб-трекер задач и база знаний",
+    "https://www.jetbrains.com/youtrack/",
+    "",
+    "youtrack",
+  ],
+  [
+    "notion",
+    "Notion",
+    "Notion Labs",
+    "productivity",
+    "Заметки, проекты и база знаний",
+    "https://www.notion.com/desktop",
+    "Notion.Notion",
+    "notion",
+  ],
+  [
+    "wordcraft",
+    "WordCraft",
+    "ArtCraft / Brandon Thomas",
+    "documents",
+    "Текстовый редактор ArtCraft",
+    "https://getartcraft.com/apps/wordcraft",
+    "",
+    "wordcraft",
+  ],
+  [
+    "gridcraft",
+    "GridCraft",
+    "ArtCraft / Brandon Thomas",
+    "documents",
+    "Электронные таблицы ArtCraft",
+    "https://getartcraft.com/apps/gridcraft",
+    "",
+    "gridcraft",
+  ],
+  [
+    "deckcraft",
+    "DeckCraft",
+    "ArtCraft / Brandon Thomas",
+    "documents",
+    "Презентации ArtCraft",
+    "https://getartcraft.com/apps/deckcraft",
+    "",
+    "deckcraft",
+  ],
+  [
+    "word",
+    "Microsoft Word",
+    "Microsoft",
+    "documents",
+    "Текстовый процессор в составе Microsoft 365",
+    "https://www.microsoft.com/microsoft-365/word",
+    "",
+    "microsoftword",
+  ],
+  [
+    "google-docs",
+    "Google Документы",
+    "Google",
+    "documents",
+    "Совместная работа с документами онлайн",
+    "https://docs.google.com/",
+    "",
+    "googledocs",
+  ],
+  [
+    "libreoffice",
+    "LibreOffice Writer",
+    "The Document Foundation",
+    "documents",
+    "Документы в составе свободного офисного пакета",
+    "https://www.libreoffice.org/",
+    "TheDocumentFoundation.LibreOffice",
+    "libreoffice",
+  ],
+  [
+    "onlyoffice",
+    "ONLYOFFICE",
+    "Ascensio System SIA",
+    "documents",
+    "Документы, таблицы и презентации",
+    "https://www.onlyoffice.com/desktop.aspx",
+    "ONLYOFFICE.DesktopEditors",
+    "onlyoffice",
+  ],
+  [
+    "wps",
+    "WPS Office Writer",
+    "Kingsoft",
+    "documents",
+    "Текстовый редактор в составе WPS Office",
+    "https://www.wps.com/",
+    "Kingsoft.WPSOffice",
+    "wpsoffice",
+  ],
+  [
+    "myoffice",
+    "МойОфис Текст",
+    "Новые облачные технологии",
+    "documents",
+    "Текстовый редактор в пакете МойОфис",
+    "https://myoffice.ru/",
+    "",
+    "myoffice",
+  ],
+  [
+    "r7",
+    "Р7-Офис",
+    "Р7",
+    "documents",
+    "Офисный пакет для документов и таблиц",
+    "https://r7-office.ru/",
+    "",
+    "r7",
+  ],
+  [
+    "photocraft",
+    "PhotoCraft",
+    "ArtCraft / Brandon Thomas",
+    "graphics",
+    "Растровый редактор ArtCraft",
+    "https://getartcraft.com/apps/photocraft",
+    "",
+    "photocraft",
+  ],
+  [
+    "gimp",
+    "GIMP",
+    "The GIMP Development Team",
+    "graphics",
+    "Свободный редактор изображений",
+    "https://www.gimp.org/",
+    "GIMP.GIMP.3",
+    "gimp",
+  ],
+  [
+    "autocad",
+    "AutoCAD",
+    "Autodesk",
+    "cad",
+    "Профессиональное проектирование и чертежи",
+    "https://www.autodesk.com/products/autocad/overview",
+    "",
+    "autodesk",
+  ],
+  [
+    "kompas",
+    "КОМПАС-3D",
+    "АСКОН",
+    "cad",
+    "Трёхмерное моделирование и конструкторская документация",
+    "https://kompas.ru/",
+    "",
+    "kompas",
+  ],
+  [
+    "solidworks",
+    "SolidWorks",
+    "Dassault Systèmes",
+    "cad",
+    "Параметрическое моделирование деталей и сборок",
+    "https://www.solidworks.com/",
+    "",
+    "solidworks",
+  ],
+  [
+    "inventor",
+    "Autodesk Inventor",
+    "Autodesk",
+    "cad",
+    "Машиностроительное проектирование",
+    "https://www.autodesk.com/products/inventor/overview",
+    "",
+    "autodesk",
+  ],
+  [
+    "fusion",
+    "Autodesk Fusion",
+    "Autodesk",
+    "cad",
+    "Проектирование и производство в единой среде",
+    "https://www.autodesk.com/products/fusion-360/overview",
+    "",
+    "autodesk",
+  ],
+  [
+    "nanocad",
+    "nanoCAD",
+    "Нанософт",
+    "cad",
+    "Платформа проектирования с поддержкой DWG",
+    "https://nanocad.ru/",
+    "",
+    "nanocad",
+  ],
+  [
+    "catia",
+    "CATIA",
+    "Dassault Systèmes",
+    "cad",
+    "Инженерное проектирование сложных изделий",
+    "https://www.3ds.com/products/catia",
+    "",
+    "catia",
+  ],
+  [
+    "creo",
+    "PTC Creo",
+    "PTC",
+    "cad",
+    "Параметрическая САПР для разработки изделий",
+    "https://www.ptc.com/en/products/creo",
+    "",
+    "creo",
+  ],
+  [
+    "freecad",
+    "FreeCAD",
+    "FreeCAD community",
+    "cad",
+    "Свободное параметрическое 3D-моделирование",
+    "https://www.freecad.org/",
+    "FreeCAD.FreeCAD",
+    "freecad",
+  ],
+  [
+    "librecad",
+    "LibreCAD",
+    "LibreCAD community",
+    "cad",
+    "Свободная САПР для двумерных чертежей",
+    "https://librecad.org/",
+    "LibreCAD.LibreCAD",
+    "librecad",
+  ],
+  [
+    "openscad",
+    "OpenSCAD",
+    "OpenSCAD developers",
+    "cad",
+    "Твердотельное моделирование через код",
+    "https://openscad.org/",
+    "OpenSCAD.OpenSCAD",
+    "openscad",
+  ],
+  [
+    "archicad",
+    "Archicad",
+    "Graphisoft",
+    "cad",
+    "BIM-проектирование зданий",
+    "https://graphisoft.com/solutions/archicad",
+    "",
+    "archicad",
+  ],
+  [
+    "revit",
+    "Revit",
+    "Autodesk",
+    "cad",
+    "Информационное моделирование зданий",
+    "https://www.autodesk.com/products/revit/overview",
+    "",
+    "autodesk",
+  ],
+  [
+    "mysql",
+    "MySQL",
+    "Oracle",
+    "databases",
+    "Сервер реляционной базы данных",
+    "https://dev.mysql.com/downloads/installer/",
+    "",
+    "mysql",
+  ],
+  [
+    "postgres",
+    "PostgreSQL",
+    "PostgreSQL Global Development Group",
+    "databases",
+    "Реляционная СУБД для приложений",
+    "https://www.postgresql.org/download/windows/",
+    "",
+    "postgresql",
+  ],
+  [
+    "sqlserver",
+    "Microsoft SQL Server",
+    "Microsoft",
+    "databases",
+    "Сервер баз данных с выбором редакции",
+    "https://www.microsoft.com/sql-server/sql-server-downloads",
+    "",
+    "microsoftsqlserver",
+  ],
+  [
+    "oracle",
+    "Oracle Database",
+    "Oracle",
+    "databases",
+    "Сервер баз данных для корпоративных систем",
+    "https://www.oracle.com/database/technologies/oracle-database-software-downloads.html",
+    "",
+    "oracle",
+  ],
+  [
+    "sqlite",
+    "SQLite",
+    "SQLite authors",
+    "databases",
+    "Встраиваемая СУБД и консольные инструменты",
+    "https://sqlite.org/download.html",
+    "SQLite.SQLite",
+    "sqlite",
+  ],
+  [
+    "mongodb",
+    "MongoDB",
+    "MongoDB",
+    "databases",
+    "Сервер документной базы данных",
+    "https://www.mongodb.com/try/download/community",
+    "",
+    "mongodb",
+  ],
+  [
+    "redis",
+    "Redis",
+    "Redis",
+    "databases",
+    "Хранилище данных. Windows: WSL или контейнер",
+    "https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/",
+    "",
+    "redis",
+  ],
+  [
+    "cassandra",
+    "Apache Cassandra",
+    "Apache Software Foundation",
+    "databases",
+    "Распределённая БД. Windows: контейнер",
+    "https://cassandra.apache.org/doc/latest/cassandra/getting_started/installing.html",
+    "",
+    "apachecassandra",
+  ],
+  [
+    "clickhouse",
+    "ClickHouse",
+    "ClickHouse",
+    "databases",
+    "Аналитическая СУБД. Windows: WSL или контейнер",
+    "https://clickhouse.com/docs/install",
+    "",
+    "clickhouse",
+  ],
+  [
+    "mariadb",
+    "MariaDB",
+    "MariaDB Foundation",
+    "databases",
+    "Открытый сервер реляционных баз данных",
+    "https://mariadb.org/download/",
+    "",
+    "mariadb",
+  ],
+  [
+    "dynamodb",
+    "Amazon DynamoDB",
+    "Amazon Web Services",
+    "databases",
+    "Облачная NoSQL-база данных AWS",
+    "https://console.aws.amazon.com/dynamodbv2/",
+    "",
+    "amazondynamodb",
+  ],
+  [
+    "firebase",
+    "Firebase Realtime Database",
+    "Google",
+    "databases",
+    "Облачная база данных реального времени",
+    "https://console.firebase.google.com/",
+    "",
+    "firebase",
+  ],
+  [
+    "neo4j",
+    "Neo4j",
+    "Neo4j",
+    "databases",
+    "Графовая база данных и локальная среда",
+    "https://neo4j.com/download/",
+    "",
+    "neo4j",
+  ],
+  [
+    "dbeaver",
+    "DBeaver",
+    "DBeaver",
+    "databases",
+    "Универсальный клиент для баз данных",
+    "https://dbeaver.io/",
+    "DBeaver.DBeaver.Community",
+    "dbeaver",
+  ],
 ];
-const web = ['github','gitlab','bitbucket','jira','trello','youtrack','google-docs'];
-const cloud = ['dynamodb','firebase'];
-const servers = ['mysql','postgres','sqlserver','oracle','mongodb','mariadb','neo4j'];
-const commercial = ['word','myoffice','r7','autocad','kompas','solidworks','inventor','fusion','nanocad','catia','creo','archicad','revit','phpstorm','sublime'];
-const colors = {chrome:'#df594b',safari:'#2f98f7',edge:'#20b0aa',firefox:'#ff8436',brave:'#ff663d',tor:'#a66bd4',yandex:'#f33',opera:'#f63452',vivaldi:'#ef4753',arc:'#a285ef',duckduckgo:'#de5833',vscode:'#28a9ef',webstorm:'#04d7c3',idea:'#ed547d',pycharm:'#a8d950',phpstorm:'#ae66f6','visual-studio':'#b582e8',python:'#e5bf53',git:'#f26849',docker:'#39a5f7',podman:'#ab83d3',notion:'#dedee4',gimp:'#a7a49d',dbeaver:'#b99777',postgres:'#60a2ce'};
-const notes = {
- safari:'Apple не поддерживает актуальную версию Safari для Windows. Старый Windows-дистрибутив не предлагается.',
- xcode:'Доступен только для macOS. В Windows можно открыть официальный источник и требования.',
- atom:'Поддержка прекращена 15 декабря 2022 года. Только официальный архив GitHub; автоматическая установка отключена.',
- arc:'Развитие продукта ограничено. Перед использованием проверьте актуальный статус поддержки у The Browser Company.',
- trello:'Официальный клиент Windows доступен в Microsoft Store. Здесь по умолчанию используется веб-версия; клиент устанавливается отдельно через официальный сайт.',
- jira:'Официальный универсальный настольный клиент Windows не подтверждён. Используется веб-платформа; серверное развёртывание не включено.',
- youtrack:'Официальный настольный клиент не подтверждён. Открывается веб-сервис, сервер устанавливается отдельно.',
- github:'Открывается веб-платформа. GitHub Desktop — отдельная запись. CLI и сервер не устанавливаются.',
- gitlab:'Открывается GitLab.com. GitLab Self-Managed и CLI не включены в эту задачу.',
- bitbucket:'Открывается веб-платформа. Серверные продукты и CLI не включены.',
- 'google-docs':'Открывается веб-сервис. Можно создать обычный интернет-ярлык .url; автоматическая установка PWA не выполняется.',
- word:'Microsoft Word устанавливается в составе выбранного пакета Microsoft 365 / Office. Требуются лицензия, учётная запись и выбор состава на сайте Microsoft.',
- libreoffice:'Устанавливается весь пакет LibreOffice: Writer, Calc, Impress, Draw, Base и Math.',
- wps:'Устанавливается WPS Office: Writer, Spreadsheets и Presentation. Дополнительные функции и условия зависят от редакции.',
- onlyoffice:'Устанавливается ONLYOFFICE Desktop Editors: документы, таблицы, презентации и PDF.',
- python:'Ветка 3.12: последний релиз 3.12.16 (исходный код). Последний официальный традиционный Windows-установщик — 3.12.10. Устанавливается именно 3.12.10.',
- sqlite:'Встраиваемая СУБД, не сервер. Устанавливаются официальные консольные инструменты; служба и порт не создаются.',
- docker:'Docker Desktop требует аппаратной виртуализации, WSL 2 или Hyper-V и подходящей редакции Windows. Коммерческое использование в крупных организациях может требовать подписки. Компоненты ОС не включаются автоматически.',
- podman:'Этот пакет — Podman CLI. Podman Desktop и podman machine — отдельные явно выбираемые шаги; виртуальная машина автоматически не создаётся.',
- virtualbox:'Проверьте аппаратную виртуализацию и совместимость с Hyper-V. Extension Pack не включён и имеет отдельную лицензию.',
- vmware:'В Windows выбран Workstation Pro; Fusion Pro — для macOS. Workstation Pro бесплатен для личного, образовательного и коммерческого использования по условиям Broadcom. Загрузка через официальный портал может потребовать аккаунт.',
- 'android-studio':'Устанавливается только IDE. Android SDK, Android Emulator и образы устройств выбираются в SDK Manager; лицензии принимаются отдельно.',
- redis:'Официального нативного Redis Server для Windows нет в этой интеграции. Выберите WSL или контейнер; локальный сервер запускается по инструкции отдельно.',
- cassandra:'Нативная установка Windows не автоматизирована. Рекомендуемый здесь путь — официальный контейнер; создание кластера требует отдельной настройки.',
- clickhouse:'В Windows используйте WSL или официальный контейнер. Локальные данные и существующие экземпляры автоматически не меняются.',
- dynamodb:'Это облачная консоль AWS; ресурсы не создаются. DynamoDB Local — отдельное локальное окружение без связи с облачными данными.',
- firebase:'Это облачная консоль Firebase; проекты не создаются. Emulator Suite — отдельная локальная среда, нужны Node.js, Firebase CLI и Java для некоторых эмуляторов.',
+const web = [
+  "github",
+  "gitlab",
+  "bitbucket",
+  "jira",
+  "trello",
+  "youtrack",
+  "google-docs",
+];
+const cloud = ["dynamodb", "firebase"];
+const servers = [
+  "mysql",
+  "postgres",
+  "sqlserver",
+  "oracle",
+  "mongodb",
+  "mariadb",
+  "neo4j",
+];
+const commercial = [
+  "word",
+  "myoffice",
+  "r7",
+  "autocad",
+  "kompas",
+  "solidworks",
+  "inventor",
+  "fusion",
+  "nanocad",
+  "catia",
+  "creo",
+  "archicad",
+  "revit",
+  "phpstorm",
+  "sublime",
+];
+const colors = {
+  chrome: "#df594b",
+  safari: "#2f98f7",
+  edge: "#20b0aa",
+  firefox: "#ff8436",
+  brave: "#ff663d",
+  tor: "#a66bd4",
+  yandex: "#f33",
+  opera: "#f63452",
+  vivaldi: "#ef4753",
+  arc: "#a285ef",
+  duckduckgo: "#de5833",
+  vscode: "#28a9ef",
+  webstorm: "#04d7c3",
+  idea: "#ed547d",
+  pycharm: "#a8d950",
+  phpstorm: "#ae66f6",
+  "visual-studio": "#b582e8",
+  python: "#e5bf53",
+  git: "#f26849",
+  docker: "#39a5f7",
+  podman: "#ab83d3",
+  notion: "#dedee4",
+  gimp: "#a7a49d",
+  dbeaver: "#b99777",
+  postgres: "#60a2ce",
 };
-const apps = rows.map(([id,name,publisher,category,description,website,packageId,icon]) => ({
- id,name,publisher,category,description,website,aliases:[],icon,color:colors[id] || '#8c94b1',
- type:cloud.includes(id)?'cloud':web.includes(id)?'web':servers.includes(id)?'database-server':['redis','cassandra','clickhouse'].includes(id)?'container':['vscode','git','python','sqlite','vim','neovim'].includes(id)?'developer-tool':'desktop',
- platforms: ['safari','xcode'].includes(id)?['macos']:['windows'],architectures:['x64'],
- license:commercial.includes(id)?'trial':'free',licenseNote:commercial.includes(id)?'Коммерческая лицензия / пробный период. Активация выполняется в продукте.':'Условия использования — на сайте издателя.',
- version:id==='python'?'3.12.10':'Уточняется в источнике',editions:[],
- install:{method:packageId?'winget':web.includes(id)||cloud.includes(id)?'web':'manual',packageId:packageId||null,source:packageId?'winget':null,verifiedAt:null,verification:'unverified',download:false,scope:'default'},
- detection:{method:packageId?'winget-export':'manual',packageId:id==='chrome'?'Google.Chrome':packageId||null},
- options:[],dependencies:[],notes:notes[id]||'',sources:[website],checkedAt:date,downloadMb:null,diskMb:null,
+const notes = {
+  safari:
+    "Apple не поддерживает актуальную версию Safari для Windows. Старый Windows-дистрибутив не предлагается.",
+  xcode:
+    "Доступен только для macOS. В Windows можно открыть официальный источник и требования.",
+  atom: "Поддержка прекращена 15 декабря 2022 года. Только официальный архив GitHub; автоматическая установка отключена.",
+  arc: "Развитие продукта ограничено. Перед использованием проверьте актуальный статус поддержки у The Browser Company.",
+  trello:
+    "Официальный клиент Windows доступен в Microsoft Store. Здесь по умолчанию используется веб-версия; клиент устанавливается отдельно через официальный сайт.",
+  jira: "Официальный универсальный настольный клиент Windows не подтверждён. Используется веб-платформа; серверное развёртывание не включено.",
+  youtrack:
+    "Официальный настольный клиент не подтверждён. Открывается веб-сервис, сервер устанавливается отдельно.",
+  github:
+    "Открывается веб-платформа. GitHub Desktop — отдельная запись. CLI и сервер не устанавливаются.",
+  gitlab:
+    "Открывается GitLab.com. GitLab Self-Managed и CLI не включены в эту задачу.",
+  bitbucket: "Открывается веб-платформа. Серверные продукты и CLI не включены.",
+  "google-docs":
+    "Открывается веб-сервис. Можно создать обычный интернет-ярлык .url; автоматическая установка PWA не выполняется.",
+  word: "Microsoft Word устанавливается в составе выбранного пакета Microsoft 365 / Office. Требуются лицензия, учётная запись и выбор состава на сайте Microsoft.",
+  libreoffice:
+    "Устанавливается весь пакет LibreOffice: Writer, Calc, Impress, Draw, Base и Math.",
+  wps: "Устанавливается WPS Office: Writer, Spreadsheets и Presentation. Дополнительные функции и условия зависят от редакции.",
+  onlyoffice:
+    "Устанавливается ONLYOFFICE Desktop Editors: документы, таблицы, презентации и PDF.",
+  python:
+    "Ветка 3.12: последний релиз 3.12.16 (исходный код). Последний официальный традиционный Windows-установщик — 3.12.10. Устанавливается именно 3.12.10.",
+  sqlite:
+    "Встраиваемая СУБД, не сервер. Устанавливаются официальные консольные инструменты; служба и порт не создаются.",
+  docker:
+    "Docker Desktop требует аппаратной виртуализации, WSL 2 или Hyper-V и подходящей редакции Windows. Коммерческое использование в крупных организациях может требовать подписки. Компоненты ОС не включаются автоматически.",
+  podman:
+    "Этот пакет — Podman CLI. Podman Desktop и podman machine — отдельные явно выбираемые шаги; виртуальная машина автоматически не создаётся.",
+  virtualbox:
+    "Проверьте аппаратную виртуализацию и совместимость с Hyper-V. Extension Pack не включён и имеет отдельную лицензию.",
+  vmware:
+    "В Windows выбран Workstation Pro; Fusion Pro — для macOS. Workstation Pro бесплатен для личного, образовательного и коммерческого использования по условиям Broadcom. Загрузка через официальный портал может потребовать аккаунт.",
+  "android-studio":
+    "Устанавливается только IDE. Android SDK, Android Emulator и образы устройств выбираются в SDK Manager; лицензии принимаются отдельно.",
+  redis:
+    "Официального нативного Redis Server для Windows нет в этой интеграции. Выберите WSL или контейнер; локальный сервер запускается по инструкции отдельно.",
+  cassandra:
+    "Нативная установка Windows не автоматизирована. Рекомендуемый здесь путь — официальный контейнер; создание кластера требует отдельной настройки.",
+  clickhouse:
+    "В Windows используйте WSL или официальный контейнер. Локальные данные и существующие экземпляры автоматически не меняются.",
+  dynamodb:
+    "Это облачная консоль AWS; ресурсы не создаются. DynamoDB Local — отдельное локальное окружение без связи с облачными данными.",
+  firebase:
+    "Это облачная консоль Firebase; проекты не создаются. Emulator Suite — отдельная локальная среда, нужны Node.js, Firebase CLI и Java для некоторых эмуляторов.",
+};
+const apps = rows.map(
+  ([id, name, publisher, category, description, website, packageId, icon]) => ({
+    id,
+    name,
+    publisher,
+    category,
+    description,
+    website,
+    aliases: [],
+    icon,
+    color: colors[id] || "#8c94b1",
+    type: cloud.includes(id)
+      ? "cloud"
+      : web.includes(id)
+        ? "web"
+        : servers.includes(id)
+          ? "database-server"
+          : ["redis", "cassandra", "clickhouse"].includes(id)
+            ? "container"
+            : ["vscode", "git", "python", "sqlite", "vim", "neovim"].includes(
+                  id,
+                )
+              ? "developer-tool"
+              : "desktop",
+    platforms: ["safari", "xcode"].includes(id) ? ["macos"] : ["windows"],
+    architectures: ["x64"],
+    license: commercial.includes(id) ? "trial" : "free",
+    licenseNote: commercial.includes(id)
+      ? "Коммерческая лицензия / пробный период. Активация выполняется в продукте."
+      : "Условия использования — на сайте издателя.",
+    version: id === "python" ? "3.12.10" : "Уточняется в источнике",
+    editions: [],
+    install: {
+      method: packageId
+        ? "winget"
+        : web.includes(id) || cloud.includes(id)
+          ? "web"
+          : "manual",
+      packageId: packageId || null,
+      source: packageId ? "winget" : null,
+      verifiedAt: null,
+      verification: "unverified",
+      download: false,
+      scope: "default",
+    },
+    detection: {
+      method: packageId ? "winget-export" : "manual",
+      packageId: id === "chrome" ? "Google.Chrome" : packageId || null,
+    },
+    options: [],
+    dependencies: [],
+    notes: notes[id] || "",
+    sources: [website],
+    checkedAt: date,
+    downloadMb: null,
+    diskMb: null,
+  }),
+);
+const app = (id) => apps.find((a) => a.id === id);
+app("fusion").aliases = ["Fusion 360"];
+app("google-docs").aliases = ["Google Docs", "Google Документы"];
+app("vmware").aliases = ["VMware", "VMware Player", "VMware Workstation"];
+app("idea").aliases = ["IntelliJ IDEA Community", "IntelliJ IDEA Ultimate"];
+app("pycharm").aliases = ["PyCharm Community", "PyCharm Professional"];
+app("word").aliases = ["Office", "Microsoft 365"];
+app("visual-studio").aliases = ["VS 2026"];
+app("python").aliases = ["Python 3.12.16", "питон"];
+app("safari").platforms = ["macos", "ios"];
+app("atom").version = "1.60.0 (архив)";
+for (const id of ["wordcraft", "gridcraft", "deckcraft", "photocraft"]) {
+  app(id).licenseNote =
+    "ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.";
+  app(id).notes =
+    "Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.";
+}
+for (const id of ["webstorm", "idea", "pycharm"]) {
+  app(id).licenseNote =
+    "Есть бесплатные возможности / некоммерческие условия, коммерческие и расширенные функции — по лицензии JetBrains. Условия зависят от продукта и версии.";
+  app(id).editions = [
+    {
+      id: "default",
+      name: "Актуальная редакция",
+      description:
+        "Точные возможности и условия лицензии — у JetBrains. Вход и активация после установки.",
+    },
+  ];
+}
+app("phpstorm").editions = [
+  {
+    id: "default",
+    name: "PhpStorm",
+    description:
+      "Коммерческая подписка JetBrains; пробный период по условиям издателя.",
+  },
+];
+app("visual-studio").editions = [
+  {
+    id: "community",
+    name: "Community",
+    description:
+      "Для индивидуальных разработчиков, обучения и open source; для организаций действуют ограничения лицензии.",
+    packageId: "Microsoft.VisualStudio.Community",
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    description:
+      "Для профессиональной разработки; требуется действующая коммерческая лицензия.",
+    packageId: "Microsoft.VisualStudio.Professional",
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    description: "Для корпоративных команд; требуется лицензия Enterprise.",
+    packageId: "Microsoft.VisualStudio.Enterprise",
+  },
+];
+app("visual-studio").notes =
+  "Профиль «Классические и мобильные приложения — полный набор» использует официальный каталог выбранной редакции, .vsconfig и флаги includeRecommended / includeOptional. Окончательный расчёт и несовместимости проверяет Visual Studio Installer; автоматическая перезагрузка запрещена.";
+app("vscode").options = [
+  {
+    id: "scope",
+    label: "Область установки",
+    type: "select",
+    default: "user",
+    values: ["user"],
+    help: "Текущий пользователь. Расширения устанавливаются в его профиль.",
+  },
+];
+app("vscode").install.scope = "user";
+app("python").options = [
+  { id: "pip", label: "Установить pip", type: "boolean", default: true },
+  {
+    id: "path",
+    label: "Добавить Python в PATH",
+    type: "boolean",
+    default: true,
+  },
+  {
+    id: "scope",
+    label: "Область установки",
+    type: "select",
+    default: "user",
+    values: ["user", "machine"],
+  },
+];
+app("python").diskMb = 120;
+app("python").downloadMb = 26;
+app("vscode").diskMb = 450;
+app("vscode").downloadMb = null;
+for (const id of servers) {
+  app(id).options = [
+    {
+      id: "edition",
+      label: "Редакция / версия",
+      type: "text",
+      default: "",
+      help: "Выбирается в официальном установщике; автоматическое обновление сервера отключено.",
+    },
+    {
+      id: "port",
+      label: "Порт",
+      type: "number",
+      default: {
+        mysql: 3306,
+        postgres: 5432,
+        sqlserver: 1433,
+        oracle: 1521,
+        mongodb: 27017,
+        mariadb: 3306,
+        neo4j: 7687,
+      }[id],
+    },
+    {
+      id: "dataDir",
+      label: "Каталог данных",
+      type: "text",
+      default: "",
+      help: "Не меняем существующие данные. Примените в официальном мастере.",
+    },
+    { id: "serviceName", label: "Имя службы", type: "text", default: "" },
+    {
+      id: "autostart",
+      label: "Автозапуск службы",
+      type: "boolean",
+      default: true,
+    },
+  ];
+  app(id).notes =
+    "Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.";
+}
+app("vmware").editions = [
+  {
+    id: "workstation",
+    name: "Workstation Pro · Windows",
+    description:
+      "Настольный продукт для Windows. Бесплатно по текущим условиям Broadcom.",
+  },
+  {
+    id: "fusion",
+    name: "Fusion Pro · macOS",
+    description: "Для macOS; установка на Windows недоступна.",
+  },
+];
+app("trello").sources.push(
+  "https://support.atlassian.com/trello/docs/trello-desktop-apps/",
+);
+app("youtrack").sources.push(
+  "https://youtrack-support.jetbrains.com/hc/en-us/community/posts/11656565550994-Desktop-application-YouTrack",
+);
+app("python").sources.push(
+  "https://peps.python.org/pep-0693/",
+  "https://docs.python.org/3.12/using/windows.html",
+);
+const extensions = [
+  ["streetsidesoftware.code-spell-checker", "Code Spell Checker", []],
+  [
+    "Zignd.html-css-class-completion",
+    "IntelliSense for CSS class names in HTML",
+    [],
+  ],
+  ["ritwickdey.LiveServer", "Live Server", []],
+  ["ms-python.python", "Python", []],
+  ["ms-python.vscode-pylance", "Pylance", ["ms-python.python"]],
+  ["ms-python.debugpy", "Python Debugger", ["ms-python.python"]],
+  ["ms-python.vscode-python-envs", "Python Environments", ["ms-python.python"]],
+  [
+    "MS-CEINTL.vscode-language-pack-ru",
+    "Russian Language Pack for Visual Studio Code",
+    [],
+  ],
+].map(([id, name, dependencies]) => ({
+  id,
+  name,
+  dependencies,
+  source: `https://marketplace.visualstudio.com/items?itemName=${id}`,
+  verifiedAt: null,
 }));
-const app = id => apps.find(a=>a.id===id);
-app('fusion').aliases=['Fusion 360']; app('google-docs').aliases=['Google Docs','Google Документы'];
-app('vmware').aliases=['VMware','VMware Player','VMware Workstation']; app('idea').aliases=['IntelliJ IDEA Community','IntelliJ IDEA Ultimate'];
-app('pycharm').aliases=['PyCharm Community','PyCharm Professional']; app('word').aliases=['Office','Microsoft 365'];
-app('visual-studio').aliases=['VS 2026']; app('python').aliases=['Python 3.12.16','питон'];
-app('safari').platforms=['macos','ios'];
-app('atom').version='1.60.0 (архив)';
-for (const id of ['wordcraft','gridcraft','deckcraft','photocraft']) {
- app(id).licenseNote='ArtCraft / Brandon Thomas. Ранняя разработка; лицензию и готовые сборки проверяйте в связанном официальном репозитории.';
- app(id).notes='Продукт из семейства ArtCraft, официальный источник getartcraft.com/apps. Автоустановка отключена: готовый Windows-дистрибутив и его подпись отдельно не проверены.';
-}
-for (const id of ['webstorm','idea','pycharm']) {
- app(id).licenseNote='Есть бесплатные возможности / некоммерческие условия, коммерческие и расширенные функции — по лицензии JetBrains. Условия зависят от продукта и версии.';
- app(id).editions=[{id:'default',name:'Актуальная редакция',description:'Точные возможности и условия лицензии — у JetBrains. Вход и активация после установки.'}];
-}
-app('phpstorm').editions=[{id:'default',name:'PhpStorm',description:'Коммерческая подписка JetBrains; пробный период по условиям издателя.'}];
-app('visual-studio').editions=[{id:'community',name:'Community',description:'Для индивидуальных разработчиков, обучения и open source; для организаций действуют ограничения лицензии.',packageId:'Microsoft.VisualStudio.Community'},{id:'professional',name:'Professional',description:'Для профессиональной разработки; требуется действующая коммерческая лицензия.',packageId:'Microsoft.VisualStudio.Professional'},{id:'enterprise',name:'Enterprise',description:'Для корпоративных команд; требуется лицензия Enterprise.',packageId:'Microsoft.VisualStudio.Enterprise'}];
-app('visual-studio').notes='Профиль «Классические и мобильные приложения — полный набор» использует официальный каталог выбранной редакции, .vsconfig и флаги includeRecommended / includeOptional. Окончательный расчёт и несовместимости проверяет Visual Studio Installer; автоматическая перезагрузка запрещена.';
-app('vscode').options=[{id:'scope',label:'Область установки',type:'select',default:'user',values:['user'],help:'Текущий пользователь. Расширения устанавливаются в его профиль.'}];
-app('vscode').install.scope='user';
-app('python').options=[{id:'pip',label:'Установить pip',type:'boolean',default:true},{id:'path',label:'Добавить Python в PATH',type:'boolean',default:true},{id:'scope',label:'Область установки',type:'select',default:'user',values:['user','machine']}];
-app('python').diskMb=120; app('python').downloadMb=26;
-app('vscode').diskMb=450;app('vscode').downloadMb=null;
-for(const id of servers){
- app(id).options=[{id:'edition',label:'Редакция / версия',type:'text',default:'',help:'Выбирается в официальном установщике; автоматическое обновление сервера отключено.'},{id:'port',label:'Порт',type:'number',default:({mysql:3306,postgres:5432,sqlserver:1433,oracle:1521,mongodb:27017,mariadb:3306,neo4j:7687})[id]},{id:'dataDir',label:'Каталог данных',type:'text',default:'',help:'Не меняем существующие данные. Примените в официальном мастере.'},{id:'serviceName',label:'Имя службы',type:'text',default:''},{id:'autostart',label:'Автозапуск службы',type:'boolean',default:true}];
- app(id).notes='Настройка сервера выполняется в официальном установщике: выберите редакцию, версию, каталог данных, службу и учётные данные. AppDock проверяет порт и обнаруженные экземпляры. Пароль вводится только в мастере производителя и не сохраняется в AppDock. Обновление существующих баз не автоматизировано.';
-}
-app('vmware').editions=[{id:'workstation',name:'Workstation Pro · Windows',description:'Настольный продукт для Windows. Бесплатно по текущим условиям Broadcom.'},{id:'fusion',name:'Fusion Pro · macOS',description:'Для macOS; установка на Windows недоступна.'}];
-app('trello').sources.push('https://support.atlassian.com/trello/docs/trello-desktop-apps/');
-app('youtrack').sources.push('https://youtrack-support.jetbrains.com/hc/en-us/community/posts/11656565550994-Desktop-application-YouTrack');
-app('python').sources.push('https://peps.python.org/pep-0693/','https://docs.python.org/3.12/using/windows.html');
-const extensions=[
- ['streetsidesoftware.code-spell-checker','Code Spell Checker',[]],['Zignd.html-css-class-completion','IntelliSense for CSS class names in HTML',[]],['ritwickdey.LiveServer','Live Server',[]],['ms-python.python','Python',[]],['ms-python.vscode-pylance','Pylance',['ms-python.python']],['ms-python.debugpy','Python Debugger',['ms-python.python']],['ms-python.vscode-python-envs','Python Environments',['ms-python.python']],['MS-CEINTL.vscode-language-pack-ru','Russian Language Pack for Visual Studio Code',[]]
-].map(([id,name,dependencies])=>({id,name,dependencies,source:`https://marketplace.visualstudio.com/items?itemName=${id}`,verifiedAt:null}));
-const presets=[
- ['python-dev','Python-разработка','Редактор, интерпретатор и контроль версий.','Code2',['vscode','python','git']],
- ['web-dev','Веб-разработка','Лёгкий старт для сайтов и веб-приложений.','Globe',['vscode','git','chrome']],
- ['java-dev','Java-разработка','IDE для Java и управление исходным кодом. JDK выберите в IDE.','Coffee',['idea','git']],
- ['android-dev','Разработка Android','IDE и Git. SDK и образы выберите отдельно в SDK Manager.','Smartphone',['android-studio','git']],
- ['databases','Базы данных','Универсальный клиент и встраиваемая СУБД. Сервер выберите отдельно.','Database',['dbeaver','sqlite']],
- ['containers','Контейнеры и виртуализация','Один контейнерный движок. Требования Windows проверяются перед запуском.','Boxes',['docker']],
- ['documents','Документы и презентации','Один свободный офисный пакет для документов, таблиц и презентаций.','FileText',['libreoffice']],
- ['graphics','Графика','Свободный редактор изображений.','Palette',['gimp']],
- ['engineering','САПР и проектирование','Свободная параметрическая САПР.','Ruler',['freecad']]
-].map(([id,name,description,icon,appIds])=>({id,name,description,icon,items:appIds.map(appId=>({appId,options:{},extensions:appId==='vscode'?extensions.map(e=>e.id):[],action:'install'})),builtin:true}));
-fs.writeFileSync('catalog/apps.json',JSON.stringify(apps,null,2)+'\n');
-fs.writeFileSync('catalog/extensions.json',JSON.stringify(extensions,null,2)+'\n');
-fs.writeFileSync('catalog/presets.json',JSON.stringify(presets,null,2)+'\n');
-console.log(`${apps.length} distinct products, ${extensions.length} extensions, ${presets.length} presets`);
+const presets = [
+  [
+    "python-dev",
+    "Python-разработка",
+    "Редактор, интерпретатор и контроль версий.",
+    "Code2",
+    ["vscode", "python", "git"],
+  ],
+  [
+    "web-dev",
+    "Веб-разработка",
+    "Лёгкий старт для сайтов и веб-приложений.",
+    "Globe",
+    ["vscode", "git", "chrome"],
+  ],
+  [
+    "java-dev",
+    "Java-разработка",
+    "IDE для Java и управление исходным кодом. JDK выберите в IDE.",
+    "Coffee",
+    ["idea", "git"],
+  ],
+  [
+    "android-dev",
+    "Разработка Android",
+    "IDE и Git. SDK и образы выберите отдельно в SDK Manager.",
+    "Smartphone",
+    ["android-studio", "git"],
+  ],
+  [
+    "databases",
+    "Базы данных",
+    "Универсальный клиент и встраиваемая СУБД. Сервер выберите отдельно.",
+    "Database",
+    ["dbeaver", "sqlite"],
+  ],
+  [
+    "containers",
+    "Контейнеры и виртуализация",
+    "Один контейнерный движок. Требования Windows проверяются перед запуском.",
+    "Boxes",
+    ["docker"],
+  ],
+  [
+    "documents",
+    "Документы и презентации",
+    "Один свободный офисный пакет для документов, таблиц и презентаций.",
+    "FileText",
+    ["libreoffice"],
+  ],
+  [
+    "graphics",
+    "Графика",
+    "Свободный редактор изображений.",
+    "Palette",
+    ["gimp"],
+  ],
+  [
+    "engineering",
+    "САПР и проектирование",
+    "Свободная параметрическая САПР.",
+    "Ruler",
+    ["freecad"],
+  ],
+].map(([id, name, description, icon, appIds]) => ({
+  id,
+  name,
+  description,
+  icon,
+  items: appIds.map((appId) => ({
+    appId,
+    options: {},
+    extensions: appId === "vscode" ? extensions.map((e) => e.id) : [],
+    action: "install",
+  })),
+  builtin: true,
+}));
+fs.writeFileSync("catalog/apps.json", JSON.stringify(apps, null, 2) + "\n");
+fs.writeFileSync(
+  "catalog/extensions.json",
+  JSON.stringify(extensions, null, 2) + "\n",
+);
+fs.writeFileSync(
+  "catalog/presets.json",
+  JSON.stringify(presets, null, 2) + "\n",
+);
+console.log(
+  `${apps.length} distinct products, ${extensions.length} extensions, ${presets.length} presets`,
+);

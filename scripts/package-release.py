@@ -33,14 +33,16 @@ quick_start = f'''AppDock {version} — Windows 11 x64
 
 Node.js, Rust и инструменты сборки для запуска не нужны.
 Если отсутствует Microsoft Edge WebView2 Runtime, используйте установщик:
-https://github.com/Farbras/appdock/releases/download/v{version}/{installer_name}
+{installer_name} из этой же папки.
 Он скачает WebView2 Runtime при необходимости.
 
 Для установки программ из каталога нужен WinGet / App Installer и интернет.
 Перед запуском очереди AppDock покажет план и запросит подтверждение.
 
-Все файлы выпуска:
-https://github.com/Farbras/appdock/releases/tag/v{version}
+Для проверки без системных операций включите «Настройки → Демонстрационный режим».
+Готовые выпуски: https://github.com/Farbras/appdock/releases
+Сертификат подписи выпуска не настроен.
+Описание изменений и ограничений: docs/APPDOCK-{version}.md в папке выпуска.
 '''
 (out / 'START-HERE.txt').write_text(quick_start, encoding='utf-8-sig')
 
@@ -49,6 +51,9 @@ with zipfile.ZipFile(portable, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as ar
     archive.write(out / 'AppDock.exe', 'AppDock.exe')
     archive.write(out / 'START-HERE.txt', 'START-HERE.txt')
     archive.write(root / 'public/icons/LICENSE.txt', 'THIRD-PARTY-NOTICES.txt')
+    release_notes = root / 'docs' / f'APPDOCK-{version}.md'
+    if release_notes.is_file():
+        archive.write(release_notes, f'docs/APPDOCK-{version}.md')
 
 sources = out / f'AppDock-{version}-source.zip'
 tracked = subprocess.run(

@@ -1,0 +1,19 @@
+name: Catalog source freshness
+on:
+  workflow_dispatch:
+jobs:
+  check-sources:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node scripts/check-sources.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: AppDock-source-freshness
+          path: artifacts/SOURCES-*

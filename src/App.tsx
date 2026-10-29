@@ -1,130 +1,955 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { Activity, ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, Bell, BookOpen, Boxes, Check, CheckCheck, CheckCircle2, ChevronDown, ChevronRight, Circle, CircleHelp, Code2, Coffee, Copy, Database, Download, ExternalLink, FileText, FolderOpen, Globe, HardDrive, Heart, History, Info, KanbanSquare, LayoutGrid, List, Loader2, Monitor, Moon, Package, Pause, Play, Plus, RefreshCw, RotateCcw, Ruler, Search, Settings2, ShieldCheck, SlidersHorizontal, Smartphone, Sparkles, Sun, Terminal, Trash2, Upload, WandSparkles, X, Palette, TriangleAlert } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { addExtension, apps, builtinPresets, categories, defaultSelection, extensions, filterApps, getApp, initialFilters, isWeb, removeExtension, statusNames, typeNames } from './catalog';
-import type { Filters } from './catalog';
-import { api, emptyQueue, native, normalizePresetItems } from './api';
-import { downloadJson, parsePreset, readStorage, serializePreset, writeStorage } from './storage';
-import type { InstalledApp, Plan, Preset, Product, QueueState, Selection, Settings, SystemInfo, QueueTask } from './types';
-import vsProfiles from '../catalog/vs-profiles.json';
+import {
+  ArrowRight,
+  Bell,
+  Check,
+  ChevronRight,
+  CircleHelp,
+  Info,
+  Loader2,
+  Monitor,
+  RefreshCw,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { api, emptyQueue, native, normalizePresetItems } from "./api";
+import type { Filters } from "./catalog";
+import {
+  apps,
+  builtinPresets,
+  categories,
+  defaultSelection,
+  filterApps,
+  getApp,
+  initialFilters,
+  matchInstalled,
+} from "./catalog";
+import { PlanDialog } from "./components/PlanDialog";
+import { ScreenBoundary } from "./components/ScreenBoundary";
+import { SelectionPane } from "./components/SelectionPane";
+import { appVersion } from "./diagnostics";
+import { currentTasks } from "./queue";
+import { CatalogScreen } from "./screens/CatalogScreen";
+import { RunsScreen } from "./screens/RunsScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
+import {
+  DownloadsScreen,
+  PresetsScreen,
+  ProfileScreen,
+  Readiness,
+  UpdatesScreen,
+  useProfile,
+} from "./screens/Workflows";
+import { readStorage, safeWriteStorage, storageIssues } from "./storage";
+import type {
+  InstalledApp,
+  Plan,
+  Preset,
+  Product,
+  QueueState,
+  QueueTask,
+  Selection,
+  Settings,
+  SystemInfo,
+} from "./types";
 
-const icons:Record<string,LucideIcon>={LayoutGrid,Globe,Code2,Boxes,KanbanSquare,FileText,Palette,Ruler,Database,Package,Coffee,Smartphone};
-const navItems=[['catalog','Каталог',LayoutGrid],['installed','Установленные',Monitor],['queue','Загрузки и установка',ArrowDownToLine],['presets','Наборы',Boxes],['favorites','Избранное',Heart],['history','История',History],['settings','Настройки',Settings2]] as const;
-const doneStatuses=['installed','current','downloaded','opened','shortcut-created','reboot-required'];
-const terminalStatuses=[...doneStatuses,'error','action-required','cancelled'];
-const iconLetters:Record<string,string>={'visual-studio':'VS',vscode:'',wordcraft:'W',gridcraft:'G',deckcraft:'D',photocraft:'P',word:'W',myoffice:'МО',r7:'Р7',kompas:'К',solidworks:'SW',catia:'3D',creo:'creo',nanocad:'nC',archicad:'A',zeal:'Z',yandex:'Я',autodesk:'A'};
-function Icon({name,size=18}:{name:string;size?:number}){const Component=icons[name]||Package;return <Component size={size}/>}
-function Logo({app,small=false}:{app:Product;small?:boolean}){const [failed,setFailed]=useState(false);return <span className={`product-logo ${small?'small':''} logo-${app.id}`} style={{'--brand':app.color} as React.CSSProperties}>{!failed?<img src={`/icons/${app.icon}.svg`} alt="" onError={()=>setFailed(true)}/>:app.id==='vscode'?<Code2 size={small?21:31}/>:<span>{iconLetters[app.id]||app.name.slice(0,2)}</span>}</span>}
-function Brand(){return <div className="brand"><div className="brand-icon"><span/><span/><span/><span/></div><span>AppDock<span className="brand-dot">.</span></span></div>}
-function Toggle({checked,onChange,label}:{checked:boolean;onChange:()=>void;label:string}){return <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`toggle ${checked?'on':''}`} onClick={onChange}><span/></button>}
-function Modal({title,children,onClose,wide=false}:{title:string;children:ReactNode;onClose:()=>void;wide?:boolean}){
- const ref=useRef<HTMLDivElement>(null);const closeRef=useRef(onClose);closeRef.current=onClose;
- useEffect(()=>{const previous=document.activeElement as HTMLElement|null;const el=ref.current;el?.focus();const key=(e:KeyboardEvent)=>{if(e.key==='Escape')closeRef.current();if(e.key==='Tab'&&el){const nodes=Array.from(el.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select,textarea,[tabindex="0"],a[href]'));if(!nodes.length)return;const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&(document.activeElement===first||document.activeElement===el)){last.focus();e.preventDefault()}else if(!e.shiftKey&&document.activeElement===last){first.focus();e.preventDefault()}}};document.addEventListener('keydown',key);return()=>{document.removeEventListener('keydown',key);previous?.focus()}},[]);
- return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className={`modal ${wide?'wide':''}`}><div className="modal-header"><h2>{title}</h2><button className="icon-button" aria-label="Закрыть" onClick={onClose}><X size={20}/></button></div>{children}</div></div>
+import { ProductDialog } from "./components/ProductDialog";
+import {
+  Brand,
+  Icon,
+  Logo,
+  Modal,
+  navItems,
+  terminalStatuses,
+} from "./components/ui";
+function App() {
+  const [profile, setProfile] = useProfile();
+  const [undoSelection, setUndoSelection] = useState<Selection[] | null>(null);
+  const [reviewItems, setReviewItems] = useState<Selection[]>([]);
+  const [editDraft, setEditDraft] = useState<Selection | undefined>();
+  const [retryTarget, setRetryTarget] = useState<QueueTask | null>(null);
+  const [retryContext, setRetryContext] = useState<{
+    runId: string;
+    status: QueueTask["status"];
+    taskId?: string;
+  } | null>(null);
+  const [returnToPlan, setReturnToPlan] = useState(false);
+  const [storageError, setStorageError] = useState(storageIssues().join("\n"));
+  const [systemError, setSystemError] = useState("");
+  const [detectedAt, setDetectedAt] = useState<number | null>(null);
+  const [focusRequest, setFocusRequest] = useState(0);
+  const [sort, setSort] = useState("name");
+  const [cartOpen, setCartOpen] = useState(false);
+  const [nav, setNav] = useState("catalog");
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [settings, setSettings] = useState<Settings>(() => ({
+    ...{
+      theme: "dark",
+      mode: native ? "live" : "demo",
+      view: "grid",
+      skipCurrent: true,
+      parallelDownloads: 2,
+    },
+    ...readStorage<Partial<Settings>>("settings", {}),
+    ...(!native ? { mode: "demo" as const } : {}),
+  }));
+  const [selection, setSelection] = useState<Selection[]>(() =>
+    readStorage<Selection[]>("selection", []).filter((s) =>
+      apps.some((a) => a.id === s.appId),
+    ),
+  );
+  const [favorites, setFavorites] = useState<string[]>(() =>
+    readStorage("favorites", []),
+  );
+  const [presets, setPresets] = useState<Preset[]>(() =>
+    readStorage("presets", []),
+  );
+  const [installed, setInstalled] = useState<InstalledApp[]>([]);
+  const [system, setSystem] = useState<SystemInfo | null>(null);
+  const [queue, setQueue] = useState<QueueState>(emptyQueue);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [detail, setDetail] = useState<Product | null>(null);
+  const [toast, setToast] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [wizard, setWizard] = useState(false);
+  const [wizardId, setWizardId] = useState("python-dev");
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const [saveName, setSaveName] = useState<string | null>(null);
+  const [editingPreset, setEditingPreset] = useState<string | null>(null);
+
+  const [clearConfirm, setClearConfirm] = useState(false);
+  const [showNotices, setShowNotices] = useState(false);
+
+  const searchRef = useRef<HTMLInputElement>(null);
+  const notify = (message: string) => setToast(message);
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(""), 5500);
+    return () => clearTimeout(id);
+  }, [toast]);
+  useEffect(() => {
+    safeWriteStorage("settings", settings);
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const apply = () => {
+      document.documentElement.dataset.theme =
+        settings.theme === "system"
+          ? media.matches
+            ? "light"
+            : "dark"
+          : settings.theme;
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [settings]);
+  useEffect(() => safeWriteStorage("selection", selection), [selection]);
+  useEffect(() => safeWriteStorage("favorites", favorites), [favorites]);
+  useEffect(() => safeWriteStorage("presets", presets), [presets]);
+  useEffect(() => {
+    const onError = (e: Event) =>
+      setStorageError((e as CustomEvent<string>).detail);
+    window.addEventListener("appdock-storage-error", onError);
+    return () => window.removeEventListener("appdock-storage-error", onError);
+  }, []);
+  useEffect(() => {
+    let alive = true;
+    let unlisten: (() => void) | undefined;
+    const accept = (q: QueueState) => {
+      if (alive) setQueue(q);
+    };
+    const refresh = () =>
+      api
+        .queue(settings.mode)
+        .then(accept)
+        .catch((e) => alive && notify(String(e)));
+    void api.subscribe(settings.mode, accept).then((fn) => {
+      if (alive) unlisten = fn;
+      else fn();
+    });
+    void refresh();
+    const id = setInterval(() => void refresh(), 15000);
+    return () => {
+      alive = false;
+      unlisten?.();
+      clearInterval(id);
+    };
+  }, [settings.mode]);
+  const refreshedRun = useRef("");
+  useEffect(() => {
+    const run = queue.runs?.find((r) => r.id === queue.currentRunId);
+    if (
+      run?.finishedAt &&
+      refreshedRun.current !== run.id &&
+      settings.mode === "live"
+    ) {
+      refreshedRun.current = run.id;
+      void scan();
+    }
+  }, [queue.currentRunId, queue.running, queue.runs, settings.mode]);
+  useEffect(() => {
+    setInstalled([]);
+    setSystem(null);
+    void api
+      .system(settings.mode)
+      .then(setSystem)
+      .catch((e) => {
+        setSystemError(String(e));
+        notify(String(e));
+      });
+    if (settings.mode === "live" && native) {
+      setScanning(true);
+      void api
+        .scan(settings.mode)
+        .then((result) => {
+          setInstalled(result);
+          setDetectedAt(Date.now());
+        })
+        .catch((e) => notify(String(e)))
+        .finally(() => setScanning(false));
+    }
+  }, [settings.mode]);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        setNav("catalog");
+        setDetail(null);
+        setPlan(null);
+        setWizard(false);
+        setShowNotices(false);
+        setSaveName(null);
+        setClearConfirm(false);
+        setFocusRequest((v) => v + 1);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  useEffect(() => {
+    if (!focusRequest) return;
+    const id = setTimeout(() => searchRef.current?.focus(), 0);
+    return () => clearTimeout(id);
+  }, [nav, focusRequest]);
+  const changeSettings = (patch: Partial<Settings>) =>
+    setSettings((s) => ({ ...s, ...patch }));
+  const getInstalled = (app: Product) =>
+    matchInstalled(app, installed, undefined);
+  const toggleApp = (app: Product) =>
+    setSelection((s) =>
+      s.some((i) => i.appId === app.id)
+        ? s.filter((i) => i.appId !== app.id)
+        : [...s, defaultSelection(app)],
+    );
+  const updateSelection = (s: Selection) =>
+    setSelection((items) =>
+      items.some((i) => i.appId === s.appId)
+        ? items.map((i) => (i.appId === s.appId ? s : i))
+        : [...items, s],
+    );
+  const toggleFavorite = (id: string) =>
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  const scan = async () => {
+    setScanning(true);
+    try {
+      const result = await api.scan(settings.mode);
+      setInstalled(result);
+      setDetectedAt(Date.now());
+      setSystemError("");
+      setSystem(await api.system(settings.mode));
+      notify(
+        settings.mode === "demo"
+          ? "Демонстрация: сведения об установленных программах не считываются."
+          : `Проверка завершена. Обнаружено пакетов: ${result.length}`,
+      );
+    } catch (e) {
+      setSystemError(String(e));
+      notify(String(e));
+    } finally {
+      setScanning(false);
+    }
+  };
+  const review = async (downloadOnly = false, explicit?: Selection[]) => {
+    setRetryContext(null);
+    const chosen = explicit || selection;
+    if (!chosen.length) return;
+    setLoading(true);
+    try {
+      const items = downloadOnly
+        ? chosen.map((s) => ({
+            ...s,
+            action: "download" as const,
+            extensions: [],
+          }))
+        : chosen;
+      setReviewItems(items);
+      const p = await api.plan(items, settings);
+
+      setPlan(p);
+    } catch (e) {
+      notify(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+  const launch = async () => {
+    if (!plan) return;
+    setBusy(true);
+    try {
+      await api.start(plan.token, settings.mode);
+      setPlan(null);
+      setNav("queue");
+      setSelection((items) =>
+        items.filter(
+          (s) => !plan.items.some((i) => i.appId === s.appId && !i.excluded),
+        ),
+      );
+      setQueue(await api.queue(settings.mode));
+    } catch (e) {
+      notify(String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const control = async (action: string, id?: string) => {
+    try {
+      await api.control(action, settings.mode, id);
+      setQueue(await api.queue(settings.mode));
+    } catch (e) {
+      notify(String(e));
+    }
+  };
+  const replaceSelection = (items: Selection[]) => {
+    setUndoSelection(structuredClone(selection));
+    setSelection(items);
+    notify("Выбор заменён. Последнюю замену можно отменить в наборах.");
+  };
+  const loadPreset = (p: Preset) => {
+    replaceSelection(normalizePresetItems(p.items));
+    setNav("catalog");
+    setFilters(initialFilters);
+    setWizard(false);
+  };
+  const retry = async (
+    runId: string,
+    status: QueueTask["status"],
+    taskId?: string,
+    edited?: Selection | Selection[],
+    includedAppIds?: string[],
+  ) => {
+    setLoading(true);
+    try {
+      const p = await api.retryPlan(
+        runId,
+        status,
+        settings.mode,
+        taskId,
+        edited,
+        includedAppIds,
+      );
+      setRetryContext({ runId, status, taskId });
+      setReviewItems(p.items.map((i) => i.selection));
+      setPlan(p);
+    } catch (e) {
+      notify(String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+  const editTask = (task: QueueTask) => {
+    setRetryTarget(task);
+    setEditDraft(
+      queue.runs
+        ?.find((r) => r.id === task.runId)
+        ?.selections.find((s) => s.appId === task.appId) || task.selection,
+    );
+    setDetail(getApp(task.appId));
+  };
+  const savePreset = () => {
+    const name = saveName?.trim();
+    if (!name) return;
+    if (editingPreset) {
+      setPresets((ps) =>
+        ps.map((p) => (p.id === editingPreset ? { ...p, name } : p)),
+      );
+      setEditingPreset(null);
+    } else {
+      setPresets((ps) => [
+        ...ps,
+        {
+          id: crypto.randomUUID(),
+          name,
+          description: "Мой набор программ",
+          icon: "Package",
+          items: structuredClone(selection),
+          builtin: false,
+        },
+      ]);
+    }
+    setSaveName(null);
+    notify("Набор сохранён");
+  };
+  const base =
+    nav === "favorites"
+      ? apps.filter((a) => favorites.includes(a.id))
+      : nav === "installed"
+        ? apps.filter((a) => getInstalled(a))
+        : apps;
+  const visible = filterApps(base, filters, installed).sort((a, b) =>
+    sort === "publisher"
+      ? a.publisher.localeCompare(b.publisher)
+      : sort === "automation"
+        ? a.install.method.localeCompare(b.install.method)
+        : a.name.localeCompare(b.name, "ru"),
+  );
+  const activeTasks = currentTasks(queue).filter(
+    (t) => !terminalStatuses.includes(t.status),
+  );
+  const pageTitles: Record<string, string> = {
+    catalog: "Подготовьте компьютер к работе",
+    installed: "Установленные программы",
+    favorites: "Ваши любимые программы",
+    queue: "Загрузки и установка",
+    presets: "Нужные программы — в одном наборе",
+    history: "История действий",
+    settings: "Настройки",
+    updates: "Центр обновлений",
+    profile: "Профиль компьютера",
+    downloads: "Полученные файлы",
+  };
+  const pageDescriptions: Record<string, string> = {
+    catalog:
+      "Выберите программы, проверьте план и выполните автоматические и ручные шаги.",
+    installed: "Программы, обнаруженные на этом компьютере.",
+    favorites: "Всё, что хочется держать под рукой.",
+    queue: "Каждый шаг под контролем. Результаты — без догадок.",
+    presets: "Сохраните свой выбор или начните с готового решения.",
+    history: "Результаты установок, загрузок и веб-действий.",
+    settings: "Пусть AppDock работает так, как удобно вам.",
+    updates: "Выберите поддерживаемые обновления и проверьте план.",
+    profile: "Сравните желаемый состав с этим компьютером.",
+    downloads: "Файлы, происхождение и ограничения загрузок.",
+  };
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <Brand />
+        <div className="sidebar-caption">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</div>
+        <nav aria-label="Основная навигация">
+          {navItems.map(([id, label, Component]) => (
+            <button
+              key={id}
+              aria-label={label}
+              className={`nav-item ${nav === id ? "active" : ""}`}
+              onClick={() => {
+                setNav(id);
+                setFilters(initialFilters);
+              }}
+            >
+              <Component size={18} />
+              <span>{label}</span>
+              {id === "queue" && activeTasks.length > 0 ? (
+                <span className="nav-count">{activeTasks.length}</span>
+              ) : id === "favorites" && favorites.length > 0 ? (
+                <span className="nav-count quiet">{favorites.length}</span>
+              ) : null}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-categories">
+          <div className="sidebar-caption">КАТЕГОРИИ</div>
+          {categories
+            .filter((c) => c.id !== "all")
+            .map((c) => (
+              <button
+                key={c.id}
+                className={`category-nav ${filters.category === c.id && nav === "catalog" ? "active" : ""}`}
+                onClick={() => {
+                  setNav("catalog");
+                  setFilters({ ...initialFilters, category: c.id });
+                }}
+              >
+                <Icon name={c.icon} size={16} />
+                <span>{c.name}</span>
+                <span className="category-count">
+                  {apps.filter((a) => a.category === c.id).length}
+                </span>
+              </button>
+            ))}
+        </div>
+        <div className="sidebar-bottom">
+          <div className="device-icon">
+            <Monitor size={19} />
+          </div>
+          <div>
+            <strong>Этот компьютер</strong>
+            <span>
+              {system?.os || "Windows 11"} · {system?.arch || "x64"}
+            </span>
+          </div>
+          <span
+            className={`status-dot ${settings.mode === "demo" ? "demo" : ""}`}
+          />
+        </div>
+        <div className="sidebar-version">
+          <span>AppDock {appVersion}</span>
+          <button
+            onClick={() => {
+              setNav("settings");
+            }}
+            aria-label="О приложении"
+          >
+            <CircleHelp size={15} />
+          </button>
+        </div>
+      </aside>
+      <main className="main-pane">
+        <header className="topbar">
+          <div className="breadcrumb">
+            <span>Рабочее пространство</span>
+            <ChevronRight size={13} />
+            <strong>{navItems.find((n) => n[0] === nav)?.[1]}</strong>
+          </div>
+          <div className="topbar-actions">
+            <span className={`mode-pill ${settings.mode}`}>
+              <span />
+              {settings.mode === "demo"
+                ? "Демонстрационный режим"
+                : "Рабочий режим"}
+            </span>
+            <button
+              className="icon-button"
+              aria-label="Уведомления"
+              onClick={() => setShowNotices(true)}
+            >
+              <Bell size={18} />
+              {queue.tasks.some((t) => t.status === "error") && (
+                <i className="notification-dot" />
+              )}
+            </button>
+          </div>
+        </header>
+        <div className="main-scroll" key={nav}>
+          <ScreenBoundary screen={nav}>
+            <div className="page-heading">
+              <div>
+                <div className="eyebrow">
+                  {nav === "catalog"
+                    ? "МЕНЬШЕ РУТИНЫ. БОЛЬШЕ ВОЗМОЖНОСТЕЙ."
+                    : "APPDOCK / " +
+                      (
+                        navItems.find((n) => n[0] === nav)?.[1] || ""
+                      ).toUpperCase()}
+                </div>
+                <h1>{pageTitles[nav]}</h1>
+                <p>{pageDescriptions[nav]}</p>
+              </div>
+              {nav === "installed" && (
+                <button
+                  className="button secondary"
+                  onClick={scan}
+                  disabled={scanning}
+                >
+                  {scanning ? (
+                    <Loader2 size={16} className="spin" />
+                  ) : (
+                    <RefreshCw size={16} />
+                  )}
+                  Проверить
+                </button>
+              )}
+            </div>
+            {(storageError || queue.storageError) && (
+              <div role="alert" className="inline-note warning-text">
+                {storageError || queue.storageError}
+              </div>
+            )}
+            {nav === "catalog" && (
+              <Readiness
+                system={system}
+                scanning={scanning}
+                detectedAt={detectedAt}
+                installed={installed}
+                queue={queue}
+                onScan={() => void scan()}
+                onPrepare={() => setWizard(true)}
+                error={systemError}
+              />
+            )}
+            {nav === "updates" && (
+              <UpdatesScreen
+                installed={installed}
+                profile={profile.items}
+                mode={settings.mode}
+                onReview={(items) => void review(false, items)}
+                onScan={() => void scan()}
+                scanning={scanning}
+                detectedAt={detectedAt}
+                notify={notify}
+              />
+            )}
+            {nav === "profile" && (
+              <ProfileScreen
+                profile={profile}
+                setProfile={setProfile}
+                installed={installed}
+                selection={selection}
+                mode={settings.mode}
+                onReview={(items) => void review(false, items)}
+                notify={notify}
+              />
+            )}
+            {nav === "downloads" && (
+              <DownloadsScreen notify={notify} running={queue.running} />
+            )}
+            {["catalog", "favorites", "installed"].includes(nav) && (
+              <CatalogScreen
+                installed={installed}
+                nav={nav}
+                filters={filters}
+                setFilters={setFilters}
+                settings={settings}
+                changeSettings={changeSettings}
+                visible={visible}
+                base={base}
+                getInstalled={getInstalled}
+                selection={selection}
+                toggleApp={toggleApp}
+                setDetail={setDetail}
+                toggleFavorite={toggleFavorite}
+                favorites={favorites}
+                showFilters={showFilters}
+                setShowFilters={setShowFilters}
+                searchRef={searchRef}
+                scanning={scanning}
+                scan={scan}
+                setNav={setNav}
+                setWizard={setWizard}
+                sort={sort}
+                setSort={setSort}
+              />
+            )}{" "}
+            {nav === "presets" && (
+              <PresetsScreen
+                presets={presets}
+                setPresets={setPresets}
+                selection={selection}
+                onReplace={replaceSelection}
+                onAdd={(items) =>
+                  setSelection((previous) => [
+                    ...previous,
+                    ...items.filter(
+                      (s) => !previous.some((p) => p.appId === s.appId),
+                    ),
+                  ])
+                }
+                canUndo={undoSelection !== null}
+                onUndo={() => {
+                  if (undoSelection) setSelection(undoSelection);
+                  setUndoSelection(null);
+                }}
+                mode={settings.mode}
+                notify={notify}
+              />
+            )}
+            {(nav === "queue" || nav === "history") && (
+              <RunsScreen
+                queue={queue}
+                history={nav === "history"}
+                mode={settings.mode}
+                onControl={(action, id) =>
+                  action === "clear"
+                    ? setClearConfirm(true)
+                    : void control(action, id)
+                }
+                onRetry={(runId, status, id) => void retry(runId, status, id)}
+                onEdit={editTask}
+                notify={notify}
+              />
+            )}
+            {nav === "settings" && (
+              <SettingsScreen
+                settings={settings}
+                changeSettings={changeSettings}
+                notify={notify}
+                queue={queue}
+                system={system}
+                setSystem={setSystem}
+              />
+            )}
+          </ScreenBoundary>
+        </div>
+      </main>
+
+      <SelectionPane
+        selection={selection}
+        settings={settings}
+        queue={queue}
+        loading={loading}
+        cartOpen={cartOpen}
+        setCartOpen={setCartOpen}
+        setSelection={setSelection}
+        setWizard={setWizard}
+        setDetail={setDetail}
+        getInstalled={getInstalled}
+        toggleApp={toggleApp}
+        setEditingPreset={setEditingPreset}
+        setSaveName={setSaveName}
+        review={review}
+      />
+      {detail && (
+        <ProductDialog
+          app={detail}
+          selection={editDraft || selection.find((s) => s.appId === detail.id)}
+          installed={getInstalled(detail)}
+          installedRecords={installed}
+          mode={settings.mode}
+          onClose={() => {
+            setDetail(null);
+            setEditDraft(undefined);
+            setRetryTarget(null);
+            setReturnToPlan(false);
+          }}
+          onApply={(s) => {
+            if (retryTarget)
+              void retry(
+                retryTarget.runId!,
+                retryTarget.status,
+                retryTarget.id,
+                s,
+              );
+            else if (returnToPlan && retryContext)
+              void retry(
+                retryContext.runId,
+                retryContext.status,
+                retryContext.taskId,
+                reviewItems.map((i) => (i.appId === s.appId ? s : i)),
+                reviewItems.map((i) => i.appId),
+              );
+            else if (returnToPlan)
+              void review(
+                false,
+                reviewItems.map((i) => (i.appId === s.appId ? s : i)),
+              );
+            updateSelection(s);
+            setDetail(null);
+            setEditDraft(undefined);
+            setRetryTarget(null);
+            setReturnToPlan(false);
+          }}
+          onFavorite={() => toggleFavorite(detail.id)}
+          favorite={favorites.includes(detail.id)}
+          notify={notify}
+        />
+      )}
+      {plan && (
+        <PlanDialog
+          key={plan.token}
+          plan={plan}
+          settings={settings}
+          busy={busy}
+          onClose={() => !busy && setPlan(null)}
+          onStart={() => void launch()}
+          onEdit={(s) => {
+            setEditDraft(s);
+            setReturnToPlan(true);
+            setDetail(getApp(s.appId));
+            setPlan(null);
+          }}
+          onRemove={(id) => {
+            const remaining = reviewItems.filter((s) => s.appId !== id);
+            setPlan(null);
+            if (remaining.length) {
+              if (retryContext)
+                void retry(
+                  retryContext.runId,
+                  retryContext.status,
+                  retryContext.taskId,
+                  remaining,
+                  remaining.map((s) => s.appId),
+                );
+              else void review(false, remaining);
+            }
+          }}
+          onRefresh={() => {
+            if (retryContext)
+              void retry(
+                retryContext.runId,
+                retryContext.status,
+                retryContext.taskId,
+                reviewItems,
+                reviewItems.map((s) => s.appId),
+              );
+            else void review(false, reviewItems);
+          }}
+        />
+      )}
+      {wizard && (
+        <Modal
+          title="Для чего нужен компьютер?"
+          wide
+          onClose={() => setWizard(false)}
+        >
+          <div className="modal-body">
+            <p className="modal-description">
+              Подберём основу, а окончательный выбор останется за вами.
+            </p>
+            <div className="wizard-options">
+              {builtinPresets.map((p) => (
+                <button
+                  key={p.id}
+                  className={wizardId === p.id ? "active" : ""}
+                  onClick={() => setWizardId(p.id)}
+                >
+                  <Icon name={p.icon} size={22} />
+                  <span>{p.name}</span>
+                  {wizardId === p.id && <Check size={17} />}
+                </button>
+              ))}
+            </div>
+            <div className="wizard-recommendation">
+              <Sparkles size={20} />
+              <div>
+                <strong>Почему этот набор</strong>
+                <p>
+                  {builtinPresets.find((p) => p.id === wizardId)?.description}
+                </p>
+                <div className="recommended-names">
+                  {builtinPresets
+                    .find((p) => p.id === wizardId)
+                    ?.items.map((s) => (
+                      <span key={s.appId}>
+                        <Logo app={getApp(s.appId)} small />
+                        {getApp(s.appId).name}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <span>Выбор заменит текущий список</span>
+            <button
+              className="button primary"
+              onClick={() =>
+                loadPreset(builtinPresets.find((p) => p.id === wizardId)!)
+              }
+            >
+              Выбрать этот набор
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </Modal>
+      )}
+      {saveName !== null && (
+        <Modal
+          title={editingPreset ? "Переименовать набор" : "Сохранить ваш набор"}
+          onClose={() => setSaveName(null)}
+        >
+          <div className="modal-body">
+            <label className="form-label">
+              Название набора
+              <input
+                autoFocus
+                maxLength={80}
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") savePreset();
+                }}
+              />
+            </label>
+            <p className="muted-text">
+              {editingPreset
+                ? "Состав набора сохранится."
+                : `${selection.length} программ. Версии и параметры сохранятся без секретов.`}
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="button secondary"
+              onClick={() => setSaveName(null)}
+            >
+              Отмена
+            </button>
+            <button
+              className="button primary"
+              disabled={!saveName.trim()}
+              onClick={savePreset}
+            >
+              Сохранить
+            </button>
+          </div>
+        </Modal>
+      )}
+      {showNotices && (
+        <Modal title="Уведомления" onClose={() => setShowNotices(false)}>
+          <div className="modal-body">
+            <div className="inline-note">
+              <Bell size={18} />
+              <span>
+                {queue.tasks.some((t) => t.status === "error")
+                  ? "В очереди есть ошибки. Откройте подробности задачи, чтобы повторить её или узнать причину."
+                  : queue.paused
+                    ? "Сохранённая очередь ожидает продолжения. Состояние программ будет проверено заново."
+                    : "Новых уведомлений нет. Все результаты доступны в истории."}
+              </span>
+            </div>
+            <button
+              className="button secondary"
+              onClick={() => {
+                setShowNotices(false);
+                setNav("queue");
+              }}
+            >
+              Открыть очередь
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </Modal>
+      )}
+      {clearConfirm && (
+        <Modal title="Очистить историю?" onClose={() => setClearConfirm(false)}>
+          <div className="modal-body">
+            <p>
+              Будут удалены результаты и журналы завершённых задач.
+              Установленные программы останутся на компьютере.
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="button secondary"
+              onClick={() => setClearConfirm(false)}
+            >
+              Отмена
+            </button>
+            <button
+              className="button primary"
+              onClick={() => {
+                void control("clear");
+                setClearConfirm(false);
+              }}
+            >
+              Очистить
+            </button>
+          </div>
+        </Modal>
+      )}
+      {toast && (
+        <div className="toast" role="status">
+          <Info size={18} />
+          <span>{toast}</span>
+          <button aria-label="Закрыть уведомление" onClick={() => setToast("")}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
-function App(){
- const [nav,setNav]=useState('catalog');const [filters,setFilters]=useState<Filters>(initialFilters);
- const [settings,setSettings]=useState<Settings>(()=>({...{theme:'dark',mode:native?'live':'demo',view:'grid',skipCurrent:true,parallelDownloads:2},...readStorage<Partial<Settings>>('settings',{}),...(!native?{mode:'demo' as const}:{})}));
- const [selection,setSelection]=useState<Selection[]>(()=>readStorage<Selection[]>('selection',[]).filter(s=>apps.some(a=>a.id===s.appId)));
- const [favorites,setFavorites]=useState<string[]>(()=>readStorage('favorites',[]));
- const [presets,setPresets]=useState<Preset[]>(()=>readStorage('presets',[]));
- const [installed,setInstalled]=useState<InstalledApp[]>([]);const [system,setSystem]=useState<SystemInfo|null>(null);const [queue,setQueue]=useState<QueueState>(emptyQueue);
- const [loading,setLoading]=useState(false);const [busy,setBusy]=useState(false);const [scanning,setScanning]=useState(false);const [detail,setDetail]=useState<Product|null>(null);
- const [toast,setToast]=useState('');const [showFilters,setShowFilters]=useState(false);const [wizard,setWizard]=useState(false);const [wizardId,setWizardId]=useState('python-dev');
- const [plan,setPlan]=useState<Plan|null>(null);const [saveName,setSaveName]=useState<string|null>(null);const [editingPreset,setEditingPreset]=useState<string|null>(null);const [expandedTask,setExpandedTask]=useState<string|null>(null);const [ack,setAck]=useState(false);const [clearConfirm,setClearConfirm]=useState(false);
- const [showNotices,setShowNotices]=useState(false);const fileRef=useRef<HTMLInputElement>(null);const searchRef=useRef<HTMLInputElement>(null);
- const notify=(message:string)=>setToast(message);
- useEffect(()=>{if(!toast)return;const id=setTimeout(()=>setToast(''),5500);return()=>clearTimeout(id)},[toast]);
- useEffect(()=>{writeStorage('settings',settings);const media=window.matchMedia('(prefers-color-scheme: light)');const apply=()=>{document.documentElement.dataset.theme=settings.theme==='system'?(media.matches?'light':'dark'):settings.theme};apply();media.addEventListener('change',apply);return()=>media.removeEventListener('change',apply)},[settings]);
- useEffect(()=>writeStorage('selection',selection),[selection]);useEffect(()=>writeStorage('favorites',favorites),[favorites]);useEffect(()=>writeStorage('presets',presets),[presets]);
- useEffect(()=>{let alive=true;const refresh=async()=>{try{const q=await api.queue(settings.mode);if(alive)setQueue(q)}catch(e){if(alive)setToast(String(e))}};void refresh();const id=setInterval(refresh,700);return()=>{alive=false;clearInterval(id)}},[settings.mode]);
- useEffect(()=>{setInstalled([]);setSystem(null);void api.system(settings.mode).then(setSystem).catch(e=>notify(String(e)));if(settings.mode==='live'&&native){setScanning(true);void api.scan(settings.mode).then(setInstalled).catch(e=>notify(String(e))).finally(()=>setScanning(false));}},[settings.mode]);
- useEffect(()=>{const key=(e:KeyboardEvent)=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();setNav('catalog');searchRef.current?.focus()}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key)},[]);
- const changeSettings=(patch:Partial<Settings>)=>setSettings(s=>({...s,...patch}));
- const getInstalled=(app:Product)=>installed.find(i=>i.packageId.toLowerCase()===(app.install.packageId||`appdock:${app.id}`).toLowerCase());
- const toggleApp=(app:Product)=>setSelection(s=>s.some(i=>i.appId===app.id)?s.filter(i=>i.appId!==app.id):[...s,defaultSelection(app)]);
- const updateSelection=(s:Selection)=>setSelection(items=>items.some(i=>i.appId===s.appId)?items.map(i=>i.appId===s.appId?s:i):[...items,s]);
- const toggleFavorite=(id:string)=>setFavorites(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id]);
- const scan=async()=>{setScanning(true);try{const result=await api.scan(settings.mode);setInstalled(result);setSystem(await api.system(settings.mode));notify(settings.mode==='demo'?'Демонстрация: сведения об установленных программах не считываются.':`Проверка завершена. Обнаружено пакетов: ${result.length}`)}catch(e){notify(String(e))}finally{setScanning(false)}};
- const review=async(downloadOnly=false)=>{if(!selection.length)return;setLoading(true);try{const items=downloadOnly?selection.filter(s=>getApp(s.appId).install.download).map(s=>({...s,action:'download' as const,extensions:[]})):selection;if(!items.length)throw new Error('Для выбранных продуктов отдельная загрузка не поддерживается');const p=await api.plan(items,settings);setAck(false);setPlan(p)}catch(e){notify(String(e))}finally{setLoading(false)}};
- const launch=async()=>{if(!plan)return;setBusy(true);try{await api.start(plan.token,settings.mode);setPlan(null);setNav('queue');setSelection([])}catch(e){notify(String(e))}finally{setBusy(false)}};
- const control=async(action:string,id?:string)=>{try{await api.control(action,settings.mode,id);setQueue(await api.queue(settings.mode))}catch(e){notify(String(e))}};
- const loadPreset=(p:Preset)=>{setSelection(normalizePresetItems(p.items));setNav('catalog');setFilters(initialFilters);setWizard(false);notify(`Набор «${p.name}» выбран. Проверьте состав перед запуском.`)};
- const savePreset=()=>{const name=saveName?.trim();if(!name)return;if(editingPreset){setPresets(ps=>ps.map(p=>p.id===editingPreset?{...p,name}:p));setEditingPreset(null)}else{setPresets(ps=>[...ps,{id:crypto.randomUUID(),name,description:'Мой набор программ',icon:'Package',items:structuredClone(selection),builtin:false}])}setSaveName(null);notify('Набор сохранён')};
- const copyLog=async(task?:QueueTask)=>{try{await navigator.clipboard.writeText((task?[task]:queue.tasks).map(t=>`${t.name} · ${statusNames[t.status]}\n${t.log.join('\n')}`).join('\n\n'));notify('Журнал скопирован')}catch{notify('Буфер обмена недоступен. Выделите текст журнала вручную.')}};
- const base=nav==='favorites'?apps.filter(a=>favorites.includes(a.id)):nav==='installed'?apps.filter(a=>getInstalled(a)):apps;
- const visible=filterApps(base,filters,installed);
- const selectedApps=selection.filter(s=>!isWeb(getApp(s.appId)));const selectedServices=selection.filter(s=>isWeb(getApp(s.appId)));
- const extensionCount=selection.reduce((sum,s)=>sum+(s.action==='install'?s.extensions.length:0),0);
- const knownDownload=selection.reduce((sum,s)=>sum+(getApp(s.appId).downloadMb||0),0);const unknownDownload=selection.some(s=>!isWeb(getApp(s.appId))&&getApp(s.appId).downloadMb===null);
- const taskTotal=selection.length+extensionCount;
- const activeTasks=queue.tasks.filter(t=>!terminalStatuses.includes(t.status));const finished=queue.tasks.filter(t=>terminalStatuses.includes(t.status));
- const pageTitles:Record<string,string>={catalog:'Подготовьте компьютер к работе',installed:'Установленные программы',favorites:'Ваши любимые программы',queue:'Загрузки и установка',presets:'Нужные программы — в одном наборе',history:'История действий',settings:'Настройки'};
- const pageDescriptions:Record<string,string>={catalog:'Выберите нужное. Остальное AppDock возьмёт на себя.',installed:'Программы, обнаруженные на этом компьютере.',favorites:'Всё, что хочется держать под рукой.',queue:'Каждый шаг под контролем. Результаты — без догадок.',presets:'Сохраните свой выбор или начните с готового решения.',history:'Результаты установок, загрузок и веб-действий.',settings:'Пусть AppDock работает так, как удобно вам.'};
 
- return <div className="app-shell">
-  <aside className="sidebar"><Brand/><div className="sidebar-caption">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</div><nav aria-label="Основная навигация">{navItems.map(([id,label,Component])=><button key={id} className={`nav-item ${nav===id?'active':''}`} onClick={()=>{setNav(id);setFilters(initialFilters)}}><Component size={18}/><span>{label}</span>{id==='queue'&&activeTasks.length>0?<span className="nav-count">{activeTasks.length}</span>:id==='favorites'&&favorites.length>0?<span className="nav-count quiet">{favorites.length}</span>:null}</button>)}</nav>
-   <div className="sidebar-categories"><div className="sidebar-caption">КАТЕГОРИИ</div>{categories.filter(c=>c.id!=='all').map(c=><button key={c.id} className={`category-nav ${filters.category===c.id&&nav==='catalog'?'active':''}`} onClick={()=>{setNav('catalog');setFilters({...initialFilters,category:c.id})}}><Icon name={c.icon} size={16}/><span>{c.name}</span><span className="category-count">{apps.filter(a=>a.category===c.id).length}</span></button>)}</div>
-   <div className="sidebar-bottom"><div className="device-icon"><Monitor size={19}/></div><div><strong>Этот компьютер</strong><span>{system?.os||'Windows 11'} · {system?.arch||'x64'}</span></div><span className={`status-dot ${settings.mode==='demo'?'demo':''}`}/></div><div className="sidebar-version"><span>AppDock 0.1.0</span><button onClick={()=>{setNav('settings')}} aria-label="О приложении"><CircleHelp size={15}/></button></div>
-  </aside>
-  <main className="main-pane"><header className="topbar"><div className="breadcrumb"><span>Рабочее пространство</span><ChevronRight size={13}/><strong>{navItems.find(n=>n[0]===nav)?.[1]}</strong></div><div className="topbar-actions"><span className={`mode-pill ${settings.mode}`}><span/>{settings.mode==='demo'?'Демонстрационный режим':'Рабочий режим'}</span><button className="icon-button" aria-label="Уведомления" onClick={()=>setShowNotices(true)}><Bell size={18}/>{queue.tasks.some(t=>t.status==='error')&&<i className="notification-dot"/>}</button></div></header>
-   <div className="main-scroll" key={nav}><div className="page-heading"><div><div className="eyebrow">{nav==='catalog'?'МЕНЬШЕ РУТИНЫ. БОЛЬШЕ ВОЗМОЖНОСТЕЙ.':'APPDOCK / '+(navItems.find(n=>n[0]===nav)?.[1]||'').toUpperCase()}</div><h1>{pageTitles[nav]}</h1><p>{pageDescriptions[nav]}</p></div>{nav==='installed'&&<button className="button secondary" onClick={scan} disabled={scanning}>{scanning?<Loader2 size={16} className="spin"/>:<RefreshCw size={16}/>}Проверить</button>}</div>
-   {['catalog','favorites','installed'].includes(nav)&&<>
-    {nav==='catalog'&&filters.category==='all'&&!filters.query&&<section className="welcome-banner"><div className="banner-content"><span className="mini-label"><Sparkles size={13}/>КОМПЬЮТЕР, ГОТОВЫЙ К ВАШИМ ЗАДАЧАМ</span><h2>Новый старт. Без лишних шагов.</h2><p>Браузер, рабочие инструменты и любимые приложения.<br/>Всё нужное — в одной очереди.</p><button className="banner-button" onClick={()=>setWizard(true)}>Подобрать по задаче<ArrowUpRight size={16}/></button></div><div className="banner-art" aria-hidden="true"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><span className="art-tile tile-code"><Code2/></span><span className="art-tile tile-world"><Globe/></span><span className="art-tile tile-doc"><FileText/></span><span className="art-main"><div className="brand-icon"><span/><span/><span/><span/></div></span><span className="art-spark">✦</span></div></section>}
-    <div className="search-toolbar"><div className="search-field"><Search size={18}/><input ref={searchRef} value={filters.query} onChange={e=>setFilters(f=>({...f,query:e.target.value}))} placeholder="Найти программу, издателя или задачу…" aria-label="Поиск программ"/>{filters.query?<button aria-label="Очистить поиск" onClick={()=>setFilters(f=>({...f,query:''}))}><X size={15}/></button>:<kbd>Ctrl K</kbd>}</div><button className={`button secondary filters-button ${showFilters?'selected':''}`} onClick={()=>setShowFilters(v=>!v)} aria-expanded={showFilters}><SlidersHorizontal size={17}/><span>Фильтры</span>{Object.entries(filters).filter(([k,v])=>!['query','category'].includes(k)&&v!=='all').length>0&&<span className="filter-dot"/>}</button><div className="view-switch" aria-label="Вид каталога"><button className={settings.view==='grid'?'active':''} onClick={()=>changeSettings({view:'grid'})} aria-label="Карточки" aria-pressed={settings.view==='grid'}><LayoutGrid size={17}/></button><button className={settings.view==='list'?'active':''} onClick={()=>changeSettings({view:'list'})} aria-label="Компактный список" aria-pressed={settings.view==='list'}><List size={18}/></button></div></div>
-    {showFilters&&<div className="filter-panel">{[
-     ['category','Категория',categories.map(c=>[c.id,c.name])],['platform','Платформа',[['all','Все платформы'],['windows','Windows'],['macos','macOS'],['linux','Linux'],['ios','iOS'],['web','Веб']]],['status','Состояние',[['all','Любое состояние'],['installed','Установлено'],['missing','Не установлено'],['update','Есть обновление']]],['license','Лицензия',[['all','Любая лицензия'],['free','Бесплатное'],['paid','Платное'],['trial','Пробная версия']]],['type','Тип продукта',[['all','Любой тип'],...Object.entries(typeNames)]],['automation','Установка',[['all','Любая установка'],['auto','Автоматическая'],['manual','Требуется участие']]]
-    ].map(([key,label,options])=><label key={key as string}>{label as string}<select aria-label={label as string} value={filters[key as keyof Filters]} onChange={e=>setFilters(f=>({...f,[key as string]:e.target.value}))}>{(options as string[][]).map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>)}<button className="text-button" onClick={()=>setFilters(initialFilters)}><RotateCcw size={14}/>Сбросить фильтры</button></div>}
-    <div className="catalog-tabs"><div>{[{id:'all',name:'Все программы'},...categories.filter(c=>['development','browsers','documents','databases'].includes(c.id))].map(c=><button key={c.id} className={filters.category===c.id?'active':''} onClick={()=>setFilters(f=>({...f,category:c.id}))}>{c.name}{c.id==='all'&&<span>{base.length}</span>}</button>)}</div><span className="result-count">Найдено: {visible.length}</span></div>
-    {nav==='installed'&&<div className="inline-note"><Info size={17}/><span>{scanning?'Считываем версии через WinGet и реестр…':settings.mode==='demo'?'В деморежиме установленные программы не считываются.':'Нажмите «Проверить», чтобы считать программы и версии. Состояние определяется заново перед выполнением.'}</span></div>}
-    {visible.length===0?<div className="empty-state"><span><Search size={28}/></span><h3>{nav==='favorites'?'Пока без избранного':nav==='installed'?'Здесь появятся ваши программы':'Ничего не найдено'}</h3><p>{nav==='favorites'?'Нажмите на сердечко в карточке программы.':nav==='installed'?'Запустите проверку в рабочем режиме.':'Попробуйте другое название или измените фильтры.'}</p><button className="button secondary" onClick={()=>{setFilters(initialFilters);if(nav==='installed')void scan();else if(nav==='favorites')setNav('catalog')}}>{nav==='installed'?'Проверить компьютер':nav==='favorites'?'Открыть каталог':'Сбросить фильтры'}</button></div>:categories.filter(c=>c.id!=='all').map(category=>{
-      const group=visible.filter(a=>a.category===category.id);if(!group.length)return null;
-      return <section className="catalog-section" key={category.id}><div className="section-heading"><div><Icon name={category.icon} size={18}/><h2>{category.name}</h2><span>{group.length}</span></div><span>{category.id==='browsers'?'Ваше окно в интернет':category.id==='development'?'Инструменты для больших идей':''}</span></div><div className={`product-grid ${settings.view==='list'?'list-view':''}`}>{group.map(app=>{
-       const chosen=selection.some(s=>s.appId===app.id);const ins=getInstalled(app);const unsupported=!app.platforms.includes('windows');
-       return <article key={app.id} className={`product-card ${chosen?'chosen':''} ${unsupported?'unsupported':''}`}><div className="card-top"><button className="product-open" onClick={()=>setDetail(app)} aria-label={`Настройки ${app.name}`}><Logo app={app}/><div><h3>{app.name}</h3><span className="publisher">{app.publisher}</span></div></button><button className={`selection-check ${chosen?'checked':''}`} aria-label={`${chosen?'Убрать':'Выбрать'} ${app.name}`} aria-pressed={chosen} onClick={()=>toggleApp(app)}>{chosen&&<Check size={15} strokeWidth={3}/>}</button></div><button className="card-description" onClick={()=>setDetail(app)}>{app.description}</button><div className="card-badges">{unsupported?<span className="badge muted"><Info size={11}/>Только {app.id==='safari'?'macOS / iOS':'macOS'}</span>:isWeb(app)?<span className="badge cyan"><Globe size={11}/>{typeNames[app.type]}</span>:ins?<span className={`badge ${ins.availableVersion?'amber':'green'}`}><Check size={11}/>{ins.availableVersion?'Есть обновление':'Установлено'} {ins.version}</span>:app.install.method==='winget'&&app.install.verification==='verified'?<span className="badge"><Monitor size={11}/>Windows</span>:<span className="badge amber"><ExternalLink size={11}/>{app.id==='atom'?'Архивный продукт':'Ручная установка'}</span>}{app.license==='trial'&&<span className="badge muted">Пробная версия</span>}</div><div className="card-footer"><span title={app.version}>{app.version==='Уточняется в источнике'?'Версия у издателя':app.version}</span><div><button className={`icon-button favorite-button ${favorites.includes(app.id)?'hearted':''}`} aria-label={`${favorites.includes(app.id)?'Удалить из':'Добавить в'} избранное ${app.name}`} onClick={()=>toggleFavorite(app.id)}><Heart size={15} fill={favorites.includes(app.id)?'currentColor':'none'}/></button><button className="card-settings" onClick={()=>setDetail(app)} aria-label={`Параметры ${app.name}`}><SlidersHorizontal size={14}/><span>Параметры</span></button></div></div></article>
-      })}</div></section>
-    })}
-    <div className="catalog-footer"><ShieldCheck size={15}/><span>Проверенные источники. Установка без лишних предложений.</span><button onClick={()=>{setNav('settings')}}>Об интеграциях<ArrowUpRight size={13}/></button></div>
-   </>}
-
-   {nav==='presets'&&<><div className="section-tools"><div className="inline-note plain"><Boxes size={18}/><span>Готовые наборы можно изменить перед установкой</span></div><input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={async e=>{const f=e.target.files?.[0];if(f){try{if(f.size>200_000)throw new Error('Файл слишком большой');const imported=parsePreset(await f.text());setPresets(ps=>[...ps,imported]);notify('Набор импортирован')}catch(err){notify(`Не удалось импортировать: ${err instanceof Error?err.message:String(err)}`)}e.target.value=''}}}/><button className="button secondary" onClick={()=>fileRef.current?.click()}><Upload size={16}/>Импорт JSON</button></div><div className="preset-grid">{[...presets,...builtinPresets].map(p=><article className="preset-card" key={p.id}><div className="preset-top"><span className="preset-icon"><Icon name={p.icon} size={25}/></span><span className="badge muted">{p.builtin?'Готовый набор':'Мой набор'}</span></div><h3>{p.name}</h3><p>{p.description}</p><div className="preset-apps">{p.items.slice(0,4).map(s=><Logo app={getApp(s.appId)} key={s.appId} small/>)}<span>{p.items.length} {p.items.length===1?'программа':'программы'}</span></div><div className="preset-actions"><button className="button secondary" onClick={()=>loadPreset(p)}>Выбрать набор<ArrowRight size={15}/></button><button className="icon-button" aria-label={`Экспорт ${p.name}`} onClick={()=>downloadJson(`${p.name}.json`,serializePreset(p))}><Download size={16}/></button>{!p.builtin&&<><button className="icon-button" aria-label={`Переименовать ${p.name}`} onClick={()=>{setEditingPreset(p.id);setSaveName(p.name)}}><Settings2 size={16}/></button><button className="icon-button danger-text" aria-label={`Удалить ${p.name}`} onClick={()=>setPresets(ps=>ps.filter(x=>x.id!==p.id))}><Trash2 size={16}/></button></>}</div></article>)}</div></>}
-
-   {(nav==='queue'||nav==='history')&&<><div className="queue-summary"><div className="queue-summary-icon"><ArrowDownToLine size={25}/></div><div><h3>{queue.running?queue.paused?'Очередь приостановлена':'Выполняем ваш план':queue.tasks.length?'Результаты выполнения':'Пока нет задач'}</h3><p>{settings.mode==='demo'?'Демонстрация · компьютер не изменяется':`${finished.length} из ${queue.tasks.length} задач завершено`} {queue.running&&'· установщики выполняются последовательно'}</p></div><div className="queue-controls">{queue.running?<button className="button secondary" onClick={()=>void control(queue.paused?'resume':'pause')}>{queue.paused?<Play size={15}/>:<Pause size={15}/>} {queue.paused?'Продолжить':'Пауза'}</button>:queue.paused&&activeTasks.length>0?<button className="button primary" onClick={()=>void control('resume')}><Play size={15}/>Продолжить</button>:null}<button className="icon-button" aria-label="Скопировать весь журнал" onClick={()=>void copyLog()}><Copy size={17}/></button></div></div>{queue.tasks.length>0&&<div className="overall-progress"><div style={{width:`${finished.length/queue.tasks.length*100}%`}}/></div>}<div className="section-heading queue-heading"><div><h2>{nav==='history'?'Завершённые действия':'Очередь задач'}</h2><span>{nav==='history'?finished.length:queue.tasks.length}</span></div><div className="row-actions"><button className="text-button" onClick={()=>void control('retry')} disabled={queue.running&&!queue.paused}><RotateCcw size={14}/>Повторить ошибки</button>{queue.running?<button className="text-button" onClick={()=>void control('cancel')}>Отменить ожидающие</button>:<button className="text-button" onClick={()=>setClearConfirm(true)}>Очистить историю</button>}</div></div>{(nav==='history'?finished:queue.tasks).length===0?<div className="empty-state"><span><CheckCheck size={29}/></span><h3>{nav==='history'?'История пока пуста':'Всё готово к новому началу'}</h3><p>Выберите программы в каталоге и проверьте итоговый план.</p><button className="button primary" onClick={()=>setNav('catalog')}>Перейти в каталог<ArrowRight size={16}/></button></div>:<div className="task-list">{(nav==='history'?finished:queue.tasks).map(task=><div className={`task-row ${task.parentId?'subtask':''}`} key={task.id}><div className="task-main"><Logo app={getApp(task.appId)} small/><div className="task-content"><strong>{task.name}</strong><span>{task.message||'Ожидание выполнения'}</span>{task.percent!==null&&<progress max="100" value={task.percent}/>}</div><span className={`task-status ${task.status}`}>{['checking','installing','configuring','downloading','verifying'].includes(task.status)?<Loader2 size={14} className="spin"/>:doneStatuses.includes(task.status)?<CheckCircle2 size={14}/>:['error','action-required'].includes(task.status)?<TriangleAlert size={14}/>:<Circle size={13}/>} {statusNames[task.status]}</span><button className="icon-button" aria-label={`Подробности ${task.name}`} onClick={()=>setExpandedTask(expandedTask===task.id?null:task.id)}><ChevronDown size={17} className={expandedTask===task.id?'rotated':''}/></button></div>{expandedTask===task.id&&<div className="task-details"><pre>{task.log.join('\n')||'Журнал появится после начала выполнения.'}</pre><div className="row-actions"><button className="text-button" onClick={()=>void copyLog(task)}><Copy size={14}/>Копировать журнал</button>{['error','action-required','cancelled'].includes(task.status)&&<button className="text-button" onClick={()=>void control('retry',task.id)}><RotateCcw size={14}/>Повторить</button>}{task.status==='action-required'&&<button className="text-button" onClick={()=>void api.source(task.appId).catch(e=>notify(String(e)))}><ExternalLink size={14}/>Официальный источник</button>}{task.status==='queued'&&<button className="text-button" onClick={()=>void control('cancel',task.id)}>Отменить</button>}</div></div>}</div>)}</div>}<div className="inline-note"><Info size={17}/><span>Пауза останавливает запуск следующих задач. Работающий установщик завершается штатно. Перезагрузка автоматически не выполняется.</span></div></>}
-
-   {nav==='settings'&&<div className="settings-page"><section className="settings-section"><div className="section-heading"><div><Monitor size={18}/><h2>Внешний вид</h2></div></div><div className="theme-options">{[['dark','Тёмная',Moon],['light','Светлая',Sun],['system','Как в системе',Monitor]].map(([id,label,Component])=>{const C=Component as LucideIcon;return <button key={id as string} className={`theme-choice ${settings.theme===id?'active':''}`} onClick={()=>changeSettings({theme:id as Settings['theme']})}><div className={`theme-preview preview-${id}`}><span/><span/><span/></div><div><C size={16}/>{label as string}{settings.theme===id&&<Check size={16}/>}</div></button>})}</div></section><section className="settings-section"><div className="section-heading"><div><ShieldCheck size={18}/><h2>Режим работы</h2></div></div><div className="setting-row"><div><strong>Демонстрационный режим</strong><p>{native?'Имитирует очередь без установки и изменения компьютера.':'Браузерный просмотр всегда работает в деморежиме. Для системных операций запустите настольное приложение.'}</p></div><Toggle checked={settings.mode==='demo'} label="Демонстрационный режим" onChange={()=>{if(!native){notify('Рабочий режим доступен в настольной версии AppDock');return}if(queue.running){notify('Дождитесь завершения текущей очереди');return}changeSettings({mode:settings.mode==='demo'?'live':'demo'})}}/></div><div className="setting-row"><div><strong>Пропускать актуальные программы</strong><p>Перед каждой задачей заново проверять установленную версию.</p></div><Toggle checked={settings.skipCurrent} label="Пропускать актуальные программы" onChange={()=>changeSettings({skipCurrent:!settings.skipCurrent})}/></div><div className="setting-row"><div><strong>Параллельные загрузки</strong><p>Только для действия «Только скачать». Установщики запускаются по одному.</p></div><select aria-label="Количество параллельных загрузок" value={settings.parallelDownloads} onChange={e=>changeSettings({parallelDownloads:Number(e.target.value)})}>{[1,2,3].map(n=><option key={n} value={n}>{n}</option>)}</select></div></section><section className="settings-section"><div className="section-heading"><div><Activity size={18}/><h2>Состояние системы</h2></div><button className="text-button" onClick={()=>void api.system(settings.mode).then(setSystem).catch(e=>notify(String(e)))}><RefreshCw size={14}/>Обновить</button></div><div className="system-grid">{[['Платформа',system?.os||'Проверяется'],['Архитектура',system?.arch||'—'],['WinGet',system?.winget||'Не обнаружен / не проверен'],['Свободное место',system?.freeDiskMb?`${(system.freeDiskMb/1024).toFixed(1)} ГБ`:'Не определено'],['Виртуализация',system?.virtualization===true?'Включена':system?.virtualization===false?'Выключена':'Не определена'],['WSL',system?.wsl||'Не проверено'],['Hyper-V',system?.hyperV||'Не проверено']].map(([name,value])=><div key={name}><span>{name}</span><strong>{value}</strong></div>)}</div><button className="button secondary" onClick={()=>void api.openDownloads().catch(e=>notify(String(e)))}><FolderOpen size={16}/>Открыть папку загрузок</button></section><section className="settings-section"><div className="section-heading"><div><BookOpen size={18}/><h2>Источники и ограничения</h2></div><span className="badge">Проверено 28.10.2026</span></div><p className="settings-copy">В каталоге {apps.length} продуктов. Для {apps.filter(a=>a.install.verification==='verified').length} проверены пакеты WinGet. Перед выполнением пакет запрашивается заново из явно указанного источника winget. Контроль хеша выполняет WinGet; отключение проверки не поддерживается.</p><div className="limitations-list"><p><Info size={16}/><span>Коммерческие САПР, Office, ArtCraft и серверы БД требуют официального мастера. Автоматическая настройка таких продуктов не подтверждена.</span></p><p><Info size={16}/><span>Профиль Visual Studio формируется по снимку официального каталога. Окончательные совместимость и размер определяет Visual Studio Installer; пропущенные компоненты требуют проверки.</span></p><p><Info size={16}/><span>SDK Android, образы, WSL, компоненты ОС, Podman machine и эмуляторы облачных БД выполняются отдельными ручными шагами по официальной инструкции.</span></p><p><Info size={16}/><span>Обычный веб-ярлык поддерживается. Установка PWA, создание облачных ресурсов и автоматическая миграция баз не выполняются.</span></p></div><div className="about-footer"><Brand/><span>Версия 0.1.0 · Tauri 2 + React + Rust</span></div></section></div>}
-  </div></main>
-
-  <aside className="selection-pane"><div className="selection-header"><div><span className="cart-icon"><Download size={18}/></span><h2>Ваш выбор</h2><span className="selection-counter">{selection.length}</span></div><button className="icon-button" disabled={!selection.length} onClick={()=>setSelection([])} aria-label="Очистить выбор"><Trash2 size={16}/></button></div><div className="selection-scroll">{selection.length===0?<div className="cart-empty"><div className="empty-stack"><div/><div/><span><Plus size={26}/></span></div><h3>Начнём с нужного</h3><p>Выбирайте программы в каталоге.<br/>Они появятся здесь.</p><button className="text-button" onClick={()=>setWizard(true)}><WandSparkles size={15}/>Помочь с выбором</button></div>:<>{selectedApps.length>0&&<div className="cart-group-label">ПРОГРАММЫ И КОМПОНЕНТЫ<span>{selectedApps.length}</span></div>}{selectedApps.map(s=>{const a=getApp(s.appId);return <div className="cart-item" key={s.appId}><Logo app={a} small/><button className="cart-item-info" onClick={()=>setDetail(a)}><strong>{a.name}</strong><span>{s.action==='guide'?'Открыть инструкцию':s.action==='download'?'Только скачать':getInstalled(a)?.availableVersion?'Обновить':'Установить'}{s.extensions.length>0&&` · +${s.extensions.length} расширений`}</span></button><button className="icon-button" aria-label={`Убрать ${a.name}`} onClick={()=>toggleApp(a)}><X size={14}/></button></div>})}{selectedServices.length>0&&<div className="cart-group-label web-group">ВЕБ-СЕРВИСЫ<span>{selectedServices.length}</span></div>}{selectedServices.map(s=>{const a=getApp(s.appId);return <div className="cart-item" key={s.appId}><Logo app={a} small/><button className="cart-item-info" onClick={()=>setDetail(a)}><strong>{a.name}</strong><span>{s.action==='shortcut'?'Создать ярлык':'Открыть сервис'}</span></button><button className="icon-button" aria-label={`Убрать ${a.name}`} onClick={()=>toggleApp(a)}><X size={14}/></button></div>})}<button className="save-selection" onClick={()=>{setEditingPreset(null);setSaveName('Мой набор')}}><Boxes size={16}/>Сохранить в набор<Plus size={15}/></button></>}
-   <div className="cart-tip"><span className="tip-icon"><ShieldCheck size={18}/></span><div><strong>Только нужные программы</strong><p>Официальные источники.<br/>Без сторонних дополнений.</p></div></div></div>
-   <div className="selection-bottom">{settings.mode==='demo'&&<div className="demo-notice"><Circle size={9} fill="currentColor"/><span>Демо · без изменений компьютера</span></div>}<div className="selection-stats"><div><span>Задач в очереди</span><strong>{taskTotal}</strong></div><div><span>Размер загрузки</span><strong>{selection.length?unknownDownload?knownDownload?`от ${knownDownload} МБ`:'Уточняется':knownDownload?`${knownDownload} МБ`:'—':'—'}</strong></div><div><span>Место на диске</span><strong>{selection.length?'Проверим в плане':'—'}</strong></div></div><button className="button primary install-button" disabled={!selection.length||loading||queue.running} onClick={()=>void review()}>{loading?<Loader2 size={17} className="spin"/>:<ArrowDownToLine size={18}/>}<span>{loading?'Проверяем план…':'Скачать и установить'}</span><ArrowRight size={16}/></button><button className="download-only" disabled={!selection.some(s=>getApp(s.appId).install.download)||loading||queue.running} onClick={()=>void review(true)}><ArrowDown size={14}/>Только скачать<span>{selection.filter(s=>getApp(s.appId).install.download).length||''}</span></button><p className="review-hint"><ShieldCheck size={12}/>Сначала покажем итоговый план</p></div>
-  </aside>
-
-  {detail&&<ProductDialog app={detail} selection={selection.find(s=>s.appId===detail.id)} installed={getInstalled(detail)} mode={settings.mode} onClose={()=>setDetail(null)} onApply={s=>{updateSelection(s);setDetail(null)}} onFavorite={()=>toggleFavorite(detail.id)} favorite={favorites.includes(detail.id)} notify={notify}/>}
-  {plan&&<Modal title="Проверим всё перед запуском" wide onClose={()=>!busy&&setPlan(null)}><div className="modal-body"><div className="plan-intro"><span className="plan-icon"><ShieldCheck size={26}/></span><div><h3>{plan.items.length} программ и действий</h3><p>{plan.mode==='demo'?'Демонстрационный план — компьютер не изменится':'План проверен в системном ядре AppDock'}</p></div><span className={`mode-pill ${plan.mode}`}><span/>{plan.mode==='demo'?'Демо':'Рабочий режим'}</span></div>{plan.warnings.map((w,i)=><div className="inline-note" key={i}><TriangleAlert size={17}/><span>{w}</span></div>)}<div className="plan-items">{plan.items.map(item=><div className="plan-item" key={item.appId}><Logo app={getApp(item.appId)} small/><div><strong>{item.name}</strong><p>{({install:'Установка / обновление',download:'Только скачивание',open:'Открытие веб-сервиса',shortcut:'Интернет-ярлык на рабочем столе',guide:'Официальная инструкция'} as Record<string,string>)[item.action]}</p>{item.installedVersion&&<small>Установлена версия {item.installedVersion}</small>}{item.warnings.map((w,i)=><small className={item.blocked?'danger-text':'warning-text'} key={i}>{w}</small>)}</div>{item.blocked?<TriangleAlert size={18} className="warning-text"/>:<Check size={18} className="success-text"/>}</div>)}</div><div className="plan-system"><span><HardDrive size={15}/>{plan.system.freeDiskMb?`${(plan.system.freeDiskMb/1024).toFixed(1)} ГБ свободно`:'Место не определено'}</span><span><Monitor size={15}/>{plan.system.arch}</span><span><Terminal size={15}/>{plan.system.winget||'WinGet не проверен'}</span></div><label className="acknowledgement"><input type="checkbox" checked={ack} onChange={e=>setAck(e.target.checked)}/><span>{plan.mode==='demo'?'Запустить демонстрацию выполнения без изменения компьютера.':'Я проверил состав и условия лицензирования. Разрешаю выполнить перечисленные действия. UAC и ручные шаги могут потребовать моего участия.'}</span></label></div><div className="modal-footer"><button className="button secondary" onClick={()=>setPlan(null)} disabled={busy}>Вернуться к выбору</button><button className="button primary" disabled={!ack||busy||plan.items.some(i=>i.blocked)} onClick={()=>void launch()}>{busy?<Loader2 size={16} className="spin"/>:<Play size={16}/>} {plan.mode==='demo'?'Запустить демо':'Начать выполнение'}</button></div></Modal>}
-  {wizard&&<Modal title="Для чего нужен компьютер?" wide onClose={()=>setWizard(false)}><div className="modal-body"><p className="modal-description">Подберём основу, а окончательный выбор останется за вами.</p><div className="wizard-options">{builtinPresets.map(p=><button key={p.id} className={wizardId===p.id?'active':''} onClick={()=>setWizardId(p.id)}><Icon name={p.icon} size={22}/><span>{p.name}</span>{wizardId===p.id&&<Check size={17}/>}</button>)}</div><div className="wizard-recommendation"><Sparkles size={20}/><div><strong>Почему этот набор</strong><p>{builtinPresets.find(p=>p.id===wizardId)?.description}</p><div className="recommended-names">{builtinPresets.find(p=>p.id===wizardId)?.items.map(s=><span key={s.appId}><Logo app={getApp(s.appId)} small/>{getApp(s.appId).name}</span>)}</div></div></div></div><div className="modal-footer"><span>Выбор заменит текущий список</span><button className="button primary" onClick={()=>loadPreset(builtinPresets.find(p=>p.id===wizardId)!)}>Выбрать этот набор<ArrowRight size={16}/></button></div></Modal>}
-  {saveName!==null&&<Modal title={editingPreset?'Переименовать набор':'Сохранить ваш набор'} onClose={()=>setSaveName(null)}><div className="modal-body"><label className="form-label">Название набора<input autoFocus maxLength={80} value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')savePreset()}}/></label><p className="muted-text">{editingPreset?'Состав набора сохранится.':`${selection.length} программ. Версии и параметры сохранятся без секретов.`}</p></div><div className="modal-footer"><button className="button secondary" onClick={()=>setSaveName(null)}>Отмена</button><button className="button primary" disabled={!saveName.trim()} onClick={savePreset}>Сохранить</button></div></Modal>}
-  {showNotices&&<Modal title="Уведомления" onClose={()=>setShowNotices(false)}><div className="modal-body"><div className="inline-note"><Bell size={18}/><span>{queue.tasks.some(t=>t.status==='error')?'В очереди есть ошибки. Откройте подробности задачи, чтобы повторить её или узнать причину.':queue.paused?'Сохранённая очередь ожидает продолжения. Состояние программ будет проверено заново.':'Новых уведомлений нет. Все результаты доступны в истории.'}</span></div><button className="button secondary" onClick={()=>{setShowNotices(false);setNav('queue')}}>Открыть очередь<ArrowRight size={16}/></button></div></Modal>}
-  {clearConfirm&&<Modal title="Очистить историю?" onClose={()=>setClearConfirm(false)}><div className="modal-body"><p>Будут удалены результаты и журналы завершённых задач. Установленные программы останутся на компьютере.</p></div><div className="modal-footer"><button className="button secondary" onClick={()=>setClearConfirm(false)}>Отмена</button><button className="button primary" onClick={()=>{void control('clear');setClearConfirm(false)}}>Очистить</button></div></Modal>}
-  {toast&&<div className="toast" role="status"><Info size={18}/><span>{toast}</span><button aria-label="Закрыть уведомление" onClick={()=>setToast('')}><X size={16}/></button></div>}
- </div>
-}
-
-function ProductDialog({app,selection,installed,mode,onClose,onApply,favorite,onFavorite,notify}:{app:Product;selection?:Selection;installed?:InstalledApp;mode:string;onClose:()=>void;onApply:(s:Selection)=>void;favorite:boolean;onFavorite:()=>void;notify:(s:string)=>void}){
- const [draft,setDraft]=useState<Selection>(()=>structuredClone(selection||defaultSelection(app)));const [portStatus,setPortStatus]=useState('');
- const opt=(key:string,value:string|number|boolean)=>setDraft(s=>({...s,options:{...s.options,[key]:value}}));
- const edition=String(draft.options.edition||'community');
- const profile=vsProfiles.editions.find(e=>e.id===edition)||vsProfiles.editions[0];
- return <Modal title="Параметры программы" wide onClose={onClose}><div className="modal-body"><div className="product-detail-heading"><Logo app={app}/><div><h2>{app.name}</h2><p>{app.publisher} · {typeNames[app.type]}</p></div><button className={`icon-button ${favorite?'hearted':''}`} onClick={onFavorite} aria-label="Избранное"><Heart size={20} fill={favorite?'currentColor':'none'}/></button></div><p className="detail-description">{app.description}</p><div className="detail-meta"><span className="badge"><Monitor size={12}/>{app.platforms.join(' / ')}</span><span className="badge">{app.version}</span>{installed&&<span className="badge green">Установлена {installed.version}</span>}<span className={`badge ${app.install.verification==='verified'?'green':'amber'}`}><ShieldCheck size={12}/>{app.install.verification==='verified'?'Пакет проверен':'Автоматизация не проверена'}</span></div>
-  {app.notes&&<div className="inline-note"><Info size={18}/><span>{app.notes}</span></div>}
-  <div className="detail-section"><h3>Действие</h3><div className="action-options">{(isWeb(app)?[['open','Открыть сервис',Globe],['shortcut','Создать ярлык',ArrowUpRight]]:app.install.method==='winget'&&app.platforms.includes('windows')?[['install',installed?.availableVersion?'Обновить':'Установить',Download],...(app.install.download?[['download','Только скачать',ArrowDown]]:[]),['guide','Открыть источник',ExternalLink]]:[['guide','Открыть инструкцию',BookOpen]]).map(([id,label,C])=>{const Component=C as LucideIcon;return <button key={id as string} className={`button secondary ${draft.action===id?'selected':''}`} onClick={()=>setDraft(s=>({...s,action:id as Selection['action']}))}><Component size={15}/>{label as string}{draft.action===id&&<Check size={14}/>}</button>})}</div></div>
-  {app.install.method==='winget'&&app.id!=='python'&&<div className="detail-section"><h3>Версия</h3><label className="version-picker"><span>Устанавливаемая версия</span><select aria-label="Устанавливаемая версия" value={draft.version||'latest'} onChange={e=>setDraft(s=>({...s,version:e.target.value==='latest'?undefined:e.target.value}))}><option value="latest">Последняя доступная в WinGet</option><option value={app.version}>{app.version} · проверена в каталоге</option>{draft.version&&draft.version!==app.version&&<option value={draft.version}>{draft.version} · из набора, требует проверки</option>}</select></label><p className="muted-text">В экспортируемом наборе сохраняется конкретная версия из каталога. Старые версии требуют проверки источника.</p></div>}
-  {app.editions.length>0&&<div className="detail-section"><h3>Редакция / продукт</h3>{app.editions.map(e=><label key={e.id} className="edition-option"><input type="radio" name="edition" checked={String(draft.options.edition||app.editions[0].id)===e.id} onChange={()=>opt('edition',e.id)}/><div><strong>{e.name}</strong><p>{e.description}</p></div></label>)}</div>}
-  {app.options.length>0&&<div className="detail-section"><h3>Параметры установки</h3><div className="product-options">{app.options.map(o=><label className={`option-row ${o.type==='boolean'?'boolean-option':''}`} key={o.id}><div><strong>{o.label}</strong>{o.help&&<p>{o.help}</p>}</div>{o.type==='boolean'?<input type="checkbox" checked={Boolean(draft.options[o.id]??o.default)} onChange={e=>opt(o.id,e.target.checked)}/>:o.type==='select'?<select value={String(draft.options[o.id]??o.default)} onChange={e=>opt(o.id,e.target.value)}>{o.values?.map(v=><option key={v} value={v}>{v==='user'?'Текущий пользователь':v==='machine'?'Все пользователи':v}</option>)}</select>:<input type={o.type==='number'?'number':'text'} min={o.type==='number'?1:undefined} max={o.type==='number'?65535:undefined} maxLength={500} value={String(draft.options[o.id]??o.default)} onChange={e=>{opt(o.id,o.type==='number'?Number(e.target.value):e.target.value);if(o.id==='port')setPortStatus('')}}/>}</label>)}</div>{app.type==='database-server'&&<><div className="inline-note"><ShieldCheck size={16}/><span>Пароль задайте в официальном мастере. AppDock его не запрашивает, не сохраняет и не экспортирует. Параметры сервера — памятка для ручной установки.</span></div><button className="button secondary" onClick={async()=>{try{if(mode==='demo'){setPortStatus('Демо: порт не проверяется');return}const available=await api.port(Number(draft.options.port));setPortStatus(available?'Порт свободен на момент проверки':'Порт занят или недоступен. Выберите другой.')}catch(e){setPortStatus(String(e))}}}>Проверить порт {String(draft.options.port)}</button><span className="port-status">{portStatus}</span></>}</div>}
-  {app.id==='vscode'&&draft.action==='install'&&<div className="detail-section"><div className="section-heading"><div><Code2 size={17}/><h3>Расширения VS Code</h3></div><span>{draft.extensions.length} из {extensions.length}</span></div><p className="muted-text">В профиль текущего пользователя, после установки редактора. Зависимые расширения включаются вместе с Python.</p><div className="extension-list">{extensions.map(e=><label key={e.id}><input type="checkbox" checked={draft.extensions.includes(e.id)} onChange={event=>setDraft(s=>({...s,extensions:event.target.checked?addExtension(s.extensions,e.id):removeExtension(s.extensions,e.id)}))}/><span><strong>{e.name}</strong><small>{e.id}</small></span><button className="icon-button" type="button" aria-label={`Источник ${e.name}`} onClick={()=>{const index=app.sources.findIndex(s=>s===e.source);if(index>=0)void api.source(app.id,index);else window.open(e.source,'_blank','noopener,noreferrer')}}><ArrowUpRight size={14}/></button></label>)}</div></div>}
-  {app.id==='visual-studio'&&<div className="detail-section"><label className="profile-option"><input type="checkbox" checked={draft.options.fullProfile===true} onChange={e=>opt('fullProfile',e.target.checked)}/><span><strong>Классические и мобильные приложения — полный набор</strong><small>Все нагрузки раздела + обязательные, рекомендуемые и дополнительные компоненты</small></span></label>{draft.options.fullProfile===true&&<><div className="inline-note"><HardDrive size={18}/><span>Снимок каталога {vsProfiles.version}. Нагрузок: {profile.workloads.length}, компонентов: {profile.components.length}. Размер уточняется в Visual Studio Installer; часть компонентов может быть неприменима. Проверьте итоговый состав перед подтверждением в Installer.</span></div><details className="profile-details"><summary>Состав профиля и ограничения <ChevronDown size={15}/></summary>{profile.workloads.map(w=><p key={w.id}><Check size={13}/><span>{w.name}<small>{w.id}</small></span></p>)}{profile.excluded.map((e,i)=><p className="warning-text" key={i}><Info size={13}/><span>{e.id}<small>{e.reason}</small></span></p>)}<div className="component-ids">{profile.components.map(c=><div key={c.id}><code>{c.id}</code><span>{c.type}</span></div>)}</div></details><button className="button secondary" onClick={()=>downloadJson(`AppDock-${edition}.vsconfig`,JSON.stringify({version:'1.0',components:profile.components.map(c=>c.id)},null,2))}><Download size={15}/>Экспорт .vsconfig</button></>}</div>}
-  {['android-studio','podman','dynamodb','firebase','redis','cassandra','clickhouse','docker','virtualbox'].includes(app.id)&&<div className="detail-section"><h3>Отдельные шаги и зависимости</h3><p className="muted-text">Эти действия не выполняются вместе с основной установкой. Откройте официальную инструкцию и подтвердите изменения в соответствующем инструменте.</p><div className="additional-steps">{(app.id==='android-studio'?['Android SDK','Android Emulator','Образы устройств и лицензии']:app.id==='podman'?['Podman Desktop','Podman machine · создать виртуальную машину']:app.id==='dynamodb'?['DynamoDB Local · локальное окружение']:app.id==='firebase'?['Firebase Emulator Suite · Node.js / Java / CLI']:app.id==='docker'?['WSL 2 / Hyper-V · проверить и включить компоненты Windows']:app.id==='virtualbox'?['Аппаратная виртуализация · BIOS / UEFI']:['WSL 2 · локальное окружение','Официальный контейнер · отдельная настройка данных и портов']).map((label,i)=><button key={label} onClick={()=>void api.source(app.id,Math.min(i+1,app.sources.length-1)).catch(e=>notify(String(e)))}><BookOpen size={16}/><span>{label}</span><ExternalLink size={14}/></button>)}</div></div>}
-  <div className="detail-section license-section"><h3>Лицензия и источник</h3><p>{app.licenseNote}</p><button className="text-button" onClick={()=>void api.source(app.id).catch(e=>notify(String(e)))}><ExternalLink size={14}/>{new URL(app.website).hostname}</button>{app.install.packageId&&<p className="package-id"><Terminal size={13}/>{app.install.packageId} · источник winget</p>}<span className="muted-text">Проверка источника: {app.checkedAt}{app.install.verifiedAt?` · WinGet ${app.install.verifiedAt}`:''}</span></div>
- </div><div className="modal-footer"><button className="button secondary" onClick={onClose}>Закрыть</button><button className="button primary" onClick={()=>onApply(draft)} disabled={app.id==='vmware'&&draft.options.edition==='fusion'}><Check size={16}/>{selection?'Сохранить параметры':'Добавить в выбор'}</button></div></Modal>
-}
 export default App;

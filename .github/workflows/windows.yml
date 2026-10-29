@@ -20,8 +20,20 @@ jobs:
           components: rustfmt
       - run: npm ci
       - run: npm run check
+      - run: npm run format:check
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
       - run: cargo test --locked --manifest-path src-tauri/Cargo.toml
+      - name: Demo end-to-end scenarios
+        shell: pwsh
+        run: |
+          $server = Start-Process -FilePath node -ArgumentList @('node_modules/vite/bin/vite.js', '--host', '127.0.0.1') -WindowStyle Hidden -PassThru
+          try {
+            for ($attempt = 0; $attempt -lt 30; $attempt++) {
+              try { Invoke-WebRequest http://127.0.0.1:1420/ -ErrorAction Stop | Out-Null; break } catch { Start-Sleep -Seconds 1 }
+            }
+            npm run test:ui
+            if ($LASTEXITCODE -ne 0) { throw 'UI scenarios failed' }
+          } finally { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
       - run: npm run bundle
       - uses: actions/upload-artifact@v4
         with:
@@ -29,3 +41,5 @@ jobs:
           path: |
             src-tauri/target/release/bundle/nsis/*-setup.exe
             src-tauri/target/release/appdock.exe
+            artifacts/ui-smoke-v020.json
+            artifacts/*-v020.png

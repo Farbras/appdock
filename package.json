@@ -1,7 +1,7 @@
 {
   "name": "appdock",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -12,7 +12,13 @@
     "bundle": "tauri build",
     "test": "vitest run",
     "verify:catalog": "node scripts/verify-catalog.mjs",
-    "check": "npm run verify:catalog && npm run test && npm run build"
+    "check": "npm run verify:catalog && npm run test && npm run build",
+    "version:sync": "node scripts/sync-version.mjs",
+    "prebuild": "node scripts/sync-version.mjs",
+    "format": "prettier --write src tests scripts/*.mjs package.json",
+    "format:check": "prettier --check src tests scripts/*.mjs package.json",
+    "sources:check": "node scripts/check-sources.mjs",
+    "test:ui": "node scripts/ui-smoke.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
@@ -28,6 +34,8 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.0.4",
+    "playwright": "^1.64.1",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^7.2.2",
     "vitest": "^5.0.5"

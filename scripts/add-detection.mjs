@@ -1,5 +1,66 @@
-import fs from 'node:fs';
-const apps=JSON.parse(fs.readFileSync('catalog/apps.json','utf8'));
-const names={chrome:['Google Chrome'],edge:['Microsoft Edge'],firefox:['Mozilla Firefox'],brave:['Brave'],tor:['Tor Browser'],yandex:['Yandex','Yandex Browser','Яндекс'],opera:['Opera Stable'],vivaldi:['Vivaldi'],arc:['Arc'],duckduckgo:['DuckDuckGo'],vscode:['Microsoft Visual Studio Code'],webstorm:['WebStorm','JetBrains WebStorm'],idea:['IntelliJ IDEA','IntelliJ IDEA Community Edition','IntelliJ IDEA Ultimate Edition'],pycharm:['PyCharm','PyCharm Community Edition','PyCharm Professional Edition'],phpstorm:['PhpStorm','JetBrains PhpStorm'],'visual-studio':['Visual Studio Community 2026','Visual Studio Professional 2026','Visual Studio Enterprise 2026'],python:['Python 3.12'],git:['Git'],notepad:['Notepad++'],sublime:['Sublime Text'],docker:['Docker Desktop'],podman:['Podman'],virtualbox:['Oracle VM VirtualBox','VirtualBox'],vmware:['VMware Workstation'],libreoffice:['LibreOffice'],onlyoffice:['ONLYOFFICE Desktop Editors'],wps:['WPS Office'],postgres:['PostgreSQL'],mysql:['MySQL Server'],mariadb:['MariaDB'],mongodb:['MongoDB'],sqlserver:['Microsoft SQL Server 2025','Microsoft SQL Server 2022'],sqlite:['SQLite'],dbeaver:['DBeaver'],gimp:['GIMP'],notion:['Notion'],'github-desktop':['GitHub Desktop'],zeal:['Zeal'],freecad:['FreeCAD'],librecad:['LibreCAD'],openscad:['OpenSCAD']};
-for(const a of apps){a.detection.displayNames=names[a.id]||[a.name];a.detection.method=a.install.packageId?'winget-export-and-registry':a.type==='database-server'?'registry-and-service':'registry';}
-fs.writeFileSync('catalog/apps.json',JSON.stringify(apps,null,2)+'\n');
+import fs from "node:fs";
+const apps = JSON.parse(fs.readFileSync("catalog/apps.json", "utf8"));
+const names = {
+  chrome: ["Google Chrome"],
+  edge: ["Microsoft Edge"],
+  firefox: ["Mozilla Firefox"],
+  brave: ["Brave"],
+  tor: ["Tor Browser"],
+  yandex: ["Yandex", "Yandex Browser", "Яндекс"],
+  opera: ["Opera Stable"],
+  vivaldi: ["Vivaldi"],
+  arc: ["Arc"],
+  duckduckgo: ["DuckDuckGo"],
+  vscode: ["Microsoft Visual Studio Code"],
+  webstorm: ["WebStorm", "JetBrains WebStorm"],
+  idea: [
+    "IntelliJ IDEA",
+    "IntelliJ IDEA Community Edition",
+    "IntelliJ IDEA Ultimate Edition",
+  ],
+  pycharm: [
+    "PyCharm",
+    "PyCharm Community Edition",
+    "PyCharm Professional Edition",
+  ],
+  phpstorm: ["PhpStorm", "JetBrains PhpStorm"],
+  "visual-studio": [
+    "Visual Studio Community 2026",
+    "Visual Studio Professional 2026",
+    "Visual Studio Enterprise 2026",
+  ],
+  python: ["Python 3.12"],
+  git: ["Git"],
+  notepad: ["Notepad++"],
+  sublime: ["Sublime Text"],
+  docker: ["Docker Desktop"],
+  podman: ["Podman"],
+  virtualbox: ["Oracle VM VirtualBox", "VirtualBox"],
+  vmware: ["VMware Workstation"],
+  libreoffice: ["LibreOffice"],
+  onlyoffice: ["ONLYOFFICE Desktop Editors"],
+  wps: ["WPS Office"],
+  postgres: ["PostgreSQL"],
+  mysql: ["MySQL Server"],
+  mariadb: ["MariaDB"],
+  mongodb: ["MongoDB"],
+  sqlserver: ["Microsoft SQL Server 2025", "Microsoft SQL Server 2022"],
+  sqlite: ["SQLite"],
+  dbeaver: ["DBeaver"],
+  gimp: ["GIMP"],
+  notion: ["Notion"],
+  "github-desktop": ["GitHub Desktop"],
+  zeal: ["Zeal"],
+  freecad: ["FreeCAD"],
+  librecad: ["LibreCAD"],
+  openscad: ["OpenSCAD"],
+};
+for (const a of apps) {
+  a.detection.displayNames = names[a.id] || [a.name];
+  a.detection.method = a.install.packageId
+    ? "winget-export-and-registry"
+    : a.type === "database-server"
+      ? "registry-and-service"
+      : "registry";
+}
+fs.writeFileSync("catalog/apps.json", JSON.stringify(apps, null, 2) + "\n");
