@@ -24,14 +24,14 @@ export function SettingsScreen({
   notify,
   queue,
   system,
-  setSystem,
+  refreshSystem,
 }: {
   settings: Settings;
   changeSettings: (p: Partial<Settings>) => void;
   notify: (message: string) => void;
   queue: QueueState;
   system: SystemInfo | null;
-  setSystem: (s: SystemInfo) => void;
+  refreshSystem: () => void;
 }) {
   return (
     <div className="settings-page">
@@ -53,6 +53,7 @@ export function SettingsScreen({
               <button
                 key={id as string}
                 className={`theme-choice ${settings.theme === id ? "active" : ""}`}
+                aria-pressed={settings.theme === id}
                 onClick={() =>
                   changeSettings({ theme: id as Settings["theme"] })
                 }
@@ -150,15 +151,7 @@ export function SettingsScreen({
             <Activity size={18} />
             <h2>Состояние системы</h2>
           </div>
-          <button
-            className="text-button"
-            onClick={() =>
-              void api
-                .system(settings.mode)
-                .then(setSystem)
-                .catch((e) => notify(String(e)))
-            }
-          >
+          <button className="text-button" onClick={refreshSystem}>
             <RefreshCw size={14} />
             Обновить
           </button>
@@ -194,7 +187,9 @@ export function SettingsScreen({
         <button
           className="button secondary"
           onClick={() =>
-            void api.openDownloads().catch((e) => notify(String(e)))
+            void api
+              .openDownloads(settings.mode)
+              .catch((e) => notify(String(e)))
           }
         >
           <FolderOpen size={16} />

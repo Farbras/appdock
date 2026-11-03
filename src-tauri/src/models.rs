@@ -162,6 +162,44 @@ pub struct Installed {
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ScanResult {
+    pub installed: Vec<Installed>,
+    pub warnings: Vec<String>,
+    pub updates_checked: bool,
+}
+
+pub fn user_finished(status: &str) -> bool {
+    terminal(status) && !["action-required", "reboot-required"].contains(&status)
+}
+
+pub fn clear_finished(queue: &mut Queue) {
+    use std::collections::HashSet;
+    let mut keep: HashSet<String> = queue
+        .tasks
+        .iter()
+        .filter(|t| !user_finished(&t.status))
+        .map(|t| t.id.clone())
+        .collect();
+    loop {
+        let before = keep.len();
+        for t in &queue.tasks {
+            if keep.contains(&t.id) {
+                keep.extend(t.dependencies.clone());
+                if let Some(parent) = &t.parent_id {
+                    keep.insert(parent.clone());
+                }
+            }
+        }
+        if before == keep.len() {
+            break;
+        }
+    }
+    queue.tasks.retain(|t| keep.contains(&t.id));
+    let runs: HashSet<_> = queue.tasks.iter().map(|t| t.run_id.clone()).collect();
+    queue.runs.retain(|r| runs.contains(&r.id));
+}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SystemInfo {
     pub windows: bool,
     pub arch: String,

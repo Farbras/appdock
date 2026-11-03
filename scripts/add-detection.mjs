@@ -40,6 +40,10 @@ const names = {
   libreoffice: ["LibreOffice"],
   onlyoffice: ["ONLYOFFICE Desktop Editors"],
   wps: ["WPS Office"],
+  word: [
+    "Microsoft Office Professional Plus 2024",
+    "Microsoft Office профессиональный плюс 2024",
+  ],
   postgres: ["PostgreSQL"],
   mysql: ["MySQL Server"],
   mariadb: ["MariaDB"],

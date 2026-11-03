@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { defaultSelection, getApp } from "../src/catalog";
+import { defaultSelection, getApp, extensions } from "../src/catalog";
 import type { Settings, QueueState } from "../src/types";
 const settings: Settings = {
   theme: "dark",
@@ -24,6 +24,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("demo queue orchestration", () => {
+  it("includes Office 2024 in the download queue", async () => {
+    const { api } = await import("../src/api");
+    const plan = await api.plan([defaultSelection(getApp("word"))], settings);
+    expect(plan.items[0]).toMatchObject({
+      name: "Office 2024",
+      action: "download",
+      excluded: false,
+      blocked: false,
+    });
+    await api.start(plan.token, "demo");
+    await vi.advanceTimersByTimeAsync(5000);
+    const queue = await api.queue("demo");
+    expect(queue.tasks[0].status).toBe("downloaded");
+    expect(queue.running).toBe(false);
+  });
   it("expires unconfirmed plans after ten minutes", async () => {
     const { api } = await import("../src/api");
     const p = await api.plan([defaultSelection(getApp("chrome"))], settings);
@@ -32,7 +47,15 @@ describe("demo queue orchestration", () => {
   });
   it("expands the editor into dependency-ordered tasks and verifies the review token", async () => {
     const { api } = await import("../src/api");
-    const plan = await api.plan([defaultSelection(getApp("vscode"))], settings);
+    const plan = await api.plan(
+      [
+        {
+          ...defaultSelection(getApp("vscode")),
+          extensions: extensions.map((e) => e.id),
+        },
+      ],
+      settings,
+    );
     await expect(api.start("wrong", "demo")).rejects.toThrow("устарел");
     await api.start(plan.token, "demo");
     let q = await api.queue("demo");

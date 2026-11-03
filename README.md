@@ -1,18 +1,18 @@
 # AppDock
 
-Версия **0.2.0** включает исправления очереди, новые рабочие разделы и мини-иконки приложений в наборах. Готовые файлы доступны в GitHub Releases. Подробности и ограничения: [изменения 0.2.0](docs/APPDOCK-0.2.0.md).
+Версия **0.2.1** исправляет ошибки по аудиту: изоляцию демофайлов, действия наборов, сравнение профиля, обновления, очистку ручных задач и адаптивный интерфейс. Добавлены регрессионные проверки и оптимизация большой истории. Готовые файлы доступны в GitHub Releases. Подробности: [изменения 0.2.1](docs/APPDOCK-0.2.1.md), [отчёт по аудиту](docs/AUDIT-FIXES-2026-11-02.md).
 
 Настольное приложение для Windows 11: каталог программ, параметры, итоговый план, последовательная установка через WinGet, отдельные загрузки и отчёт. Интерфейс полностью на русском языке. В каталоге 80 отдельных продуктов; 40 основных WinGet-интеграций, 3 редакции Visual Studio и 8 расширений VS Code проверены по источникам.
 
-## Скачать AppDock 0.2.0 для Windows
+## Скачать AppDock 0.2.1 для Windows
 
-**[Скачать установщик AppDock для Windows x64](https://github.com/Farbras/appdock/releases/download/v0.2.0/AppDock_0.2.0_x64-setup.exe)**
+**[Скачать установщик AppDock для Windows x64](https://github.com/Farbras/appdock/releases/download/v0.2.1/AppDock_0.2.1_x64-setup.exe)**
 
 1. Скачайте установщик по ссылке выше.
-2. Откройте `AppDock_0.2.0_x64-setup.exe` и завершите установку.
+2. Откройте `AppDock_0.2.1_x64-setup.exe` и завершите установку.
 3. Запустите AppDock через меню «Пуск».
 
-Для запуска без установки скачайте **[ZIP с готовым AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.2.0/AppDock-0.2.0-windows-x64.zip)**, распакуйте архив в отдельную папку и откройте `AppDock.exe`. Также доступен [отдельный AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.2.0/AppDock.exe).
+Для запуска без установки скачайте **[ZIP с готовым AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.2.1/AppDock-0.2.1-windows-x64.zip)**, распакуйте архив в отдельную папку и откройте `AppDock.exe`. Также доступен [отдельный AppDock.exe](https://github.com/Farbras/appdock/releases/download/v0.2.1/AppDock.exe).
 
 Готовая версия рассчитана на Windows 11 x64. Для отображения интерфейса нужен Microsoft Edge WebView2 Runtime; установщик скачает его при отсутствии. Для установки программ из каталога нужен WinGet / App Installer и доступ в интернет. Node.js, Rust и инструменты сборки для запуска готовой программы не нужны.
 
@@ -43,9 +43,9 @@ npm run desktop
 npm run bundle
 ```
 
-Результаты стандартной сборки: `src-tauri/target/release/appdock.exe` и `src-tauri/target/release/bundle/nsis/AppDock_0.2.0_x64-setup.exe`. NSIS устанавливает AppDock для текущего пользователя; приложение не требует запуска целиком от администратора. Пакетные установщики запрашивают собственный UAC. Сертификат подписи выпуска не настроен.
+Результаты стандартной сборки: `src-tauri/target/release/appdock.exe` и `src-tauri/target/release/bundle/nsis/AppDock_0.2.1_x64-setup.exe`. NSIS устанавливает AppDock для текущего пользователя; приложение не требует запуска целиком от администратора. Пакетные установщики запрашивают собственный UAC. Сертификат подписи выпуска не настроен.
 
-После сборки `python scripts/package-release.py` подготовит в `releases/AppDock-0.2.0/` установщик, отдельный `.exe`, ZIP для запуска без установки, архив исходников и файл SHA-256. Для этого шага нужен Python 3.
+После сборки `python scripts/package-release.py` подготовит в `releases/AppDock-0.2.1/` установщик, отдельный `.exe`, ZIP для запуска без установки, архив исходников и файл SHA-256. Для этого шага нужен Python 3.
 
 Если нет системных Build Tools, `scripts/build-env.ps1` умеет использовать уже подготовленные инструменты из `.tools`. Их архивы получены с серверов Microsoft, проверены по SHA-256 каталога Microsoft / SHA-512 метаданных NuGet и распакованы локально. Разработка не требует повторной установки Visual Studio или изменения её компонентов.
 

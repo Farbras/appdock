@@ -2318,28 +2318,29 @@
   },
   {
     "id": "word",
-    "name": "Microsoft Word",
+    "name": "Office 2024",
     "publisher": "Microsoft",
     "category": "documents",
-    "description": "Текстовый процессор в составе Microsoft 365",
-    "website": "https://www.microsoft.com/microsoft-365/word",
+    "description": "Офисный пакет Office 2024 Professional Plus на русском языке",
+    "website": "https://www.microsoft.com/microsoft-365",
     "aliases": [
       "Office",
-      "Microsoft 365"
+      "Microsoft 365",
+      "Microsoft Word",
+      "Office Professional Plus 2024"
     ],
     "icon": "microsoftword",
     "color": "#8c94b1",
     "type": "desktop",
     "platforms": [
-      "windows",
-      "macos"
+      "windows"
     ],
     "architectures": [
       "x64"
     ],
-    "license": "trial",
-    "licenseNote": "Коммерческая лицензия / пробный период. Активация выполняется в продукте.",
-    "version": "Уточняется в источнике",
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия Office 2024. Активация выполняется в продукте.",
+    "version": "2024",
     "editions": [],
     "install": {
       "method": "manual",
@@ -2347,24 +2348,27 @@
       "source": null,
       "verifiedAt": null,
       "verification": "unverified",
-      "download": false,
+      "download": true,
+      "downloadUrl": "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2024Retail.img",
       "scope": "default"
     },
     "detection": {
       "method": "registry",
       "packageId": null,
       "displayNames": [
-        "Microsoft Word"
+        "Microsoft Office Professional Plus 2024",
+        "Microsoft Office профессиональный плюс 2024"
       ]
     },
     "options": [],
     "dependencies": [],
-    "notes": "Microsoft Word устанавливается в составе выбранного пакета Microsoft 365 / Office. Требуются лицензия, учётная запись и выбор состава на сайте Microsoft.",
+    "notes": "Образ ProPlus2024Retail.img скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office 2024.",
     "sources": [
-      "https://www.microsoft.com/microsoft-365/word"
+      "https://www.microsoft.com/microsoft-365",
+      "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2024Retail.img"
     ],
-    "checkedAt": "2026-10-28",
-    "downloadMb": null,
+    "checkedAt": "2026-11-02",
+    "downloadMb": 5073,
     "diskMb": null
   },
   {

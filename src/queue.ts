@@ -8,6 +8,7 @@ import type {
   TaskStatus,
 } from "./types";
 import { sanitizeSelection } from "./storage";
+import { assertUniquePrograms } from "./domain";
 export const terminal = (status: string) =>
   [
     "installed",
@@ -31,6 +32,39 @@ export const success = (status: string) =>
     "opened",
     "shortcut-created",
   ].includes(status);
+export const userFinished = (status: string) =>
+  terminal(status) && !["action-required", "reboot-required"].includes(status);
+export function clearFinished(q: QueueState) {
+  const keep = new Set(
+    q.tasks.filter((t) => !userFinished(t.status)).map((t) => t.id),
+  );
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const t of q.tasks.filter((t) => keep.has(t.id)))
+      for (const id of [
+        ...(t.dependencies || []),
+        ...(t.parentId ? [t.parentId] : []),
+      ])
+        if (!keep.has(id)) {
+          keep.add(id);
+          changed = true;
+        }
+  }
+  q.tasks = q.tasks.filter((t) => keep.has(t.id));
+  q.runs = q.runs?.filter((r) => q.tasks.some((t) => t.runId === r.id));
+}
+export function demoStages(action: QueueTask["action"]): TaskStatus[] {
+  return action === "guide" || action === "open"
+    ? ["checking"]
+    : action === "shortcut"
+      ? ["checking", "configuring"]
+      : action === "download"
+        ? ["checking", "downloading", "verifying"]
+        : action === "extension"
+          ? ["checking", "installing", "configuring"]
+          : ["checking", "downloading", "installing"];
+}
 export function currentTasks(queue: QueueState) {
   return queue.tasks.filter((t) => t.runId === queue.currentRunId);
 }
@@ -139,6 +173,7 @@ export function migrateQueue(value: QueueState): QueueState {
   return q;
 }
 export function expandTasks(items: Selection[]): QueueTask[] {
+  assertUniquePrograms(items);
   const tasks: QueueTask[] = [];
   for (const selection of items) {
     const a = getApp(selection.appId);

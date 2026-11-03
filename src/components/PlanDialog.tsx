@@ -1,10 +1,12 @@
 import { useState } from "react";
 import vsProfiles from "../../catalog/vs-profiles.json";
-const scopeNames: Record<string, string> = {
-  user: "Текущий пользователь",
-  machine: "Все пользователи",
-  default: "Определяет установщик",
-};
+import {
+  programs,
+  taskCount,
+  scopeNames,
+  optionLabel,
+  optionValue,
+} from "../display";
 import { actionNames, getApp } from "../catalog";
 import type { Plan, Selection, Settings } from "../types";
 import { Modal } from "./ui";
@@ -39,7 +41,7 @@ export function PlanDialog({
     <Modal title="Проверим всё перед запуском" wide onClose={onClose}>
       <div className="modal-body">
         <h3>
-          {plan.items.length} программ · {tasks.length} задач
+          {programs(plan.items.length)} · {taskCount(tasks.length)}
         </h3>
         <p className="muted-text">
           {plan.mode === "demo"
@@ -101,28 +103,8 @@ export function PlanDialog({
                   <dl className="parameter-list">
                     {Object.entries(s.options).map(([key, v]) => (
                       <div key={key}>
-                        <dt>
-                          {app.options.find((o) => o.id === key)?.label ||
-                            (
-                              {
-                                edition: "Редакция",
-                                fullProfile: "Полный профиль Visual Studio",
-                              } as Record<string, string>
-                            )[key] ||
-                            key}
-                        </dt>
-                        <dd>
-                          {typeof v === "boolean"
-                            ? v
-                              ? "Да"
-                              : "Нет"
-                            : key === "scope"
-                              ? scopeNames[String(v)] || String(v)
-                              : key === "edition"
-                                ? app.editions.find((e) => e.id === v)?.name ||
-                                  String(v)
-                                : String(v)}
-                        </dd>
+                        <dt>{optionLabel(app, key)}</dt>
+                        <dd>{optionValue(app, key, v)}</dd>
                       </div>
                     ))}
                   </dl>

@@ -445,11 +445,11 @@ const rows = [
   ],
   [
     "word",
-    "Microsoft Word",
+    "Office 2024",
     "Microsoft",
     "documents",
-    "Текстовый процессор в составе Microsoft 365",
-    "https://www.microsoft.com/microsoft-365/word",
+    "Офисный пакет Office 2024 Professional Plus на русском языке",
+    "https://www.microsoft.com/microsoft-365",
     "",
     "microsoftword",
   ],
@@ -886,7 +886,7 @@ const notes = {
   bitbucket: "Открывается веб-платформа. Серверные продукты и CLI не включены.",
   "google-docs":
     "Открывается веб-сервис. Можно создать обычный интернет-ярлык .url; автоматическая установка PWA не выполняется.",
-  word: "Microsoft Word устанавливается в составе выбранного пакета Microsoft 365 / Office. Требуются лицензия, учётная запись и выбор состава на сайте Microsoft.",
+  word: "Образ ProPlus2024Retail.img скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office 2024.",
   libreoffice:
     "Устанавливается весь пакет LibreOffice: Writer, Calc, Impress, Draw, Base и Math.",
   wps: "Устанавливается WPS Office: Writer, Spreadsheets и Presentation. Дополнительные функции и условия зависят от редакции.",
@@ -981,7 +981,22 @@ app("google-docs").aliases = ["Google Docs", "Google Документы"];
 app("vmware").aliases = ["VMware", "VMware Player", "VMware Workstation"];
 app("idea").aliases = ["IntelliJ IDEA Community", "IntelliJ IDEA Ultimate"];
 app("pycharm").aliases = ["PyCharm Community", "PyCharm Professional"];
-app("word").aliases = ["Office", "Microsoft 365"];
+app("word").aliases = [
+  "Office",
+  "Microsoft 365",
+  "Microsoft Word",
+  "Office Professional Plus 2024",
+];
+app("word").version = "2024";
+app("word").license = "paid";
+app("word").licenseNote =
+  "Коммерческая лицензия Office 2024. Активация выполняется в продукте.";
+app("word").install.download = true;
+app("word").install.downloadUrl =
+  "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2024Retail.img";
+app("word").sources.push(app("word").install.downloadUrl);
+app("word").downloadMb = 5073;
+app("word").checkedAt = "2026-11-02";
 app("visual-studio").aliases = ["VS 2026"];
 app("python").aliases = ["Python 3.12.16", "питон"];
 app("safari").platforms = ["macos", "ios"];

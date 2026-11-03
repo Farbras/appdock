@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { optionLabel, optionValue, taskCount, outcomeNames } from "../display";
 import { api } from "../api";
 import { actionNames, getApp, statusNames } from "../catalog";
 import { Modal } from "../components/ui";
@@ -30,15 +31,27 @@ export function RunsScreen({
   const [preview, setPreview] = useState<string | null>(null);
   const [structured, setStructured] = useState(true);
   const [redact, setRedact] = useState(true);
-  const all = history ? queue.tasks : currentTasks(queue);
-  const visible = all.filter(
-    (t) =>
-      (runId === "all" || t.runId === runId) &&
-      (filter === "all" || t.status === filter) &&
-      `${t.name} ${t.message} ${t.log.join(" ")}`
-        .toLocaleLowerCase("ru")
-        .includes(query.toLocaleLowerCase("ru")),
+  const [page, setPage] = useState(0);
+  const filtered = useMemo(
+    () =>
+      (history ? queue.tasks : currentTasks(queue)).filter(
+        (t) =>
+          (runId === "all" || t.runId === runId) &&
+          (filter === "all" || t.status === filter) &&
+          `${t.name} ${t.message} ${t.log.join(" ")}`
+            .toLocaleLowerCase("ru")
+            .includes(query.toLocaleLowerCase("ru")),
+      ),
+    [queue, history, runId, filter, query],
   );
+  const pageSize = 50;
+  const currentPage = Math.min(
+    page,
+    Math.max(0, Math.ceil(filtered.length / pageSize) - 1),
+  );
+  const visible = history
+    ? filtered.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+    : filtered;
   const active = currentTasks(queue);
   const done = active.filter((t) => terminal(t.status)).length;
   const report = (json: boolean, hide = redact) => {
@@ -64,7 +77,7 @@ export function RunsScreen({
             {mode === "demo"
               ? "Демонстрация · компьютер не изменяется"
               : "Рабочий режим"}{" "}
-            · текущий запуск {done}/{active.length}
+            · завершена обработка {done} из {active.length} шагов
           </p>
         </div>
         <div className="row-actions">
@@ -84,6 +97,24 @@ export function RunsScreen({
           </button>
         </div>
       </div>
+      {queue.running && !queue.paused && (
+        <div
+          className="stage-progress"
+          role="progressbar"
+          aria-label="Выполнение текущего этапа"
+        />
+      )}
+      {active
+        .filter((t) => !terminal(t.status) && t.status !== "queued")
+        .map((t) => (
+          <p className="inline-note" key={t.id}>
+            {t.name}: {statusNames[t.status]} · последнее сообщение{" "}
+            {date(t.lastActivityAt)}
+            {t.percent == null
+              ? " · процент этапа неизвестен"
+              : ` · ${t.percent}%`}
+          </p>
+        ))}
       <div className="overall-progress">
         <div
           style={{
@@ -117,12 +148,18 @@ export function RunsScreen({
           aria-label="Поиск по истории"
           placeholder="Поиск по задачам и журналу"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setPage(0);
+          }}
         />
         <select
           aria-label="Статус задач"
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => {
+            setFilter(e.target.value);
+            setPage(0);
+          }}
         >
           <option value="all">Все результаты</option>
           {Object.entries(statusNames).map(([id, name]) => (
@@ -135,7 +172,10 @@ export function RunsScreen({
           <select
             aria-label="Запуск"
             value={runId}
-            onChange={(e) => setRunId(e.target.value)}
+            onChange={(e) => {
+              setRunId(e.target.value);
+              setPage(0);
+            }}
           >
             <option value="all">Все запуски</option>
             {queue.runs?.map((r) => (
@@ -159,6 +199,29 @@ export function RunsScreen({
           Очистить завершённое
         </button>
       </div>
+      {history && filtered.length > pageSize && (
+        <div className="history-pages">
+          <button
+            className="button secondary"
+            disabled={!currentPage}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Предыдущая страница
+          </button>
+          <span>
+            Задачи {currentPage * pageSize + 1}–
+            {Math.min((currentPage + 1) * pageSize, filtered.length)} из{" "}
+            {filtered.length}. Полная история включена в отчёт.
+          </span>
+          <button
+            className="button secondary"
+            disabled={(currentPage + 1) * pageSize >= filtered.length}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Следующая страница
+          </button>
+        </div>
+      )}
       {queue.runs
         ?.filter((r) => visible.some((t) => t.runId === r.id))
         .slice()
@@ -173,17 +236,7 @@ export function RunsScreen({
                 {run.id.slice(0, 8)}
               </h3>
               <p className="muted-text">
-                {(
-                  {
-                    running: "Выполняется",
-                    completed: "Завершён",
-                    errors: "Есть ошибки",
-                    cancelled: "Есть отмены",
-                    "action-required": "Требуется участие",
-                    migrated: "Перенесено из предыдущей версии",
-                  } as Record<string, string>
-                )[run.outcome] || run.outcome}{" "}
-                ·{" "}
+                {outcomeNames[run.outcome] || "Итог не определён"} ·{" "}
                 {run.finishedAt
                   ? `Длительность: ${Math.round((run.finishedAt - run.createdAt) / 1000)} с`
                   : "Запуск не завершён"}{" "}
@@ -217,7 +270,7 @@ export function RunsScreen({
                 <details className="task-group" open key={appId}>
                   <summary>
                     {getApp(appId).name} ·{" "}
-                    {tasks.filter((t) => t.appId === appId).length} задач
+                    {taskCount(tasks.filter((t) => t.appId === appId).length)}
                   </summary>
                   {tasks
                     .filter((t) => t.appId === appId)
@@ -271,7 +324,10 @@ export function RunsScreen({
                                 <li>
                                   Выполните установку или настройку:{" "}
                                   {Object.entries(task.selection.options)
-                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .map(
+                                      ([k, v]) =>
+                                        `${optionLabel(getApp(appId), k)}: ${optionValue(getApp(appId), k, v)}`,
+                                    )
                                     .join("; ") ||
                                     "по инструкции производителя"}
                                   .

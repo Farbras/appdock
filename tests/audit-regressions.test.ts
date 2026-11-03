@@ -118,7 +118,10 @@ describe("run isolation and dependencies", () => {
   });
   it("blocks Pylance after Python fails and allows independent tasks", () => {
     const tasks = expandTasks([
-      defaultSelection(getApp("vscode")),
+      {
+        ...defaultSelection(getApp("vscode")),
+        extensions: ["ms-python.python", "ms-python.vscode-pylance"],
+      },
       defaultSelection(getApp("chrome")),
     ]);
     const root = tasks.find(

@@ -44,6 +44,7 @@ export interface Product {
     verifiedAt: string | null;
     verification: "verified" | "unverified";
     download: boolean;
+    downloadUrl?: string;
     scope: string;
   };
   detection: { method: string; packageId: string | null };
@@ -126,6 +127,11 @@ export interface InstalledApp {
   packageId: string;
   version: string;
   availableVersion?: string;
+}
+export interface ScanResult {
+  installed: InstalledApp[];
+  warnings: string[];
+  updatesChecked: boolean;
 }
 export interface SystemInfo {
   windows: boolean;

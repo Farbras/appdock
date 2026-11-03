@@ -31,6 +31,12 @@ import type {
   SystemInfo,
 } from "../types";
 import { date } from "./RunsScreen";
+import {
+  assertUniquePrograms,
+  compareProfile,
+  updateEligibility,
+} from "../domain";
+import { programs, optionValue } from "../display";
 export function Readiness({
   system,
   scanning,
@@ -40,6 +46,7 @@ export function Readiness({
   onScan,
   onPrepare,
   error,
+  updatesChecked,
 }: {
   system: SystemInfo | null;
   scanning: boolean;
@@ -49,9 +56,20 @@ export function Readiness({
   onScan: () => void;
   onPrepare: () => void;
   error: string;
+  updatesChecked: boolean;
 }) {
   return (
-    <section className="readiness">
+    <details className="readiness">
+      <summary>
+        Готовность компьютера ·{" "}
+        {scanning
+          ? "Проверяем…"
+          : error
+            ? "Не удалось проверить"
+            : detectedAt
+              ? "Проверка выполнена"
+              : "Не проверено"}
+      </summary>
       <div>
         <strong>Готовность компьютера</strong>
         <p>{error || (!system ? "Получаем сведения…" : system.os)}</p>
@@ -78,7 +96,7 @@ export function Readiness({
         <div>
           <dt>Обновления</dt>
           <dd>
-            {detectedAt
+            {updatesChecked
               ? installed.filter((i) => i.availableVersion).length
               : "Не проверено"}
           </dd>
@@ -106,7 +124,7 @@ export function Readiness({
           {scanning ? "Проверяем…" : "Проверить обновления"}
         </button>
       </div>
-    </section>
+    </details>
   );
 }
 export function UpdatesScreen({
@@ -118,6 +136,7 @@ export function UpdatesScreen({
   scanning,
   detectedAt,
   notify,
+  updatesChecked,
 }: {
   installed: InstalledApp[];
   profile: Selection[];
@@ -127,6 +146,7 @@ export function UpdatesScreen({
   scanning: boolean;
   detectedAt: number | null;
   notify: (s: string) => void;
+  updatesChecked: boolean;
 }) {
   const [targets, setTargets] = useState<Record<string, string>>({});
   const foundFor = (a: Product) => {
@@ -142,15 +162,27 @@ export function UpdatesScreen({
     readStorage("update-exclusions", []),
   );
   const rows = apps.filter((a) => matchInstalled(a, installed));
-  const supported = rows.filter(
-    (a) =>
-      a.install.method === "winget" && a.install.verification === "verified",
-  );
+  const eligibility = (a: Product) =>
+    updateEligibility(
+      a,
+      installed,
+      profile.find((s) => s.appId === a.id),
+      excluded.includes(a.id),
+      targets[a.id],
+      updatesChecked && !scanning,
+    );
+  const eligibleIds = rows
+    .filter((a) => eligibility(a).eligible)
+    .map((a) => a.id);
+  const selectedIds = selected.filter((id) => eligibleIds.includes(id));
+  useEffect(() => {
+    setSelected((s) => s.filter((id) => eligibleIds.includes(id)));
+  }, [installed, profile, excluded, targets, updatesChecked, scanning]);
   const choose = (id: string, on: boolean) =>
     setSelected((s) =>
       on ? [...new Set([...s, id])] : s.filter((x) => x !== id),
     );
-  const items = selected.map((id) => {
+  const items = selectedIds.map((id) => {
     const a = getApp(id);
     const pin = profile.find((s) => s.appId === id);
     const found = foundFor(a);
@@ -186,27 +218,17 @@ export function UpdatesScreen({
         <span>Последняя проверка: {date(detectedAt)}</span>
         <button
           className="button secondary"
-          onClick={() =>
-            setSelected(
-              supported
-                .filter(
-                  (a) =>
-                    !excluded.includes(a.id) &&
-                    !profile.find((s) => s.appId === a.id)?.version &&
-                    foundFor(a)?.availableVersion,
-                )
-                .map((a) => a.id),
-            )
-          }
+          disabled={scanning || !updatesChecked}
+          onClick={() => setSelected(eligibleIds)}
         >
           Выбрать доступные
         </button>
         <button
           className="button primary"
-          disabled={!selected.length}
+          disabled={!selectedIds.length || scanning}
           onClick={() => onReview(items)}
         >
-          Проверить план обновлений ({selected.length})
+          Проверить план обновлений ({selectedIds.length})
         </button>
       </div>
       <div className="workflow-list">
@@ -225,13 +247,9 @@ export function UpdatesScreen({
               <label>
                 <input
                   type="checkbox"
-                  checked={selected.includes(a.id)}
-                  disabled={
-                    !auto ||
-                    !found.availableVersion ||
-                    fixed ||
-                    excluded.includes(a.id)
-                  }
+                  checked={selectedIds.includes(a.id)}
+                  disabled={!eligibility(a).eligible || scanning}
+                  aria-label={"Обновить " + a.name}
                   onChange={(e) => choose(a.id, e.target.checked)}
                 />
                 <strong>{a.name}</strong>
@@ -242,12 +260,18 @@ export function UpdatesScreen({
                     Редакция обновления{" "}
                     <select
                       aria-label={"Редакция обновления " + a.name}
-                      value={found.packageId}
+                      value={
+                        targets[a.id] ||
+                        (instances.length === 1 ? found.packageId : "")
+                      }
                       onChange={(e) => {
                         setTargets((t) => ({ ...t, [a.id]: e.target.value }));
                         choose(a.id, false);
                       }}
                     >
+                      <option value="" disabled>
+                        Выберите редакцию
+                      </option>
                       {[...new Set(instances.map((i) => i.packageId))].map(
                         (id) => (
                           <option key={id} value={id}>
@@ -260,8 +284,11 @@ export function UpdatesScreen({
                   </label>
                   {instances.map((i, index) => (
                     <p key={i.instanceId || index}>
-                      Экземпляр: {i.edition || i.packageId} ·{" "}
-                      {i.instanceId || "ID не предоставлен"} · {i.version}
+                      Экземпляр:{" "}
+                      {a.editions.find((e) => e.id === i.edition)?.name ||
+                        i.edition ||
+                        i.packageId}{" "}
+                      · {i.instanceId || "ID не предоставлен"} · {i.version}
                       {i.availableVersion ? " → " + i.availableVersion : ""}
                     </p>
                   ))}
@@ -269,8 +296,14 @@ export function UpdatesScreen({
               )}
               <p>
                 Установлена: {found.version} · доступна:{" "}
-                {found.availableVersion || "обновление не обнаружено"}
+                {found.availableVersion ||
+                  (updatesChecked
+                    ? "обновление не обнаружено"
+                    : "обновления не проверены")}
               </p>
+              {eligibility(a).reason && (
+                <p className="muted-text">{eligibility(a).reason}</p>
+              )}
               {fixed && (
                 <p className="warning-text">
                   Закреплена {pin.version}. Измените политику версии в профиле
@@ -309,8 +342,11 @@ export function UpdatesScreen({
       </div>
       {!rows.length && (
         <p className="empty-state">
-          Поддерживаемые программы пока не обнаружены. Запустите проверку в
-          рабочем режиме.
+          {scanning
+            ? "Проверяем установленные программы и обновления…"
+            : !detectedAt
+              ? "Проверка ещё не выполнена. Запустите обнаружение в рабочем режиме."
+              : "Поддерживаемые программы не обнаружены при последней проверке."}
         </p>
       )}
     </>
@@ -444,7 +480,7 @@ export function PresetEditor({
         </div>
       </div>
       <div className="modal-footer">
-        <span>{draft.items.length} программ</span>
+        <span>{programs(draft.items.length)}</span>
         <button
           className="button primary"
           disabled={!draft.name.trim() || !draft.items.length}
@@ -486,6 +522,7 @@ export function PresetsScreen({
 }) {
   const [editing, setEditing] = useState<Preset | null>(null);
   const [imported, setImported] = useState<Preset | null>(null);
+  const [deleting, setDeleting] = useState<Preset | null>(null);
   const save = (p: Preset) => {
     setPresets(
       presets.some((x) => x.id === p.id)
@@ -559,7 +596,7 @@ export function PresetsScreen({
               </ul>
             )}
             <p>{p.description}</p>
-            <p>{p.items.length} программ</p>
+            <p>{programs(p.items.length)}</p>
             <div className="row-actions">
               <button
                 className="button primary"
@@ -567,59 +604,87 @@ export function PresetsScreen({
               >
                 Заменить выбор
               </button>
-              <button
-                className="button secondary"
-                onClick={() => onAdd(normalizePresetItems(p.items))}
-              >
-                Добавить к текущему выбору
-              </button>
-              <button
-                className="button secondary"
-                onClick={() =>
-                  setEditing({
-                    ...structuredClone(p),
-                    id: p.builtin ? crypto.randomUUID() : p.id,
-                    builtin: false,
-                  })
-                }
-              >
-                Редактировать
-              </button>
-              <button
-                className="button secondary"
-                onClick={() =>
-                  setEditing({
-                    ...structuredClone(p),
-                    id: crypto.randomUUID(),
-                    name: `${p.name} — копия`.slice(0, 80),
-                    builtin: false,
-                  })
-                }
-              >
-                Дублировать
-              </button>
-              <button
-                className="button secondary"
-                onClick={() =>
-                  downloadJson(`${p.name}.json`, serializePreset(p))
-                }
-              >
-                Экспорт {p.name}
-              </button>
-              {!p.builtin && (
+              <details className="preset-more">
+                <summary>Другие действия</summary>
+                <button
+                  className="button secondary"
+                  onClick={() => onAdd(normalizePresetItems(p.items))}
+                >
+                  Добавить к текущему выбору
+                </button>
                 <button
                   className="button secondary"
                   onClick={() =>
-                    setPresets(presets.filter((x) => x.id !== p.id))
+                    setEditing({
+                      ...structuredClone(p),
+                      id: p.builtin ? crypto.randomUUID() : p.id,
+                      builtin: false,
+                    })
                   }
                 >
-                  Удалить
+                  Редактировать
                 </button>
-              )}
+                <button
+                  className="button secondary"
+                  onClick={() =>
+                    setEditing({
+                      ...structuredClone(p),
+                      id: crypto.randomUUID(),
+                      name: `${p.name} — копия`.slice(0, 80),
+                      builtin: false,
+                    })
+                  }
+                >
+                  Дублировать
+                </button>
+                <button
+                  className="button secondary"
+                  onClick={() =>
+                    downloadJson(`${p.name}.json`, serializePreset(p))
+                  }
+                >
+                  Экспорт {p.name}
+                </button>
+                {!p.builtin && (
+                  <button
+                    className="button secondary"
+                    onClick={() => setDeleting(p)}
+                  >
+                    Удалить
+                  </button>
+                )}
+              </details>
             </div>
           </article>
         ))}
       </div>
+      {deleting && (
+        <Modal title="Удалить набор?" onClose={() => setDeleting(null)}>
+          <div className="modal-body">
+            <p>
+              Удалить сохранённый набор «{deleting.name}» (
+              {programs(deleting.items.length)})?
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="button secondary"
+              onClick={() => setDeleting(null)}
+            >
+              Отмена
+            </button>
+            <button
+              className="button primary"
+              onClick={() => {
+                setPresets(presets.filter((p) => p.id !== deleting.id));
+                setDeleting(null);
+              }}
+            >
+              Удалить набор
+            </button>
+          </div>
+        </Modal>
+      )}
       {editing && (
         <PresetEditor
           key={editing.id}
@@ -639,7 +704,7 @@ export function PresetsScreen({
           <div className="modal-body">
             <h3>{imported.name}</h3>
             <p>
-              {imported.items.length} программ. Все операции потребуют нового
+              {programs(imported.items.length)}. Все операции потребуют нового
               плана.
             </p>
             {imported.issues?.length ? (
@@ -707,7 +772,10 @@ export function useProfile() {
       if (!Array.isArray(p.items)) throw new Error();
       return {
         ...p,
-        items: p.items.map((s) => sanitizeSelection(itemSchema.parse(s))),
+        items: (() => {
+          assertUniquePrograms(p.items);
+          return p.items.map((s) => sanitizeSelection(itemSchema.parse(s)));
+        })(),
         unsupported: Array.isArray(p.unsupported) ? p.unsupported : [],
       };
     } catch {
@@ -732,6 +800,8 @@ export function ProfileScreen({
   mode,
   onReview,
   notify,
+  checked,
+  onScan,
 }: {
   profile: Profile;
   setProfile: (p: Profile) => void;
@@ -740,14 +810,17 @@ export function ProfileScreen({
   mode: Settings["mode"];
   onReview: (items: Selection[]) => void;
   notify: (s: string) => void;
+  checked: boolean;
+  onScan: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [candidate, setCandidate] = useState<Profile | null>(null);
-  const missing = profile.items.filter(
-    (s) =>
-      !matchInstalled(getApp(s.appId), installed, s) ||
-      (matchInstalled(getApp(s.appId), installed, s)?.availableVersion &&
-        !s.version),
+  const comparisons = profile.items.map((s) => ({
+    s,
+    comparison: compareProfile(s, installed, checked),
+  }));
+  const missing = comparisons.flatMap(({ comparison }) =>
+    comparison.next ? [comparison.next] : [],
   );
   return (
     <>
@@ -755,8 +828,16 @@ export function ProfileScreen({
         Профиль переносит состав программ и параметры AppDock. Пользовательские
         файлы и секреты в перенос не входят. После импорта требуется сравнение с
         этим компьютером и новый план.
+        {mode === "demo"
+          ? " В деморежиме состав компьютера не считывается; план моделируется."
+          : ""}
       </p>
       <div className="section-tools wrap">
+        {!checked && (
+          <button className="button secondary" onClick={onScan}>
+            Проверить состав компьютера
+          </button>
+        )}
         <button
           className="button secondary"
           disabled={!selection.length}
@@ -833,6 +914,9 @@ export function ProfileScreen({
                   )
                     throw new Error("Неверная схема профиля");
                   const unsupported: string[] = [];
+                  assertUniquePrograms(
+                    raw.items.map((entry: unknown) => itemSchema.parse(entry)),
+                  );
                   const items: Selection[] = [];
                   for (const entry of raw.items) {
                     const s = itemSchema.parse(entry);
@@ -872,38 +956,35 @@ export function ProfileScreen({
       </div>
       <h2>{profile.name}</h2>
       <div className="workflow-list">
-        {profile.items.map((s) => {
+        {comparisons.map(({ s, comparison }) => {
           const a = getApp(s.appId),
-            i = matchInstalled(a, installed, s);
-          const manual =
-            s.action === "guide" ||
-            ["web", "cloud"].includes(a.type) ||
-            !a.platforms.includes("windows");
-          const stale = s.version && s.version !== a.version;
+            i = comparison.found;
           return (
             <article key={s.appId}>
               <h3>{a.name}</h3>
-              <span className="badge">
-                {manual || stale
-                  ? "Требуется ручной шаг"
-                  : !i
-                    ? "Отсутствует"
-                    : i.availableVersion && !s.version
-                      ? "Доступно обновление"
-                      : s.version && i.version !== s.version
-                        ? "Требуется проверка версии"
-                        : "Соответствует"}
-              </span>
+              <span className="badge">{comparison.label}</span>
               <p>
                 На компьютере: {i?.version || "не обнаружена"} · политика:{" "}
                 {s.version ? `конкретная ${s.version}` : "последняя доступная"}{" "}
-                · редакция: {String(s.options.edition || "по умолчанию")}
+                · редакция:{" "}
+                {optionValue(
+                  a,
+                  "edition",
+                  s.options.edition || a.editions[0]?.id || "",
+                )}
               </p>
-              {stale && (
-                <p className="warning-text">
-                  Версия больше не проверена каталогом. Откройте редактор
-                  профиля и выберите последнюю.
-                </p>
+              {comparison.reason && (
+                <p className="warning-text">{comparison.reason}</p>
+              )}
+              {comparison.status === "manual" && (
+                <button
+                  className="button secondary"
+                  onClick={() =>
+                    void api.source(a.id).catch((e) => notify(String(e)))
+                  }
+                >
+                  Официальная инструкция
+                </button>
               )}
             </article>
           );
@@ -970,17 +1051,22 @@ export function ProfileScreen({
 export function DownloadsScreen({
   notify,
   running,
+  mode,
 }: {
   notify: (s: string) => void;
   running: boolean;
+  mode: Settings["mode"];
 }) {
   const [inventory, setInventory] = useState<DownloadInventory | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<
+    DownloadInventory["files"][number] | null
+  >(null);
   const refresh = async () => {
     setLoading(true);
     try {
-      setInventory(await api.downloads());
+      setInventory(await api.downloads(mode));
       setError("");
     } catch (e) {
       setError(String(e));
@@ -989,17 +1075,35 @@ export function DownloadsScreen({
     }
   };
   useEffect(() => {
-    void refresh();
-  }, []);
+    let alive = true;
+    setInventory(null);
+    setError("");
+    setDeleting(null);
+    setLoading(true);
+    void api
+      .downloads(mode)
+      .then((value) => {
+        if (alive) setInventory(value);
+      })
+      .catch((e) => {
+        if (alive) setError(String(e));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [mode]);
   return (
     <>
       <div className="section-tools wrap">
         <button
           className="button secondary"
-          disabled={running || !native}
+          disabled={running || (mode === "live" && !native)}
           onClick={() =>
             void api
-              .chooseDownloads()
+              .chooseDownloads(mode)
               .then(() => refresh())
               .catch((e) => notify(String(e)))
           }
@@ -1009,7 +1113,7 @@ export function DownloadsScreen({
         <button
           className="button secondary"
           onClick={() =>
-            void api.openDownloads().catch((e) => notify(String(e)))
+            void api.openDownloads(mode).catch((e) => notify(String(e)))
           }
         >
           Открыть папку
@@ -1039,22 +1143,57 @@ export function DownloadsScreen({
             <button
               className="button secondary"
               disabled={running}
-              onClick={() =>
-                void api
-                  .removeDownload(f.id)
-                  .then(refresh)
-                  .catch((e) => notify(String(e)))
-              }
+              onClick={() => setDeleting(f)}
             >
               Удалить из кэша {f.name}
             </button>
           </article>
         ))}
       </div>
-      {!inventory?.files.length && !loading && (
+      {!inventory?.files.length && !loading && !error && (
         <p className="empty-state">
           Полученных файлов нет. Загрузка создаёт файлы только в рабочем режиме.
         </p>
+      )}
+      {deleting && (
+        <Modal
+          title="Удалить полученный файл?"
+          onClose={() => setDeleting(null)}
+        >
+          <div className="modal-body">
+            <p>
+              «{deleting.name}» · {(deleting.size / 1024 / 1024).toFixed(2)} МБ.
+            </p>
+            <p>
+              {mode === "demo"
+                ? "Будет удалён только демонстрационный элемент."
+                : "Файл будет удалён с диска без возможности восстановления в AppDock."}
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="button secondary"
+              onClick={() => setDeleting(null)}
+            >
+              Отмена
+            </button>
+            <button
+              className="button primary"
+              disabled={loading || running}
+              onClick={() => {
+                void api
+                  .removeDownload(deleting.id, mode, true)
+                  .then(() => {
+                    setDeleting(null);
+                    return refresh();
+                  })
+                  .catch((e) => notify(String(e)));
+              }}
+            >
+              Удалить файл
+            </button>
+          </div>
+        </Modal>
       )}
     </>
   );

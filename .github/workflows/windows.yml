@@ -33,9 +33,12 @@ jobs:
             }
             npm run test:ui
             if ($LASTEXITCODE -ne 0) { throw 'UI scenarios failed' }
+            npm run test:ui:audit
+            if ($LASTEXITCODE -ne 0) { throw 'Audit regression scenarios failed' }
           } finally { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
       - run: npm run bundle
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: AppDock-Windows-x64
           path: |
@@ -43,3 +46,7 @@ jobs:
             src-tauri/target/release/appdock.exe
             artifacts/ui-smoke-v020.json
             artifacts/*-v020.png
+            artifacts/fix-2026-11-02/ui-regressions.json
+            artifacts/fix-2026-11-02/failure.json
+            artifacts/fix-2026-11-02/*.png
+            artifacts/ui-smoke-failure.*

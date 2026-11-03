@@ -1,6 +1,6 @@
 use crate::{
     catalog,
-    models::{Installed, SystemInfo},
+    models::{Installed, ScanResult, SystemInfo},
 };
 use serde_json::Value;
 use std::{
@@ -110,6 +110,11 @@ pub fn info() -> SystemInfo {
     }
 }
 pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
+    Ok(scan_report(data_dir)?.installed)
+}
+pub fn scan_report(data_dir: &Path) -> Result<ScanResult, String> {
+    let mut warnings = Vec::new();
+    let mut updates_checked = false;
     let path = data_dir.join(format!("scan-{}.json", uuid::Uuid::new_v4()));
     let r = bounded_output(
         command("winget")
@@ -130,6 +135,9 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
         .and_then(|s| serde_json::from_str::<Value>(s.trim_start_matches('\u{feff}')).ok());
     let _ = std::fs::remove_file(&path);
     let winget_ok = r.is_some_and(|r| r.status.success()) && parsed.is_some();
+    if !winget_ok {
+        warnings.push("WinGet не смог считать установленные пакеты; показаны доступные данные других источников.".into());
+    }
     let catalog = catalog::apps();
     let mut installed = Vec::new();
     if let Some(sources) = parsed.as_ref().and_then(|p| p["Sources"].as_array()) {
@@ -153,6 +161,12 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
     }
     // Registry fallback detects apps that WinGet export cannot correlate with its source.
     let registry=powershell(r#"@(Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*','HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue | Where-Object {$_.DisplayName} | Select-Object DisplayName,DisplayVersion) | ConvertTo-Json -Compress"#).ok();
+    if registry.is_none() {
+        warnings.push(
+            "Реестр установленных программ прочитать не удалось; список может быть неполным."
+                .into(),
+        );
+    }
     if !winget_ok && registry.is_none() {
         return Err("Не удалось считать ни WinGet, ни реестр установленных программ".into());
     }
@@ -213,14 +227,18 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
         ],
     ) {
         if upgrades.status.success() {
+            updates_checked = true;
             let text = String::from_utf8_lossy(&upgrades.stdout);
             for app in &mut installed {
                 app.available_version = parse_available_version(&text, &app.package_id, &catalog);
             }
         }
     }
+    if !updates_checked {
+        warnings.push("Установленные программы считаны; обновления проверить не удалось. Повторите обнаружение.".into());
+    }
     // Server detection uses Windows services, separate from desktop clients and libraries.
-    let services=powershell("@(Get-CimInstance Win32_Service | Select-Object Name,DisplayName) | ConvertTo-Json -Compress").unwrap_or(Value::Null);
+    let services=powershell("@(Get-CimInstance Win32_Service | Select-Object Name,DisplayName) | ConvertTo-Json -Compress").unwrap_or_else(|_| {warnings.push("Не удалось считать службы Windows; обнаружение серверов может быть неполным.".into());Value::Null});
     for (id, prefix) in [
         ("postgres", "postgresql"),
         ("mysql", "mysql"),
@@ -305,7 +323,11 @@ pub fn scan(data_dir: &Path) -> Result<Vec<Installed>, String> {
             }
         }
     }
-    Ok(installed)
+    Ok(ScanResult {
+        installed,
+        warnings,
+        updates_checked,
+    })
 }
 pub fn parse_available_version(text: &str, package: &str, catalog: &[Value]) -> Option<String> {
     let mut clean = String::new();
@@ -377,10 +399,31 @@ fn matches_display_name(name: &str, target: &str) -> bool {
     false
 }
 pub fn version_less(current: &str, target: &str) -> bool {
-    let parse = |s: &str| -> Option<Vec<u64>> { s.split('.').map(|n| n.parse().ok()).collect() };
-    match (parse(current), parse(target)) {
-        (Some(a), Some(b)) => a < b,
-        _ => false,
+    numeric_version_order(current, target) == Some(std::cmp::Ordering::Less)
+}
+pub fn numeric_version_order(current: &str, target: &str) -> Option<std::cmp::Ordering> {
+    let parse = |s: &str| -> Option<Vec<u64>> {
+        s.split('.')
+            .map(|n| {
+                if n.is_empty() || !n.bytes().all(|b| b.is_ascii_digit()) {
+                    None
+                } else {
+                    n.parse().ok()
+                }
+            })
+            .collect()
+    };
+    let (mut a, mut b) = (parse(current)?, parse(target)?);
+    let len = a.len().max(b.len());
+    a.resize(len, 0);
+    b.resize(len, 0);
+    Some(a.cmp(&b))
+}
+pub fn check_pinned_transition(current: &str, target: &str) -> Result<(), String> {
+    match numeric_version_order(current,target) {
+        Some(std::cmp::Ordering::Less | std::cmp::Ordering::Equal) => Ok(()),
+        Some(std::cmp::Ordering::Greater) => Err("Установлена более новая версия. Автоматическое понижение запрещено. Измените закрепление или выполните ручную проверку.".into()),
+        None => Err("Версию нельзя надёжно сравнить с закреплением. Выполните ручную проверку.".into()),
     }
 }
 pub fn port_available(port: u16) -> Result<bool, String> {
@@ -507,6 +550,11 @@ mod tests {
         assert!(version_less("1.2.9", "1.2.10"));
         assert!(!version_less("2.0", "1.9"));
         assert!(!version_less("Unknown", "1.2"));
+        assert!(!version_less("1.0", "1"));
+        assert!(check_pinned_transition("1.0", "1").is_ok());
+        assert!(check_pinned_transition("1", "2").is_ok());
+        assert!(check_pinned_transition("2", "1").is_err());
+        assert!(check_pinned_transition("Unknown", "1").is_err());
     }
     #[test]
     fn upgrade_output_formats_do_not_guess_truncated_ids() {

@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { addExtension, defaultSelection, extensions, getApp } from "./catalog";
+import {
+  addExtension,
+  allowedActions,
+  defaultSelection,
+  extensions,
+  getApp,
+} from "./catalog";
+import { assertUniquePrograms } from "./domain";
 import type { Preset, Selection, Settings } from "./types";
 const issues: string[] = [];
 export const storageIssues = () => [...issues];
@@ -23,9 +30,18 @@ export function readStorage<T>(key: string, fallback: T): T {
     if (key === "settings") return validateSettings(value) as T;
     if (key === "selection") {
       if (!Array.isArray(value)) throw new Error("Ожидается список программ");
+      assertUniquePrograms(value);
       return value.map((s) =>
         sanitizeSelection(itemSchema.parse(s), true),
       ) as T;
+    }
+    if (key === "computer-profile") {
+      if (!Array.isArray(value.items))
+        throw new Error("Неверный профиль компьютера");
+      assertUniquePrograms(value.items);
+      value.items = value.items.map((s: Selection) =>
+        sanitizeSelection(itemSchema.parse(s)),
+      );
     }
     if (
       ["favorites", "update-exclusions"].includes(key) &&
@@ -83,16 +99,31 @@ export function validateSettings(value: unknown): Settings {
     })
     .parse(value);
 }
-export const itemSchema = z.object({
-  appId: z.string().max(80),
-  action: z.enum(["install", "download", "open", "shortcut", "guide"]),
-  options: z.record(
-    z.string(),
-    z.union([z.string().max(500), z.number().finite(), z.boolean()]),
-  ),
-  extensions: z.array(z.string()).max(30),
-  version: z.string().max(40).optional(),
-});
+export const itemSchema = z.preprocess(
+  (value) => {
+    if (
+      value &&
+      typeof value === "object" &&
+      "appId" in value &&
+      !("action" in value) &&
+      typeof value.appId === "string"
+    ) {
+      const app = getApp(value.appId);
+      if (app) return { ...value, action: defaultSelection(app).action };
+    }
+    return value;
+  },
+  z.object({
+    appId: z.string().max(80),
+    action: z.enum(["install", "download", "open", "shortcut", "guide"]),
+    options: z.record(
+      z.string(),
+      z.union([z.string().max(500), z.number().finite(), z.boolean()]),
+    ),
+    extensions: z.array(z.string()).max(30),
+    version: z.string().max(40).optional(),
+  }),
+);
 const presetSchema = z.object({
   schemaVersion: z.union([z.literal(1), z.literal(2)]),
   name: z.string().trim().min(1).max(80),
@@ -163,18 +194,19 @@ export function sanitizeSelection(
   const errors = selectionErrors(clean);
   if (errors.length) throw new Error(errors.join("; "));
   if (
-    clean.action === "download" &&
-    !app.install.download &&
-    !allowUnsupportedDownload
+    !allowedActions(app).includes(clean.action) &&
+    !(allowUnsupportedDownload && clean.action === "download")
   )
-    throw new Error("Загрузка продукта не поддерживается");
+    throw new Error(
+      `${app.name}: действие не поддерживается. Выберите допустимое действие в параметрах.`,
+    );
   return clean;
 }
 export function parsePreset(text: string): Preset {
   if (text.length > 200_000)
     throw new Error("Размер набора не должен превышать 200 КБ");
   const p = presetSchema.parse(JSON.parse(text));
-  const seen = new Set<string>();
+  assertUniquePrograms(p.items);
   const warnings: string[] = [];
   const items = p.items.map((s) => {
     const clean = sanitizeSelection(s);
@@ -188,11 +220,6 @@ export function parsePreset(text: string): Preset {
       );
     return clean;
   });
-  for (const i of items) {
-    if (seen.has(i.appId))
-      throw new Error("В наборе есть повторяющиеся программы");
-    seen.add(i.appId);
-  }
   return {
     id: crypto.randomUUID(),
     name: p.name,
@@ -204,6 +231,7 @@ export function parsePreset(text: string): Preset {
   };
 }
 export function serializePreset(p: Preset) {
+  assertUniquePrograms(p.items);
   return JSON.stringify(
     {
       schemaVersion: 2,

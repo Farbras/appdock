@@ -15,9 +15,9 @@ async fn system_info() -> Result<SystemInfo, String> {
         .map_err(|e| e.to_string())
 }
 #[tauri::command]
-async fn scan_installed(state: State<'_, Shared>) -> Result<Vec<Installed>, String> {
+async fn scan_installed(state: State<'_, Shared>) -> Result<ScanResult, String> {
     let data = engine::lock(&state).data_dir.clone();
-    tauri::async_runtime::spawn_blocking(move || system::scan(&data))
+    tauri::async_runtime::spawn_blocking(move || system::scan_report(&data))
         .await
         .map_err(|e| e.to_string())?
 }
@@ -101,25 +101,38 @@ async fn verify_manual(
     .map_err(|e| e.to_string())?
 }
 #[tauri::command]
-fn downloads_inventory(state: State<'_, Shared>) -> Result<serde_json::Value, String> {
+fn downloads_inventory(
+    state: State<'_, Shared>,
+    mode: String,
+) -> Result<serde_json::Value, String> {
+    downloads::require_live(&mode)?;
     downloads::inventory(&engine::lock(&state).data_dir)
 }
 #[tauri::command]
-fn remove_download(state: State<'_, Shared>, id: String) -> Result<(), String> {
+fn remove_download(
+    state: State<'_, Shared>,
+    id: String,
+    mode: String,
+    confirmed: bool,
+) -> Result<(), String> {
+    downloads::require_live(&mode)?;
     let e = engine::lock(&state);
     if e.worker_active {
         return Err("Дождитесь завершения операций с файлами".into());
     }
-    downloads::remove(&e.data_dir, &id)
+    downloads::remove_confirmed(&e.data_dir, &id, &mode, confirmed)
 }
 #[tauri::command]
-async fn choose_download_folder(state: State<'_, Shared>) -> Result<String, String> {
-    let data = engine::lock(&state).data_dir.clone();
+async fn choose_download_folder(state: State<'_, Shared>, mode: String) -> Result<String, String> {
+    downloads::require_live(&mode)?;
+    let shared = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         let value=system::powershell("Add-Type -AssemblyName System.Windows.Forms; $d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description='Папка загрузок AppDock'; if($d.ShowDialog() -eq 'OK'){$d.SelectedPath | ConvertTo-Json -Compress}else{'' | ConvertTo-Json}")?;
         let path=value.as_str().filter(|p| !p.is_empty()).ok_or("Выбор папки отменён")?;
         let folder=std::path::PathBuf::from(path); if !folder.is_absolute() || !folder.is_dir() { return Err("Выберите существующую абсолютную папку".into()); }
-        std::fs::write(data.join("download-folder.json"),serde_json::to_vec(&folder).map_err(|e|e.to_string())?).map_err(|e|e.to_string())?; Ok(path.into())
+        let e = engine::lock(&shared);
+        if e.worker_active {return Err("Дождитесь завершения операций с файлами".into());}
+        downloads::set_folder(&e.data_dir, &folder, &mode)?; Ok(path.into())
     }).await.map_err(|e|e.to_string())?
 }
 #[tauri::command]
@@ -182,7 +195,8 @@ fn open_source(app_id: String, index: usize) -> Result<(), String> {
     open::that(url).map_err(|e| e.to_string())
 }
 #[tauri::command]
-fn open_downloads(state: State<'_, Shared>) -> Result<(), String> {
+fn open_downloads(state: State<'_, Shared>, mode: String) -> Result<(), String> {
+    downloads::require_live(&mode)?;
     let path = system::download_dir(&engine::lock(&state).data_dir);
     std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
     open::that(path).map_err(|e| e.to_string())

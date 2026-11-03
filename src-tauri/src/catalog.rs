@@ -1,26 +1,63 @@
 use crate::models::Selection;
 use serde_json::Value;
 use std::collections::HashSet;
+use std::sync::OnceLock;
+fn bundled_apps() -> &'static Vec<Value> {
+    static APPS: OnceLock<Vec<Value>> = OnceLock::new();
+    APPS.get_or_init(|| {
+        serde_json::from_str(include_str!("../../catalog/apps.json"))
+            .expect("Invalid bundled catalog")
+    })
+}
 pub fn apps() -> Vec<Value> {
-    serde_json::from_str(include_str!("../../catalog/apps.json")).expect("Invalid bundled catalog")
+    bundled_apps().clone()
 }
 pub fn extensions() -> Vec<Value> {
     serde_json::from_str(include_str!("../../catalog/extensions.json"))
         .expect("Invalid extension catalog")
 }
 pub fn app(id: &str) -> Result<Value, String> {
-    apps()
-        .into_iter()
+    bundled_apps()
+        .iter()
         .find(|a| a["id"] == id)
+        .cloned()
         .ok_or_else(|| "Программа отсутствует в доверенном каталоге".into())
 }
 pub fn text<'a>(v: &'a Value, key: &str) -> &'a str {
     v[key].as_str().unwrap_or("")
 }
+pub fn direct_download_url(a: &Value) -> Option<&str> {
+    (a["install"]["download"] == true)
+        .then(|| a["install"]["downloadUrl"].as_str())
+        .flatten()
+}
+pub fn allowed_actions(a: &Value) -> Vec<&'static str> {
+    if ["web", "cloud"].contains(&text(a, "type")) {
+        return vec!["open", "shortcut"];
+    }
+    if !a["platforms"]
+        .as_array()
+        .is_some_and(|p| p.iter().any(|v| v == "windows"))
+    {
+        return vec!["guide"];
+    }
+    let mut actions = Vec::new();
+    if a["install"]["method"] == "winget" && a["install"]["verification"] == "verified" {
+        actions.push("install");
+    }
+    if a["install"]["download"] == true {
+        actions.push("download");
+    }
+    actions.push("guide");
+    actions
+}
 pub fn validate(s: &Selection) -> Result<Value, String> {
     let a = app(&s.app_id)?;
     if !["install", "download", "open", "shortcut", "guide"].contains(&s.action.as_str()) {
         return Err("Недопустимое действие".into());
+    }
+    if !allowed_actions(&a).contains(&s.action.as_str()) {
+        return Err("Действие не поддерживается этим продуктом. Измените параметры.".into());
     }
     if s.extensions.len() > 8 {
         return Err("Слишком много расширений".into());
@@ -125,6 +162,29 @@ mod tests {
             options: Default::default(),
             extensions: vec![],
             version: None,
+        }
+    }
+    #[test]
+    fn catalog_actions_are_validated_without_silent_substitution() {
+        assert_eq!(
+            allowed_actions(&app("word").unwrap()),
+            vec!["download", "guide"]
+        );
+        assert_eq!(
+            allowed_actions(&app("google-docs").unwrap()),
+            vec!["open", "shortcut"]
+        );
+        for a in apps() {
+            for action in ["install", "download", "open", "shortcut", "guide"] {
+                let mut s = selection(text(&a, "id"));
+                s.action = action.into();
+                assert_eq!(
+                    validate(&s).is_ok(),
+                    allowed_actions(&a).contains(&action),
+                    "{} {action}",
+                    s.app_id
+                );
+            }
         }
     }
     #[test]

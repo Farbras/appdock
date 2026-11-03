@@ -22,6 +22,7 @@ import vsProfiles from "../../catalog/vs-profiles.json";
 import { api } from "../api";
 import {
   addExtension,
+  allowedActions,
   defaultSelection,
   extensionProfiles,
   extensions,
@@ -38,6 +39,7 @@ import {
 import type { InstalledApp, Product, Selection } from "../types";
 
 import { Logo, Modal } from "./ui";
+import { platformNames, optionValue } from "../display";
 export function ProductDialog({
   app,
   selection,
@@ -104,6 +106,7 @@ export function ProductDialog({
             className={`icon-button ${favorite ? "hearted" : ""}`}
             onClick={onFavorite}
             aria-label="Избранное"
+            aria-pressed={favorite}
           >
             <Heart size={20} fill={favorite ? "currentColor" : "none"} />
           </button>
@@ -112,7 +115,7 @@ export function ProductDialog({
         <div className="detail-meta">
           <span className="badge">
             <Monitor size={12} />
-            {app.platforms.join(" / ")}
+            {app.platforms.map((p) => platformNames[p] || p).join(" / ")}
           </span>
           <span className="badge">{app.version}</span>
           {installed && (
@@ -154,26 +157,36 @@ export function ProductDialog({
                       : []),
                     ["guide", "Открыть источник", ExternalLink],
                   ]
-                : [["guide", "Открыть инструкцию", BookOpen]]
-            ).map(([id, label, C]) => {
-              const Component = C as LucideIcon;
-              return (
-                <button
-                  key={id as string}
-                  className={`button secondary ${draft.action === id ? "selected" : ""}`}
-                  onClick={() =>
-                    setDraft((s) => ({
-                      ...s,
-                      action: id as Selection["action"],
-                    }))
-                  }
-                >
-                  <Component size={15} />
-                  {label as string}
-                  {draft.action === id && <Check size={14} />}
-                </button>
-              );
-            })}
+                : [
+                    ...(app.install.download
+                      ? [["download", "Только скачать", ArrowDown]]
+                      : []),
+                    ["guide", "Открыть инструкцию", BookOpen],
+                  ]
+            )
+              .filter(([id]) =>
+                allowedActions(app).includes(id as Selection["action"]),
+              )
+              .map(([id, label, C]) => {
+                const Component = C as LucideIcon;
+                return (
+                  <button
+                    key={id as string}
+                    className={`button secondary ${draft.action === id ? "selected" : ""}`}
+                    aria-pressed={draft.action === id}
+                    onClick={() =>
+                      setDraft((s) => ({
+                        ...s,
+                        action: id as Selection["action"],
+                      }))
+                    }
+                  >
+                    <Component size={15} />
+                    {label as string}
+                    {draft.action === id && <Check size={14} />}
+                  </button>
+                );
+              })}
           </div>
         </div>
         {app.install.method === "winget" && app.id !== "python" && (
@@ -261,11 +274,7 @@ export function ProductDialog({
                     >
                       {o.values?.map((v) => (
                         <option key={v} value={v}>
-                          {v === "user"
-                            ? "Текущий пользователь"
-                            : v === "machine"
-                              ? "Все пользователи"
-                              : v}
+                          {optionValue(app, o.id, v)}
                         </option>
                       ))}
                     </select>

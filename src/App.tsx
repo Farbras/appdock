@@ -11,7 +11,9 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { LatestRequest } from "./requests";
+import { programs } from "./display";
 import { api, emptyQueue, native, normalizePresetItems } from "./api";
 import type { Filters } from "./catalog";
 import {
@@ -77,9 +79,15 @@ function App() {
   const [storageError, setStorageError] = useState(storageIssues().join("\n"));
   const [systemError, setSystemError] = useState("");
   const [detectedAt, setDetectedAt] = useState<number | null>(null);
+  const [scanWarning, setScanWarning] = useState("");
+  const [updatesChecked, setUpdatesChecked] = useState(false);
   const [focusRequest, setFocusRequest] = useState(0);
   const [sort, setSort] = useState("name");
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(
+    () =>
+      matchMedia("(min-width:1251px)").matches &&
+      readStorage<Selection[]>("selection", []).length > 0,
+  );
   const [nav, setNav] = useState("catalog");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [settings, setSettings] = useState<Settings>(() => ({
@@ -123,6 +131,11 @@ function App() {
   const [showNotices, setShowNotices] = useState(false);
 
   const searchRef = useRef<HTMLInputElement>(null);
+  const discoveryRequest = useRef(new LatestRequest());
+  const systemRequest = useRef(new LatestRequest());
+  const planRequest = useRef(new LatestRequest());
+  const modeRef = useRef(settings.mode);
+  modeRef.current = settings.mode;
   const notify = (message: string) => setToast(message);
   useEffect(() => {
     if (!toast) return;
@@ -191,24 +204,22 @@ function App() {
   useEffect(() => {
     setInstalled([]);
     setSystem(null);
-    void api
-      .system(settings.mode)
-      .then(setSystem)
-      .catch((e) => {
-        setSystemError(String(e));
-        notify(String(e));
-      });
+    setDetectedAt(null);
+    setSystemError("");
+    setScanWarning("");
+    setUpdatesChecked(false);
+    setScanning(false);
+    setPlan(null);
+    setLoading(false);
+    planRequest.current.invalidate();
+    void refreshSystem();
     if (settings.mode === "live" && native) {
-      setScanning(true);
-      void api
-        .scan(settings.mode)
-        .then((result) => {
-          setInstalled(result);
-          setDetectedAt(Date.now());
-        })
-        .catch((e) => notify(String(e)))
-        .finally(() => setScanning(false));
+      void scan();
     }
+    return () => {
+      discoveryRequest.current.invalidate();
+      systemRequest.current.invalidate();
+    };
   }, [settings.mode]);
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -221,6 +232,7 @@ function App() {
         setShowNotices(false);
         setSaveName(null);
         setClearConfirm(false);
+        setCartOpen(false);
         setFocusRequest((v) => v + 1);
       }
     };
@@ -229,50 +241,82 @@ function App() {
   }, []);
   useEffect(() => {
     if (!focusRequest) return;
-    const id = setTimeout(() => searchRef.current?.focus(), 0);
-    return () => clearTimeout(id);
+    const id = requestAnimationFrame(() => searchRef.current?.focus());
+    return () => cancelAnimationFrame(id);
   }, [nav, focusRequest]);
   const changeSettings = (patch: Partial<Settings>) =>
     setSettings((s) => ({ ...s, ...patch }));
   const getInstalled = (app: Product) =>
     matchInstalled(app, installed, undefined);
-  const toggleApp = (app: Product) =>
+  const toggleApp = (app: Product) => {
+    if (
+      !selection.some((s) => s.appId === app.id) &&
+      matchMedia("(min-width:1251px)").matches
+    )
+      setCartOpen(true);
     setSelection((s) =>
       s.some((i) => i.appId === app.id)
         ? s.filter((i) => i.appId !== app.id)
         : [...s, defaultSelection(app)],
     );
-  const updateSelection = (s: Selection) =>
+  };
+  const updateSelection = (s: Selection) => {
+    if (matchMedia("(min-width:1251px)").matches) setCartOpen(true);
     setSelection((items) =>
       items.some((i) => i.appId === s.appId)
         ? items.map((i) => (i.appId === s.appId ? s : i))
         : [...items, s],
     );
+  };
   const toggleFavorite = (id: string) =>
     setFavorites((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   const scan = async () => {
+    const mode = settings.mode;
+    const current = discoveryRequest.current.begin();
+    const accept = () => current() && modeRef.current === mode;
     setScanning(true);
     try {
-      const result = await api.scan(settings.mode);
-      setInstalled(result);
+      const result = await api.scan(mode);
+      if (!accept()) return;
+      setInstalled(result.installed);
       setDetectedAt(Date.now());
-      setSystemError("");
-      setSystem(await api.system(settings.mode));
+      setScanWarning(result.warnings.join(" "));
+      setUpdatesChecked(result.updatesChecked);
+      void refreshSystem();
       notify(
-        settings.mode === "demo"
+        mode === "demo"
           ? "Демонстрация: сведения об установленных программах не считываются."
-          : `Проверка завершена. Обнаружено пакетов: ${result.length}`,
+          : result.warnings.length
+            ? result.warnings.join(" ")
+            : `Проверка завершена. Обнаружено пакетов: ${result.installed.length}`,
       );
     } catch (e) {
-      setSystemError(String(e));
+      if (!accept()) return;
+      setScanWarning(String(e));
+      setUpdatesChecked(false);
       notify(String(e));
     } finally {
-      setScanning(false);
+      if (accept()) setScanning(false);
+    }
+  };
+  const refreshSystem = async () => {
+    const mode = settings.mode,
+      current = systemRequest.current.begin();
+    try {
+      const value = await api.system(mode);
+      if (current() && modeRef.current === mode) {
+        setSystem(value);
+        setSystemError("");
+      }
+    } catch (e) {
+      if (current() && modeRef.current === mode) setSystemError(String(e));
     }
   };
   const review = async (downloadOnly = false, explicit?: Selection[]) => {
+    const current = planRequest.current.begin(),
+      mode = settings.mode;
     setRetryContext(null);
     const chosen = explicit || selection;
     if (!chosen.length) return;
@@ -287,20 +331,26 @@ function App() {
         : chosen;
       setReviewItems(items);
       const p = await api.plan(items, settings);
-
+      if (!current() || modeRef.current !== mode) return;
       setPlan(p);
     } catch (e) {
-      notify(String(e));
+      if (current() && modeRef.current === mode) notify(String(e));
     } finally {
-      setLoading(false);
+      if (current() && modeRef.current === mode) setLoading(false);
     }
   };
   const launch = async () => {
     if (!plan) return;
+    if (plan.mode !== settings.mode) {
+      setPlan(null);
+      notify("Режим изменился. Проверьте план заново.");
+      return;
+    }
     setBusy(true);
     try {
       await api.start(plan.token, settings.mode);
       setPlan(null);
+      setCartOpen(false);
       setNav("queue");
       setSelection((items) =>
         items.filter(
@@ -315,9 +365,11 @@ function App() {
     }
   };
   const control = async (action: string, id?: string) => {
+    const mode = settings.mode;
     try {
-      await api.control(action, settings.mode, id);
-      setQueue(await api.queue(settings.mode));
+      await api.control(action, mode, id);
+      const value = await api.queue(mode);
+      if (modeRef.current === mode) setQueue(value);
     } catch (e) {
       notify(String(e));
     }
@@ -325,7 +377,12 @@ function App() {
   const replaceSelection = (items: Selection[]) => {
     setUndoSelection(structuredClone(selection));
     setSelection(items);
-    notify("Выбор заменён. Последнюю замену можно отменить в наборах.");
+    setCartOpen(items.length > 0 && matchMedia("(min-width:1251px)").matches);
+    notify(
+      items.length
+        ? "Выбор заменён. Предыдущий выбор можно восстановить."
+        : "Выбор очищен. Предыдущий выбор можно восстановить.",
+    );
   };
   const loadPreset = (p: Preset) => {
     replaceSelection(normalizePresetItems(p.items));
@@ -340,6 +397,8 @@ function App() {
     edited?: Selection | Selection[],
     includedAppIds?: string[],
   ) => {
+    const current = planRequest.current.begin(),
+      mode = settings.mode;
     setLoading(true);
     try {
       const p = await api.retryPlan(
@@ -350,13 +409,14 @@ function App() {
         edited,
         includedAppIds,
       );
+      if (!current() || modeRef.current !== mode) return;
       setRetryContext({ runId, status, taskId });
       setReviewItems(p.items.map((i) => i.selection));
       setPlan(p);
     } catch (e) {
-      notify(String(e));
+      if (current() && modeRef.current === mode) notify(String(e));
     } finally {
-      setLoading(false);
+      if (current() && modeRef.current === mode) setLoading(false);
     }
   };
   const editTask = (task: QueueTask) => {
@@ -392,18 +452,35 @@ function App() {
     setSaveName(null);
     notify("Набор сохранён");
   };
-  const base =
-    nav === "favorites"
-      ? apps.filter((a) => favorites.includes(a.id))
-      : nav === "installed"
-        ? apps.filter((a) => getInstalled(a))
-        : apps;
-  const visible = filterApps(base, filters, installed).sort((a, b) =>
-    sort === "publisher"
-      ? a.publisher.localeCompare(b.publisher)
-      : sort === "automation"
-        ? a.install.method.localeCompare(b.install.method)
-        : a.name.localeCompare(b.name, "ru"),
+  const base = useMemo(
+    () =>
+      nav === "favorites"
+        ? apps.filter((a) => favorites.includes(a.id))
+        : nav === "installed"
+          ? apps.filter((a) => getInstalled(a))
+          : apps,
+    [nav, favorites, installed],
+  );
+  const visible = useMemo(
+    () =>
+      filterApps(base, filters, installed).sort((a, b) =>
+        sort === "publisher"
+          ? a.publisher.localeCompare(b.publisher)
+          : sort === "automation"
+            ? a.install.method.localeCompare(b.install.method)
+            : a.name.localeCompare(b.name, "ru"),
+      ),
+    [base, filters, installed, sort],
+  );
+  const categoryCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        categories.map((c) => [
+          c.id,
+          filterApps(apps, { ...filters, category: c.id }, installed).length,
+        ]),
+      ),
+    [filters, installed],
   );
   const activeTasks = currentTasks(queue).filter(
     (t) => !terminalStatuses.includes(t.status),
@@ -425,17 +502,68 @@ function App() {
       "Выберите программы, проверьте план и выполните автоматические и ручные шаги.",
     installed: "Программы, обнаруженные на этом компьютере.",
     favorites: "Всё, что хочется держать под рукой.",
-    queue: "Каждый шаг под контролем. Результаты — без догадок.",
-    presets: "Сохраните свой выбор или начните с готового решения.",
-    history: "Результаты установок, загрузок и веб-действий.",
+    queue: "Очередь — действия текущего запуска и шаги, требующие участия.",
+    presets:
+      "Набор — сохранённый выбор программ с параметрами для повторного применения.",
+    history: "История — результаты всех запусков, журналы и отчёты.",
     settings: "Пусть AppDock работает так, как удобно вам.",
     updates: "Выберите поддерживаемые обновления и проверьте план.",
-    profile: "Сравните желаемый состав с этим компьютером.",
-    downloads: "Файлы, происхождение и ограничения загрузок.",
+    profile:
+      "Профиль — желаемый состав компьютера. Сравните его с обнаруженными программами.",
+    downloads:
+      "Полученные файлы — готовые загрузки, их происхождение и проверка.",
   };
 
+  const catalogScreen = useMemo(
+    () =>
+      ["catalog", "favorites", "installed"].includes(nav) ? (
+        <CatalogScreen
+          installed={installed}
+          nav={nav}
+          filters={filters}
+          setFilters={setFilters}
+          settings={settings}
+          changeSettings={changeSettings}
+          visible={visible}
+          base={base}
+          getInstalled={getInstalled}
+          selection={selection}
+          toggleApp={toggleApp}
+          setDetail={setDetail}
+          toggleFavorite={toggleFavorite}
+          favorites={favorites}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          searchRef={searchRef}
+          scanning={scanning}
+          detectedAt={detectedAt}
+          scan={scan}
+          setNav={setNav}
+          setWizard={setWizard}
+          sort={sort}
+          setSort={setSort}
+        />
+      ) : null,
+    [
+      installed,
+      nav,
+      filters,
+      settings,
+      visible,
+      base,
+      selection,
+      favorites,
+      showFilters,
+      scanning,
+      detectedAt,
+      sort,
+    ],
+  );
+
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${selection.length ? "has-selection" : "empty-selection"} ${cartOpen ? "selection-open" : ""}`}
+    >
       <aside className="sidebar">
         <Brand />
         <div className="sidebar-caption">ВАШЕ РАБОЧЕЕ ПРОСТРАНСТВО</div>
@@ -444,6 +572,8 @@ function App() {
             <button
               key={id}
               aria-label={label}
+              aria-current={nav === id ? "page" : undefined}
+              title={label}
               className={`nav-item ${nav === id ? "active" : ""}`}
               onClick={() => {
                 setNav(id);
@@ -468,6 +598,7 @@ function App() {
               <button
                 key={c.id}
                 className={`category-nav ${filters.category === c.id && nav === "catalog" ? "active" : ""}`}
+                aria-pressed={filters.category === c.id && nav === "catalog"}
                 onClick={() => {
                   setNav("catalog");
                   setFilters({ ...initialFilters, category: c.id });
@@ -475,9 +606,7 @@ function App() {
               >
                 <Icon name={c.icon} size={16} />
                 <span>{c.name}</span>
-                <span className="category-count">
-                  {apps.filter((a) => a.category === c.id).length}
-                </span>
+                <span className="category-count">{categoryCounts[c.id]}</span>
               </button>
             ))}
         </div>
@@ -578,8 +707,22 @@ function App() {
                 onScan={() => void scan()}
                 onPrepare={() => setWizard(true)}
                 error={systemError}
+                updatesChecked={updatesChecked}
               />
             )}
+            {scanWarning &&
+              ["catalog", "installed", "updates", "profile"].includes(nav) && (
+                <div role="alert" className="inline-note warning-text">
+                  {scanWarning}{" "}
+                  <button
+                    className="text-button"
+                    disabled={scanning}
+                    onClick={() => void scan()}
+                  >
+                    Повторить обнаружение
+                  </button>
+                </div>
+              )}
             {nav === "updates" && (
               <UpdatesScreen
                 installed={installed}
@@ -589,11 +732,14 @@ function App() {
                 onScan={() => void scan()}
                 scanning={scanning}
                 detectedAt={detectedAt}
+                updatesChecked={updatesChecked}
                 notify={notify}
               />
             )}
             {nav === "profile" && (
               <ProfileScreen
+                checked={settings.mode === "demo" || detectedAt !== null}
+                onScan={() => void scan()}
                 profile={profile}
                 setProfile={setProfile}
                 installed={installed}
@@ -604,35 +750,14 @@ function App() {
               />
             )}
             {nav === "downloads" && (
-              <DownloadsScreen notify={notify} running={queue.running} />
-            )}
-            {["catalog", "favorites", "installed"].includes(nav) && (
-              <CatalogScreen
-                installed={installed}
-                nav={nav}
-                filters={filters}
-                setFilters={setFilters}
-                settings={settings}
-                changeSettings={changeSettings}
-                visible={visible}
-                base={base}
-                getInstalled={getInstalled}
-                selection={selection}
-                toggleApp={toggleApp}
-                setDetail={setDetail}
-                toggleFavorite={toggleFavorite}
-                favorites={favorites}
-                showFilters={showFilters}
-                setShowFilters={setShowFilters}
-                searchRef={searchRef}
-                scanning={scanning}
-                scan={scan}
-                setNav={setNav}
-                setWizard={setWizard}
-                sort={sort}
-                setSort={setSort}
+              <DownloadsScreen
+                key={settings.mode}
+                mode={settings.mode}
+                notify={notify}
+                running={queue.running}
               />
-            )}{" "}
+            )}
+            {catalogScreen}
             {nav === "presets" && (
               <PresetsScreen
                 presets={presets}
@@ -678,7 +803,7 @@ function App() {
                 notify={notify}
                 queue={queue}
                 system={system}
-                setSystem={setSystem}
+                refreshSystem={() => void refreshSystem()}
               />
             )}
           </ScreenBoundary>
@@ -692,7 +817,12 @@ function App() {
         loading={loading}
         cartOpen={cartOpen}
         setCartOpen={setCartOpen}
-        setSelection={setSelection}
+        clearSelection={() => replaceSelection([])}
+        canUndo={undoSelection !== null}
+        onUndo={() => {
+          if (undoSelection) setSelection(undoSelection);
+          setUndoSelection(null);
+        }}
         setWizard={setWizard}
         setDetail={setDetail}
         getInstalled={getInstalled}
@@ -803,6 +933,7 @@ function App() {
                 <button
                   key={p.id}
                   className={wizardId === p.id ? "active" : ""}
+                  aria-pressed={wizardId === p.id}
                   onClick={() => setWizardId(p.id)}
                 >
                   <Icon name={p.icon} size={22} />
@@ -866,7 +997,7 @@ function App() {
             <p className="muted-text">
               {editingPreset
                 ? "Состав набора сохранится."
-                : `${selection.length} программ. Версии и параметры сохранятся без секретов.`}
+                : `${programs(selection.length)}. Версии и параметры сохранятся без секретов.`}
             </p>
           </div>
           <div className="modal-footer">

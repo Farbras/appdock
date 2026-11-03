@@ -44,16 +44,28 @@ export const statusNames: Record<string, string> = {
 };
 export const isWeb = (app: Product) => ["web", "cloud"].includes(app.type);
 export const getApp = (id: string) => apps.find((a) => a.id === id)!;
+export function allowedActions(app: Product): Selection["action"][] {
+  if (isWeb(app)) return ["open", "shortcut"];
+  if (!app.platforms.includes("windows")) return ["guide"];
+  return [
+    ...(app.install.method === "winget" &&
+    app.install.verification === "verified"
+      ? ["install" as const]
+      : []),
+    ...(app.install.download ? ["download" as const] : []),
+    "guide",
+  ];
+}
 export function defaultSelection(app: Product): Selection {
+  const actions = allowedActions(app);
   return {
     appId: app.id,
-    action: isWeb(app)
-      ? "open"
-      : !app.platforms.includes("windows") || app.install.method === "manual"
-        ? "guide"
-        : "install",
+    action:
+      app.install.downloadUrl && actions.includes("download")
+        ? "download"
+        : actions[0],
     options: Object.fromEntries(app.options.map((o) => [o.id, o.default])),
-    extensions: app.id === "vscode" ? extensions.map((e) => e.id) : [],
+    extensions: [],
   };
 }
 export function addExtension(ids: string[], id: string): string[] {

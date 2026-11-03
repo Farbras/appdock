@@ -72,10 +72,30 @@ describe("catalog and discovery", () => {
     expect(defaultSelection(getApp("firebase")).action).toBe("open");
     expect(defaultSelection(getApp("postgres")).action).toBe("guide");
   });
+  it("offers Office 2024 as a direct download and preserves Word search", () => {
+    const office = getApp("word");
+    expect(office.name).toBe("Office 2024");
+    expect(office.category).toBe("documents");
+    expect(defaultSelection(office).action).toBe("download");
+    expect(
+      filterApps(apps, { ...initialFilters, query: "Microsoft Word" }, []),
+    ).toContain(office);
+    const preset = {
+      id: "office-test",
+      name: "Office",
+      description: "",
+      icon: "Package",
+      builtin: false,
+      items: [defaultSelection(office)],
+    };
+    expect(parsePreset(serializePreset(preset)).items[0].action).toBe(
+      "download",
+    );
+  });
 });
 describe("dependencies and presets", () => {
-  it("selects exactly eight default editor extensions", () =>
-    expect(defaultSelection(getApp("vscode")).extensions).toHaveLength(8));
+  it("requires explicit extension opt-in for a newly selected editor", () =>
+    expect(defaultSelection(getApp("vscode")).extensions).toEqual([]));
   it("includes dependencies and removes dependents when Python is disabled", () => {
     const ids = addExtension([], "ms-python.vscode-pylance");
     expect(ids).toContain("ms-python.python");

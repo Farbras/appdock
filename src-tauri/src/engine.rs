@@ -103,7 +103,14 @@ fn finish_run_id(q: &mut Queue, run_id: &str) {
 }
 pub fn build_tasks(items: &[Selection]) -> Result<Vec<Task>, String> {
     let mut tasks = Vec::new();
+    let mut seen = HashSet::new();
     for selection in items {
+        if !seen.insert(&selection.app_id) {
+            return Err(format!(
+                "Повторяющаяся программа в плане: {}",
+                selection.app_id
+            ));
+        }
         let a = catalog::app(&selection.app_id)?;
         if selection.action == "download" && a["install"]["download"] != true {
             continue;
@@ -357,7 +364,7 @@ impl Engine {
     fn save_inner(&mut self) -> Result<(), String> {
         let path = self.data_dir.join("queue.json");
         let temp = self.data_dir.join("queue.tmp");
-        let bytes = serde_json::to_vec_pretty(&self.queue).map_err(|e| e.to_string())?;
+        let bytes = serde_json::to_vec(&self.queue).map_err(|e| e.to_string())?;
         {
             use std::io::Write;
             let mut f = std::fs::File::create(&temp).map_err(|e| e.to_string())?;
@@ -485,17 +492,26 @@ pub fn prepare(
                 item_warnings.push("Архитектура не проверена для этого пакета".into());
                 blocked = true
             }
-            if system.winget.is_none() {
+            let direct_download =
+                s.action == "download" && catalog::direct_download_url(&a).is_some();
+            if !direct_download && system.winget.is_none() {
                 item_warnings
                     .push("WinGet не найден. Установите App Installer из Microsoft Store.".into());
                 blocked = true
             }
-            if let Err(err) = catalog::package_id(&a, s) {
-                item_warnings.push(err);
-                blocked = true
+            if !direct_download {
+                if let Err(err) = catalog::package_id(&a, s) {
+                    item_warnings.push(err);
+                    blocked = true
+                }
             }
         }
-        if let Some(mb) = a["diskMb"].as_u64() {
+        let size = if s.action == "download" {
+            &a["downloadMb"]
+        } else {
+            &a["diskMb"]
+        };
+        if let Some(mb) = size.as_u64() {
             disk += mb
         } else if native_action {
             unknown_size = true
@@ -530,6 +546,14 @@ pub fn prepare(
         let found = installed
             .iter()
             .find(|i| i.package_id.eq_ignore_ascii_case(&package));
+        if s.action == "install" {
+            if let (Some(i), Some(target)) = (found, s.version.as_deref()) {
+                if let Err(message) = system::check_pinned_transition(&i.version, target) {
+                    blocked = true;
+                    item_warnings.push(message);
+                }
+            }
+        }
         if s.app_id == "visual-studio"
             && s.action == "install"
             && installed
@@ -828,12 +852,16 @@ fn run_command(
     );
     let began = std::time::Instant::now();
     let mut attention = false;
+    let direct_download = task.action == "download"
+        && catalog::app(&task.app_id).is_ok_and(|a| catalog::direct_download_url(&a).is_some());
     let status = loop {
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
             break status;
         }
         let limit = if diagnostic {
             45
+        } else if direct_download {
+            86400
         } else if task.action == "download" {
             600
         } else {
@@ -846,7 +874,7 @@ fn run_command(
                 return Err(if diagnostic {
                     "Диагностическая команда превысила 45 секунд. Проверьте источник WinGet и повторите проверку.".into()
                 } else {
-                    "Превышено время загрузки (10 минут). Проверьте сеть и повторите через новый план.".into()
+                    format!("Превышено время загрузки ({} минут). Проверьте сеть и повторите через новый план.", limit / 60)
                 });
             }
             attention = true;
@@ -1031,6 +1059,20 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
         }
         _ => {}
     }
+    if task.action == "download" && catalog::direct_download_url(&a).is_some() {
+        update(
+            shared,
+            app,
+            &task.id,
+            "downloading",
+            "Скачивание образа Office 2024 напрямую с сервера Microsoft по HTTPS.",
+        );
+        crate::downloads::download_direct(&data, task, |command| {
+            run_command(shared, app, task, command)
+        })?;
+        update(shared, app, &task.id, "downloaded", "Образ Office 2024 скачан. Откройте папку загрузок, подключите ProPlus2024Retail.img и запустите setup.exe.");
+        return Ok(());
+    }
     let package = catalog::package_id(&a, &task.selection)?;
     if !a["platforms"]
         .as_array()
@@ -1078,6 +1120,11 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
     let current = installed
         .iter()
         .find(|i| i.package_id.eq_ignore_ascii_case(&package));
+    if task.action == "install" {
+        if let (Some(i), Some(target)) = (current, task.selection.version.as_deref()) {
+            system::check_pinned_transition(&i.version, target)?;
+        }
+    }
     let full_profile = task.app_id == "visual-studio"
         && task.selection.options.get("fullProfile") == Some(&Value::Bool(true));
     if task.action != "download"
@@ -1423,10 +1470,7 @@ pub fn control(
                 if e.worker_active {
                     return Err("Сначала завершите очередь".into());
                 }
-                // Keep completed records referenced by pending dependencies.
-                let referenced:HashSet<_>=e.queue.tasks.iter().filter(|t|!terminal(&t.status)).flat_map(|t|t.dependencies.clone()).collect();
-                e.queue.tasks.retain(|t| !terminal(&t.status)||referenced.contains(&t.id));
-                let remaining:HashSet<_>=e.queue.tasks.iter().map(|t|t.run_id.clone()).collect();e.queue.runs.retain(|r|remaining.contains(&r.id));
+                clear_finished(&mut e.queue);
             }
             _ => return Err("Неизвестное управление очередью".into()),
         }
@@ -1468,6 +1512,88 @@ mod tests {
             started_at: None,
             finished_at: None,
         }
+    }
+    #[test]
+    fn cleanup_keeps_user_actions_and_transitive_dependencies() {
+        let mut queue = Queue::default();
+        queue.tasks = (0..7)
+            .map(|i| {
+                let mut t = task("installed");
+                t.id = i.to_string();
+                t
+            })
+            .collect();
+        queue.tasks[0].status = "action-required".into();
+        queue.tasks[0].dependencies = vec!["1".into()];
+        queue.tasks[1].dependencies = vec!["2".into()];
+        queue.tasks[3].status = "reboot-required".into();
+        queue.tasks[4].status = "attention".into();
+        queue.tasks[4].parent_id = Some("5".into());
+        clear_finished(&mut queue);
+        assert_eq!(
+            queue
+                .tasks
+                .iter()
+                .map(|t| t.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["0", "1", "2", "3", "4", "5"]
+        );
+    }
+    #[test]
+    fn rejects_duplicate_programs_before_constructing_tasks() {
+        let s = task("queued").selection;
+        assert!(build_tasks(&[s.clone(), s])
+            .unwrap_err()
+            .contains("Повторяющаяся"));
+    }
+    #[test]
+    fn history_snapshot_measurement_and_atomic_roundtrip() {
+        use std::time::Instant;
+        let path =
+            std::env::temp_dir().join(format!("appdock-history-measure-{}", uuid::Uuid::new_v4()));
+        let mut state = Engine::load(path.clone());
+        for i in 0..500 {
+            let id = format!("run-{i}");
+            let selection = task("installed").selection;
+            state.queue.runs.push(Run {
+                id: id.clone(),
+                created_at: 1,
+                finished_at: Some(2),
+                mode: "live".into(),
+                skip_current: true,
+                parallel_downloads: 2,
+                selections: vec![selection],
+                outcome: "completed".into(),
+            });
+            for j in 0..10 {
+                let mut t = task("installed");
+                t.id = format!("{id}-{j}");
+                t.run_id = id.clone();
+                t.log =
+                    vec!["[ТЕСТ] Запись журнала выполнения".into(); 5];
+                state.queue.tasks.push(t);
+            }
+        }
+        let start = Instant::now();
+        let pretty = serde_json::to_vec_pretty(&state.queue).unwrap();
+        let pretty_ms = start.elapsed().as_secs_f64() * 1000.0;
+        let start = Instant::now();
+        let compact = serde_json::to_vec(&state.queue).unwrap();
+        let compact_ms = start.elapsed().as_secs_f64() * 1000.0;
+        let start = Instant::now();
+        state.save().unwrap();
+        let save_ms = start.elapsed().as_secs_f64() * 1000.0;
+        println!("HISTORY_METRICS pretty_bytes={} compact_bytes={} pretty_serialize_ms={:.3} compact_serialize_ms={:.3} atomic_save_ms={:.3}",pretty.len(),compact.len(),pretty_ms,compact_ms,save_ms);
+        let start = Instant::now();
+        let restored = Engine::load(path.clone());
+        println!(
+            "HISTORY_RESTORE_MS {:.3}",
+            start.elapsed().as_secs_f64() * 1000.0
+        );
+        assert_eq!(restored.queue.tasks.len(), 5000);
+        assert_eq!(restored.queue.runs.len(), 500);
+        assert_eq!(restored.queue.tasks[4999].log.len(), 5);
+        std::fs::remove_dir_all(path).unwrap();
     }
     #[test]
     fn interrupted_queue_is_restored_paused_without_repeating_completed_tasks() {

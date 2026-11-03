@@ -9,6 +9,7 @@ const { chromium } = await import(
     : "playwright"
 );
 const browser = await chromium.launch({ channel: "msedge", headless: true });
+let currentPage;
 const errors = [];
 const appData = JSON.parse(fs.readFileSync("catalog/apps.json", "utf8"));
 const selection = (id) => {
@@ -31,6 +32,7 @@ const open = async (seed = {}, routeMock = false) => {
     acceptDownloads: true,
   });
   const page = await context.newPage();
+  currentPage = page;
   page.on("pageerror", (e) => errors.push(e.message));
   await page.addInitScript((seed) => {
     for (const [k, v] of Object.entries(seed))
@@ -42,7 +44,7 @@ const open = async (seed = {}, routeMock = false) => {
       let body = await response.text();
       body = body.replace(
         "async scan(mode) {",
-        'async scan(mode) { return [{packageId:"Google.Chrome.EXE",version:"100",availableVersion:"101"},{packageId:"appdock:postgres",version:"16"}];',
+        'async scan(mode) { return {installed:[{packageId:"Google.Chrome.EXE",version:"100",availableVersion:"101"},{packageId:"appdock:postgres",version:"16"}],warnings:[],updatesChecked:true};',
       );
       await route.fulfill({ response, body });
     });
@@ -75,8 +77,45 @@ const record = (message) => {
 };
 fs.mkdirSync("artifacts", { recursive: true });
 try {
-  // New user, readable plan, demo, keyboard focus, minimum width and zoom.
+  // Office image downloads are available alongside manual installation guidance.
   let { page, context } = await open();
+  await page
+    .getByRole("button", { name: "Параметры Office 2024", exact: true })
+    .click();
+  const officeDialog = page.getByRole("dialog", {
+    name: "Параметры программы",
+    exact: true,
+  });
+  check(
+    await officeDialog
+      .getByRole("button", { name: "Только скачать", exact: true })
+      .evaluate((e) => e.classList.contains("selected")),
+    "Office defaults to download",
+  );
+  await officeDialog
+    .getByRole("button", { name: "Добавить в выбор", exact: true })
+    .click();
+  await page.locator(".download-only").click();
+  await page
+    .getByRole("dialog", { name: "Проверим всё перед запуском" })
+    .waitFor();
+  check(
+    (await page.locator(".plan-expanded").textContent()).includes(
+      "Office 2024",
+    ),
+    "Office included in download plan",
+  );
+  await run(page);
+  await page.waitForFunction(() => {
+    const q = JSON.parse(localStorage.getItem("appdock:demo-queue") || "null");
+    return (
+      q?.data && !q.data.running && q.data.tasks[0]?.status === "downloaded"
+    );
+  });
+  record("Office 2024 → download action → plan → downloaded demo task");
+  await context.close();
+  // New user, readable plan, demo, keyboard focus, minimum width and zoom.
+  ({ page, context } = await open());
   check(
     (await page.locator(".product-card").count()) === 78,
     "Windows defaults",
@@ -122,11 +161,9 @@ try {
   await page.getByRole("button", { name: "Настройки", exact: true }).click();
   await page.keyboard.press("Control+k");
   await page.getByRole("textbox", { name: "Поиск программ" }).waitFor();
-  check(
-    await page
-      .getByRole("textbox", { name: "Поиск программ" })
-      .evaluate((e) => e === document.activeElement),
-    "Ctrl+K focus",
+  await page.waitForFunction(
+    () =>
+      document.activeElement?.getAttribute("aria-label") === "Поиск программ",
   );
   await page
     .getByRole("textbox", { name: "Поиск программ" })
@@ -297,6 +334,7 @@ try {
   const card = page
     .locator(".preset-card")
     .filter({ hasText: "Сквозной набор" });
+  await card.locator(".preset-more summary").click();
   await card
     .getByRole("button", { name: "Редактировать", exact: true })
     .click();
@@ -460,6 +498,25 @@ try {
     JSON.stringify({ passed: true, results, browserErrors: errors }, null, 2),
   );
   console.log("PASS: " + results.join("; "));
+} catch (error) {
+  if (currentPage && !currentPage.isClosed()) {
+    await currentPage.screenshot({ path: "artifacts/ui-smoke-failure.png" });
+    fs.writeFileSync(
+      "artifacts/ui-smoke-failure.json",
+      JSON.stringify(
+        await currentPage.evaluate(() => ({
+          url: location.href,
+          visibility: document.visibilityState,
+          settings: localStorage.getItem("appdock:settings"),
+          queue: localStorage.getItem("appdock:demo-queue"),
+          text: document.body.innerText,
+        })),
+        null,
+        2,
+      ),
+    );
+  }
+  throw error;
 } finally {
   await browser.close();
 }

@@ -25,6 +25,11 @@ for (const a of apps) {
   ])
     assert.ok(Object.hasOwn(a, key), `${a.id}: ${key}`);
   for (const url of a.sources) assert.equal(new URL(url).protocol, "https:");
+  if (a.install.downloadUrl) {
+    assert.equal(new URL(a.install.downloadUrl).protocol, "https:");
+    assert.equal(a.install.download, true);
+    assert.ok(a.sources.includes(a.install.downloadUrl));
+  }
   if (a.install.verification === "verified") {
     assert.ok(report.winget[a.install.packageId]?.ok);
     assert.equal(a.install.source, "winget");

@@ -2,9 +2,7 @@ import { installedInstances } from "../catalog";
 import {
   ArrowUpRight,
   Check,
-  Code2,
   ExternalLink,
-  FileText,
   Globe,
   Heart,
   Info,
@@ -25,6 +23,7 @@ import type { InstalledApp, Product, Selection, Settings } from "../types";
 import { Icon, Logo } from "../components/ui";
 
 import type { Dispatch, RefObject, SetStateAction } from "react";
+import { filterNames, filterValue } from "../display";
 export function CatalogScreen({
   installed,
   nav,
@@ -44,6 +43,7 @@ export function CatalogScreen({
   setShowFilters,
   searchRef,
   scanning,
+  detectedAt,
   scan,
   setNav,
   setWizard,
@@ -68,6 +68,7 @@ export function CatalogScreen({
   setShowFilters: Dispatch<SetStateAction<boolean>>;
   searchRef: RefObject<HTMLInputElement | null>;
   scanning: boolean;
+  detectedAt: number | null;
   scan: () => Promise<void>;
   setNav: (nav: string) => void;
   setWizard: (v: boolean) => void;
@@ -76,47 +77,15 @@ export function CatalogScreen({
 }) {
   return (
     <>
-      {nav === "catalog" && filters.category === "all" && !filters.query && (
-        <section className="welcome-banner">
-          <div className="banner-content">
-            <span className="mini-label">
-              <Sparkles size={13} />
-              КОМПЬЮТЕР, ГОТОВЫЙ К ВАШИМ ЗАДАЧАМ
-            </span>
-            <h2>Новый старт. Без лишних шагов.</h2>
-            <p>
-              Браузер, рабочие инструменты и любимые приложения.
-              <br />
-              Всё нужное — в одной очереди.
-            </p>
-            <button className="banner-button" onClick={() => setWizard(true)}>
-              Подобрать по задаче
-              <ArrowUpRight size={16} />
-            </button>
-          </div>
-          <div className="banner-art" aria-hidden="true">
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-            <span className="art-tile tile-code">
-              <Code2 />
-            </span>
-            <span className="art-tile tile-world">
-              <Globe />
-            </span>
-            <span className="art-tile tile-doc">
-              <FileText />
-            </span>
-            <span className="art-main">
-              <div className="brand-icon">
-                <span />
-                <span />
-                <span />
-                <span />
-              </div>
-            </span>
-            <span className="art-spark">✦</span>
-          </div>
-        </section>
+      {nav === "catalog" && (
+        <button
+          className="catalog-prepare text-button"
+          onClick={() => setWizard(true)}
+        >
+          <Sparkles size={16} />
+          Подобрать программы по задаче
+          <ArrowUpRight size={16} />
+        </button>
       )}
       <div className="search-toolbar">
         <div className="search-field">
@@ -271,7 +240,7 @@ export function CatalogScreen({
               <button
                 className="badge"
                 key={k}
-                aria-label={"Снять фильтр " + k}
+                aria-label={"Снять фильтр " + filterNames[k]}
                 onClick={() =>
                   setFilters((f) => ({
                     ...f,
@@ -279,20 +248,7 @@ export function CatalogScreen({
                   }))
                 }
               >
-                {
-                  (
-                    {
-                      platform: "Платформа",
-                      status: "Состояние",
-                      category: "Категория",
-                      license: "Лицензия",
-                      type: "Тип",
-                      automation: "Действие",
-                      query: "Поиск",
-                    } as Record<string, string>
-                  )[k]
-                }
-                : {v} ×
+                {filterNames[k]}: {filterValue(k, v)} ×
               </button>
             ))}
         </div>
@@ -310,6 +266,7 @@ export function CatalogScreen({
             <button
               key={c.id}
               className={filters.category === c.id ? "active" : ""}
+              aria-pressed={filters.category === c.id}
               onClick={() => setFilters((f) => ({ ...f, category: c.id }))}
             >
               {c.name}
@@ -317,7 +274,9 @@ export function CatalogScreen({
             </button>
           ))}
         </div>
-        <span className="result-count">Найдено: {visible.length}</span>
+        <span className="result-count">
+          Показано {visible.length} из {base.length}
+        </span>
       </div>
       {nav === "installed" && (
         <div className="inline-note">
@@ -337,32 +296,43 @@ export function CatalogScreen({
             <Search size={28} />
           </span>
           <h3>
-            {nav === "favorites"
-              ? "Пока без избранного"
-              : nav === "installed"
-                ? "Здесь появятся ваши программы"
-                : "Ничего не найдено"}
+            {base.length > 0
+              ? "Ничего не найдено по фильтрам"
+              : nav === "favorites"
+                ? "Пока без избранного"
+                : nav === "installed"
+                  ? scanning
+                    ? "Проверяем компьютер…"
+                    : detectedAt
+                      ? "Программы каталога не обнаружены"
+                      : "Проверка ещё не выполнена"
+                  : "Ничего не найдено"}
           </h3>
           <p>
-            {nav === "favorites"
-              ? "Нажмите на сердечко в карточке программы."
-              : nav === "installed"
-                ? "Запустите проверку в рабочем режиме."
-                : "Попробуйте другое название или измените фильтры."}
+            {base.length > 0
+              ? "Измените запрос или сбросьте фильтры, чтобы вернуть список."
+              : nav === "favorites"
+                ? "Нажмите на сердечко в карточке программы."
+                : nav === "installed"
+                  ? "Запустите проверку в рабочем режиме."
+                  : "Попробуйте другое название или измените фильтры."}
           </p>
           <button
             className="button secondary"
             onClick={() => {
               setFilters(initialFilters);
+              if (base.length > 0) return;
               if (nav === "installed") void scan();
               else if (nav === "favorites") setNav("catalog");
             }}
           >
-            {nav === "installed"
-              ? "Проверить компьютер"
-              : nav === "favorites"
-                ? "Открыть каталог"
-                : "Сбросить фильтры"}
+            {base.length > 0
+              ? "Сбросить фильтры"
+              : nav === "installed"
+                ? "Проверить компьютер"
+                : nav === "favorites"
+                  ? "Открыть каталог"
+                  : "Сбросить фильтры"}
           </button>
         </div>
       ) : (
@@ -404,6 +374,7 @@ export function CatalogScreen({
                             className="product-open"
                             onClick={() => setDetail(app)}
                             aria-label={`Настройки ${app.name}`}
+                            title={app.name}
                           >
                             <Logo app={app} />
                             <div>
@@ -485,8 +456,10 @@ export function CatalogScreen({
                             ),
                           )}
                         <div className="card-footer">
-                          <span title={app.version}>
-                            Доступная:{" "}
+                          <span
+                            title={`Проверено в каталоге: ${app.checkedAt}`}
+                          >
+                            Версия в каталоге:{" "}
                             {app.version === "Уточняется в источнике"
                               ? "Версия у издателя"
                               : app.version}

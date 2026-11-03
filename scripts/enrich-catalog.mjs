@@ -50,7 +50,6 @@ const mac = [
   "duckduckgo",
   "github-desktop",
   "notion",
-  "word",
   "autocad",
   "fusion",
   "archicad",

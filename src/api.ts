@@ -1,6 +1,8 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { defaultSelection, getApp, isWeb } from "./catalog";
+import { defaultSelection, getApp, statusNames } from "./catalog";
+import { assertUniquePrograms } from "./domain";
+import { coalesce } from "./requests";
 import {
   beginRun,
   dependencyFailure,
@@ -10,6 +12,8 @@ import {
   retrySelections,
   retryTasks,
   terminal,
+  clearFinished,
+  demoStages,
 } from "./queue";
 import {
   downloadJson,
@@ -19,7 +23,6 @@ import {
 } from "./storage";
 import type {
   DownloadInventory,
-  InstalledApp,
   Plan,
   QueueState,
   QueueTask,
@@ -27,6 +30,7 @@ import type {
   Settings,
   SystemInfo,
   TaskStatus,
+  ScanResult,
 } from "./types";
 export const native = isTauri();
 export const emptyQueue: QueueState = {
@@ -108,11 +112,11 @@ function runDemo() {
       return;
     }
     task.startedAt = Date.now();
-    for (const stage of ["checking", "downloading", "installing"] as const) {
+    for (const stage of demoStages(task.action)) {
       task.status = stage;
       task.lastActivityAt = Date.now();
       task.message = "Демонстрация этапа. Системные операции не выполняются.";
-      task.log.push(`[ДЕМО] ${stage}`);
+      task.log.push(`[ДЕМО] ${statusNames[stage]}`);
       persist();
       await wait(250);
     }
@@ -147,10 +151,22 @@ export const api = {
     };
   },
   async system(mode: Settings["mode"]): Promise<SystemInfo> {
-    return mode === "live" && native ? invoke("system_info") : demoSystem;
+    return coalesce(`system:${mode}`, () =>
+      mode === "live" && native
+        ? invoke<SystemInfo>("system_info")
+        : Promise.resolve(demoSystem),
+    );
   },
-  async scan(mode: Settings["mode"]): Promise<InstalledApp[]> {
-    return mode === "live" && native ? invoke("scan_installed") : [];
+  async scan(mode: Settings["mode"]): Promise<ScanResult> {
+    return coalesce(`scan:${mode}`, () =>
+      mode === "live" && native
+        ? invoke<ScanResult>("scan_installed")
+        : Promise.resolve({
+            installed: [],
+            warnings: [],
+            updatesChecked: false,
+          }),
+    );
   },
   async queue(mode: Settings["mode"]): Promise<QueueState> {
     return mode === "live" && native
@@ -158,6 +174,7 @@ export const api = {
       : structuredClone(demoQueue);
   },
   async plan(items: Selection[], settings: Settings): Promise<Plan> {
+    assertUniquePrograms(items);
     if (settings.mode === "live" && native)
       return invoke("prepare_plan", {
         items,
@@ -330,17 +347,7 @@ export const api = {
     }
     if (action === "clear") {
       if (demoQueue.running) throw new Error("Сначала завершите очередь");
-      const referenced = new Set(
-        demoQueue.tasks
-          .filter((t) => !terminal(t.status))
-          .flatMap((t) => t.dependencies || []),
-      );
-      demoQueue.tasks = demoQueue.tasks.filter(
-        (t) => !terminal(t.status) || referenced.has(t.id),
-      );
-      demoQueue.runs = demoQueue.runs?.filter((r) =>
-        demoQueue.tasks.some((t) => t.runId === r.id),
-      );
+      clearFinished(demoQueue);
     }
     persist();
   },
@@ -356,25 +363,39 @@ export const api = {
     const a = getApp(appId);
     window.open(a.sources[index] || a.website, "_blank", "noopener,noreferrer");
   },
-  async openDownloads() {
-    if (native) return invoke<void>("open_downloads");
+  async openDownloads(mode: Settings["mode"]) {
+    if (mode === "demo")
+      throw new Error(
+        "В деморежиме используется виртуальная папка; реальные файлы не открываются.",
+      );
+    if (native) return invoke<void>("open_downloads", { mode });
     throw new Error("Папка загрузок доступна в настольном приложении");
   },
-  async downloads(): Promise<DownloadInventory> {
+  async downloads(mode: Settings["mode"]): Promise<DownloadInventory> {
+    if (mode === "demo") return structuredClone(demoDownloads);
     return native
-      ? invoke("downloads_inventory")
+      ? invoke("downloads_inventory", { mode })
       : {
           folder: "Доступно в настольном приложении",
           files: [],
           limitations: "Демонстрация не создаёт файлов.",
         };
   },
-  async chooseDownloads(): Promise<string> {
-    if (native) return invoke("choose_download_folder");
+  async chooseDownloads(mode: Settings["mode"]): Promise<string> {
+    if (mode === "demo") {
+      demoDownloads.folder = "Демонстрационная папка AppDock (виртуальная)";
+      return demoDownloads.folder;
+    }
+    if (native) return invoke("choose_download_folder", { mode });
     throw new Error("Выбор папки доступен в настольном приложении");
   },
-  async removeDownload(id: string) {
-    if (native) return invoke<void>("remove_download", { id });
+  async removeDownload(id: string, mode: Settings["mode"], confirmed: boolean) {
+    if (!confirmed) throw new Error("Подтвердите удаление файла");
+    if (mode === "demo") {
+      demoDownloads.files = demoDownloads.files.filter((f) => f.id !== id);
+      return;
+    }
+    if (native) return invoke<void>("remove_download", { id, mode, confirmed });
   },
   async saveReport(text: string, structured: boolean): Promise<string> {
     if (native) return invoke("save_report", { text, structured });
@@ -387,18 +408,25 @@ export const api = {
   },
 };
 export function normalizePresetItems(items: Selection[]): Selection[] {
+  assertUniquePrograms(items);
   return items.map((s) =>
-    sanitizeSelection(
-      {
-        ...defaultSelection(getApp(s.appId)),
-        ...s,
-        action: isWeb(getApp(s.appId))
-          ? "open"
-          : getApp(s.appId).install.method === "manual"
-            ? "guide"
-            : s.action,
-      },
-      true,
-    ),
+    sanitizeSelection({ ...defaultSelection(getApp(s.appId)), ...s }),
   );
 }
+const demoDownloads: DownloadInventory = {
+  folder: "Демонстрационная папка AppDock (виртуальная)",
+  limitations:
+    "Демонстрационные данные. Реальный кэш и настройка папки не считываются и не изменяются.",
+  files: [
+    {
+      id: "demo-office",
+      appId: "word",
+      name: "Пример Office 2024.img",
+      size: 1048576,
+      version: "2024",
+      source: null,
+      verification: "Демонстрационный файл; на диске не существует",
+      checkedAt: null,
+    },
+  ],
+};
