@@ -1,0 +1,13 @@
+* text=auto
+
+# Keep formatter/build inputs identical in Windows and Unix checkouts.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.mjs text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.rs text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
