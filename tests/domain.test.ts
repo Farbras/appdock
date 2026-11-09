@@ -12,9 +12,9 @@ import {
 } from "../src/catalog";
 import { parsePreset, serializePreset } from "../src/storage";
 describe("catalog and discovery", () => {
-  it("preserves all 80 distinct requested products", () => {
-    expect(apps).toHaveLength(80);
-    expect(new Set(apps.map((a) => a.id)).size).toBe(80);
+  it("preserves all 83 distinct requested products", () => {
+    expect(apps).toHaveLength(83);
+    expect(new Set(apps.map((a) => a.id)).size).toBe(apps.length);
     expect(
       apps.filter(
         (a) => a.publisher === "JetBrains" && a.category === "development",
@@ -92,6 +92,29 @@ describe("catalog and discovery", () => {
       "download",
     );
   });
+  it.each([
+    [2021, "db", "ProPlus2021Retail.img"],
+    [2019, "db", "ProPlus2019Retail.img"],
+    [2016, "pr", "ProPlusRetail.img"],
+  ])(
+    "offers Office %s in documents with the supplied direct URL",
+    (year, path, file) => {
+      const office = getApp(`office-${year}`);
+      expect(office.name).toBe(`Office ${year}`);
+      expect(office.category).toBe("documents");
+      expect(defaultSelection(office).action).toBe("download");
+      expect(office.install.downloadUrl).toBe(
+        `https://officecdn.microsoft.com/${path}/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/${file}`,
+      );
+      expect(
+        filterApps(
+          apps,
+          { ...initialFilters, category: "documents", query: `Office ${year}` },
+          [],
+        ),
+      ).toEqual([office]);
+    },
+  );
 });
 describe("dependencies and presets", () => {
   it("requires explicit extension opt-in for a newly selected editor", () =>

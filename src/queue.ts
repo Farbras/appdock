@@ -166,6 +166,8 @@ export function migrateQueue(value: QueueState): QueueState {
     for (const t of q.tasks)
       if (!terminal(t.status)) {
         t.status = "queued";
+        t.percent = null;
+        t.downloadProgress = null;
         t.message =
           "Восстановлено. Состояние будет проверено перед продолжением.";
       }

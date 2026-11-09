@@ -2372,6 +2372,171 @@
     "diskMb": null
   },
   {
+    "id": "office-2021",
+    "name": "Office 2021",
+    "publisher": "Microsoft",
+    "category": "documents",
+    "description": "Офисный пакет Office 2021 Professional Plus на русском языке",
+    "website": "https://www.microsoft.com/microsoft-365",
+    "aliases": [
+      "Office",
+      "Microsoft Office 2021",
+      "Microsoft Word 2021",
+      "Office Professional Plus 2021"
+    ],
+    "icon": "microsoftword",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия Office 2021. Активация выполняется в продукте.",
+    "version": "2021",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": true,
+      "downloadUrl": "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2021Retail.img",
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Microsoft Office Professional Plus 2021",
+        "Microsoft Office профессиональный плюс 2021"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Образ ProPlus2021Retail.img скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office 2021.",
+    "sources": [
+      "https://www.microsoft.com/microsoft-365",
+      "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2021Retail.img"
+    ],
+    "checkedAt": "2026-11-09",
+    "downloadMb": 4646,
+    "diskMb": null
+  },
+  {
+    "id": "office-2019",
+    "name": "Office 2019",
+    "publisher": "Microsoft",
+    "category": "documents",
+    "description": "Офисный пакет Office 2019 Professional Plus на русском языке",
+    "website": "https://www.microsoft.com/microsoft-365",
+    "aliases": [
+      "Office",
+      "Microsoft Office 2019",
+      "Microsoft Word 2019",
+      "Office Professional Plus 2019"
+    ],
+    "icon": "microsoftword",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия Office 2019. Активация выполняется в продукте.",
+    "version": "2019",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": true,
+      "downloadUrl": "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2019Retail.img",
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Microsoft Office Professional Plus 2019",
+        "Microsoft Office профессиональный плюс 2019"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Образ ProPlus2019Retail.img скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office 2019.",
+    "sources": [
+      "https://www.microsoft.com/microsoft-365",
+      "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2019Retail.img"
+    ],
+    "checkedAt": "2026-11-09",
+    "downloadMb": 3931,
+    "diskMb": null
+  },
+  {
+    "id": "office-2016",
+    "name": "Office 2016",
+    "publisher": "Microsoft",
+    "category": "documents",
+    "description": "Офисный пакет Office 2016 Professional Plus на русском языке",
+    "website": "https://www.microsoft.com/microsoft-365",
+    "aliases": [
+      "Office",
+      "Microsoft Office 2016",
+      "Microsoft Word 2016",
+      "Office Professional Plus 2016"
+    ],
+    "icon": "microsoftword",
+    "color": "#8c94b1",
+    "type": "desktop",
+    "platforms": [
+      "windows"
+    ],
+    "architectures": [
+      "x64"
+    ],
+    "license": "paid",
+    "licenseNote": "Коммерческая лицензия Office 2016. Активация выполняется в продукте.",
+    "version": "2016",
+    "editions": [],
+    "install": {
+      "method": "manual",
+      "packageId": null,
+      "source": null,
+      "verifiedAt": null,
+      "verification": "unverified",
+      "download": true,
+      "downloadUrl": "https://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlusRetail.img",
+      "scope": "default"
+    },
+    "detection": {
+      "method": "registry",
+      "packageId": null,
+      "displayNames": [
+        "Microsoft Office Professional Plus 2016",
+        "Microsoft Office профессиональный плюс 2016"
+      ]
+    },
+    "options": [],
+    "dependencies": [],
+    "notes": "Образ ProPlusRetail.img скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office 2016.",
+    "sources": [
+      "https://www.microsoft.com/microsoft-365",
+      "https://officecdn.microsoft.com/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlusRetail.img"
+    ],
+    "checkedAt": "2026-11-09",
+    "downloadMb": 4112,
+    "diskMb": null
+  },
+  {
     "id": "google-docs",
     "name": "Google Документы",
     "publisher": "Google",

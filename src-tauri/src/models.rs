@@ -78,6 +78,40 @@ pub struct Selection {
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DownloadProgress {
+    pub downloaded_bytes: u64,
+    pub total_bytes: Option<u64>,
+    pub remaining_bytes: Option<u64>,
+    pub bytes_per_second: f64,
+    pub remaining_seconds: Option<u64>,
+}
+impl DownloadProgress {
+    pub fn new(downloaded: u64, total: Option<u64>, speed: f64) -> Self {
+        let remaining = total.map(|n| n.saturating_sub(downloaded));
+        Self {
+            downloaded_bytes: downloaded,
+            total_bytes: total,
+            remaining_bytes: remaining,
+            bytes_per_second: speed,
+            remaining_seconds: remaining.and_then(|n| {
+                if n == 0 {
+                    Some(0)
+                } else if speed > 0.0 {
+                    Some((n as f64 / speed).ceil() as u64)
+                } else {
+                    None
+                }
+            }),
+        }
+    }
+    pub fn percent(&self) -> Option<f64> {
+        self.total_bytes
+            .filter(|n| *n > 0)
+            .map(|n| (self.downloaded_bytes as f64 / n as f64 * 100.0).clamp(0.0, 100.0))
+    }
+}
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Task {
     #[serde(default)]
     pub run_id: String,
@@ -97,6 +131,8 @@ pub struct Task {
     pub message: String,
     pub log: Vec<String>,
     pub percent: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub download_progress: Option<DownloadProgress>,
     pub parent_id: Option<String>,
     pub selection: Selection,
     pub started_at: Option<u64>,

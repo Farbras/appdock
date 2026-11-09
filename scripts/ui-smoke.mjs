@@ -78,46 +78,88 @@ const record = (message) => {
 fs.mkdirSync("artifacts", { recursive: true });
 try {
   // Office image downloads are available alongside manual installation guidance.
-  let { page, context } = await open();
-  await page
-    .getByRole("button", { name: "Параметры Office 2024", exact: true })
-    .click();
-  const officeDialog = page.getByRole("dialog", {
-    name: "Параметры программы",
-    exact: true,
-  });
-  check(
-    await officeDialog
-      .getByRole("button", { name: "Только скачать", exact: true })
-      .evaluate((e) => e.classList.contains("selected")),
-    "Office defaults to download",
-  );
-  await officeDialog
-    .getByRole("button", { name: "Добавить в выбор", exact: true })
-    .click();
-  await page.locator(".download-only").click();
-  await page
-    .getByRole("dialog", { name: "Проверим всё перед запуском" })
-    .waitFor();
-  check(
-    (await page.locator(".plan-expanded").textContent()).includes(
-      "Office 2024",
-    ),
-    "Office included in download plan",
-  );
-  await run(page);
-  await page.waitForFunction(() => {
-    const q = JSON.parse(localStorage.getItem("appdock:demo-queue") || "null");
-    return (
-      q?.data && !q.data.running && q.data.tasks[0]?.status === "downloaded"
+  let page, context;
+  for (const year of [2024, 2021, 2019, 2016]) {
+    ({ page, context } = await open());
+    await page
+      .getByRole("button", { name: `Параметры Office ${year}`, exact: true })
+      .click();
+    const officeDialog = page.getByRole("dialog", {
+      name: "Параметры программы",
+      exact: true,
+    });
+    check(
+      await officeDialog
+        .getByRole("button", { name: "Только скачать", exact: true })
+        .evaluate((e) => e.classList.contains("selected")),
+      "Office defaults to download",
     );
-  });
-  record("Office 2024 → download action → plan → downloaded demo task");
-  await context.close();
+    await officeDialog
+      .getByRole("button", { name: "Добавить в выбор", exact: true })
+      .click();
+    await page.locator(".download-only").click();
+    await page
+      .getByRole("dialog", { name: "Проверим всё перед запуском" })
+      .waitFor();
+    check(
+      (await page.locator(".plan-expanded").textContent()).includes(
+        `Office ${year}`,
+      ),
+      "Office included in download plan",
+    );
+    await run(page);
+    const progress = page.getByRole("progressbar", {
+      name: `Скачивание Office ${year}`,
+      exact: true,
+    });
+    await progress.waitFor();
+    check(
+      Number(await progress.getAttribute("value")) > 0,
+      "Download percentage is visible",
+    );
+    const metrics = await page.locator(".download-metrics").textContent();
+    for (const label of [
+      "Скачано:",
+      "Осталось:",
+      "Скорость:",
+      "До завершения:",
+    ])
+      check(metrics.includes(label), `Visible download metric: ${label}`);
+    if (year === 2021)
+      await page.screenshot({ path: "artifacts/office-download-progress.png" });
+    await page.waitForFunction(() => {
+      const q = JSON.parse(
+        localStorage.getItem("appdock:demo-queue") || "null",
+      );
+      return (
+        q?.data && !q.data.running && q.data.tasks[0]?.status === "downloaded"
+      );
+    });
+    check(
+      (await progress.getAttribute("value")) === "100",
+      "Completed download reaches 100%",
+    );
+    if (year === 2021) {
+      await page.setViewportSize({ width: 1020, height: 720 });
+      check(
+        await page
+          .locator(".download-status")
+          .evaluate((e) => e.scrollWidth <= e.clientWidth),
+        "Download metrics fit minimum window width",
+      );
+      await page.screenshot({
+        path: "artifacts/office-download-complete-1020.png",
+      });
+    }
+    record(
+      `Office ${year} → download action → progress metrics → downloaded demo task`,
+    );
+    await context.close();
+  }
   // New user, readable plan, demo, keyboard focus, minimum width and zoom.
   ({ page, context } = await open());
   check(
-    (await page.locator(".product-card").count()) === 78,
+    (await page.locator(".product-card").count()) === 81,
     "Windows defaults",
   );
   check(

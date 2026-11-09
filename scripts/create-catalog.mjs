@@ -997,6 +997,44 @@ app("word").install.downloadUrl =
 app("word").sources.push(app("word").install.downloadUrl);
 app("word").downloadMb = 5073;
 app("word").checkedAt = "2026-11-02";
+for (const [year, path, size] of [
+  [
+    2021,
+    "db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2021Retail.img",
+    4871094272,
+  ],
+  [
+    2019,
+    "db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2019Retail.img",
+    4121292800,
+  ],
+  [
+    2016,
+    "pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlusRetail.img",
+    4310859776,
+  ],
+]) {
+  const office = JSON.parse(
+    JSON.stringify(app("word")).replaceAll("2024", String(year)),
+  );
+  office.id = `office-${year}`;
+  office.aliases = [
+    "Office",
+    `Microsoft Office ${year}`,
+    `Microsoft Word ${year}`,
+    `Office Professional Plus ${year}`,
+  ];
+  office.install.downloadUrl = `https://officecdn.microsoft.com/${path}`;
+  office.sources = [office.website, office.install.downloadUrl];
+  office.notes = `Образ ${path.split("/").at(-1)} скачивается напрямую с сервера Microsoft. После загрузки откройте образ и запустите setup.exe. Для активации требуется лицензия Office ${year}.`;
+  office.downloadMb = Math.ceil(size / 1048576);
+  office.checkedAt = "2026-11-09";
+  apps.splice(
+    apps.indexOf(app("word")) + 1 + [2021, 2019, 2016].indexOf(year),
+    0,
+    office,
+  );
+}
 app("visual-studio").aliases = ["VS 2026"];
 app("python").aliases = ["Python 3.12.16", "питон"];
 app("safari").platforms = ["macos", "ios"];

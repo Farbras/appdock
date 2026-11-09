@@ -91,6 +91,13 @@ export type TaskStatus =
   | "downloaded"
   | "opened"
   | "shortcut-created";
+export interface DownloadProgress {
+  downloadedBytes: number;
+  totalBytes: number | null;
+  remainingBytes: number | null;
+  bytesPerSecond: number;
+  remainingSeconds: number | null;
+}
 export interface QueueTask {
   runId?: string;
   dependencies?: string[];
@@ -105,6 +112,7 @@ export interface QueueTask {
   message: string;
   log: string[];
   percent: number | null;
+  downloadProgress?: DownloadProgress | null;
   parentId?: string | null;
   selection: Selection;
   startedAt?: number | null;

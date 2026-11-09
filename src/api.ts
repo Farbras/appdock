@@ -117,6 +117,23 @@ function runDemo() {
       task.lastActivityAt = Date.now();
       task.message = "Демонстрация этапа. Системные операции не выполняются.";
       task.log.push(`[ДЕМО] ${statusNames[stage]}`);
+      if (stage === "downloading" && task.action === "download") {
+        const total = (getApp(task.appId).downloadMb || 100) * 1048576;
+        for (const fraction of [0.15, 0.5, 0.85]) {
+          task.percent = fraction * 100;
+          task.downloadProgress = {
+            downloadedBytes: Math.round(total * fraction),
+            totalBytes: total,
+            remainingBytes: Math.round(total * (1 - fraction)),
+            bytesPerSecond: 20 * 1048576,
+            remainingSeconds: Math.ceil(
+              (total * (1 - fraction)) / (20 * 1048576),
+            ),
+          };
+          persist();
+          await wait(250);
+        }
+      }
       persist();
       await wait(250);
     }
@@ -137,6 +154,13 @@ function runDemo() {
         ? "Завершите шаги по официальной инструкции."
         : "Демонстрация завершена. Компьютер не изменён.";
     task.finishedAt = Date.now();
+    if (task.status === "downloaded" && task.downloadProgress) {
+      task.percent = 100;
+      task.downloadProgress.downloadedBytes = task.downloadProgress.totalBytes!;
+      task.downloadProgress.remainingBytes = 0;
+      task.downloadProgress.bytesPerSecond = 0;
+      task.downloadProgress.remainingSeconds = 0;
+    }
     persist();
     runDemo();
   }, 100);

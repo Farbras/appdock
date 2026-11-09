@@ -188,15 +188,15 @@ mod tests {
         }
     }
     #[test]
-    fn catalog_has_80_distinct_products() {
+    fn catalog_has_83_distinct_products() {
         let a = apps();
-        assert_eq!(a.len(), 80);
+        assert_eq!(a.len(), 83);
         assert_eq!(
             a.iter()
                 .map(|a| text(a, "id"))
                 .collect::<HashSet<_>>()
                 .len(),
-            80
+            a.len()
         )
     }
     #[test]

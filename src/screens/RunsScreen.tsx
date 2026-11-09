@@ -3,6 +3,7 @@ import { optionLabel, optionValue, taskCount, outcomeNames } from "../display";
 import { api } from "../api";
 import { actionNames, getApp, statusNames } from "../catalog";
 import { Modal } from "../components/ui";
+import { DownloadStatus } from "../components/DownloadStatus";
 import { buildDiagnostics, readableReport } from "../diagnostics";
 import { currentTasks, success, terminal } from "../queue";
 import type { QueueState, QueueTask, Settings, TaskStatus } from "../types";
@@ -283,6 +284,7 @@ export function RunsScreen({
                           <div className="task-content">
                             <strong>{task.name}</strong>
                             <span>{task.message}</span>
+                            <DownloadStatus task={task} />
                           </div>
                           <span className={`task-status ${task.status}`}>
                             {statusNames[task.status]}

@@ -131,6 +131,7 @@ pub fn build_tasks(items: &[Selection]) -> Result<Vec<Task>, String> {
             message: "Перед выполнением состояние будет проверено заново".into(),
             log: vec![],
             percent: None,
+            download_progress: None,
             parent_id: None,
             selection: selection.clone(),
             started_at: None,
@@ -329,6 +330,7 @@ impl Engine {
                 if !terminal(&t.status) {
                     t.status = "queued".into();
                     t.percent = None;
+                    t.download_progress = None;
                     t.message="Восстановлено после перезапуска. Перед повтором будет выполнена проверка состояния.".into();
                     t.log.push("Выполнение было прервано. Установщик мог завершиться самостоятельно; повтор требует проверки.".into())
                 }
@@ -382,7 +384,16 @@ pub fn update(shared: &Shared, app: &AppHandle, id: &str, status: &str, message:
         t.last_activity_at = now();
         t.status = status.into();
         t.message = message.into();
-        t.percent = None;
+        if matches!(status, "checking" | "downloading" | "queued") {
+            t.download_progress = None;
+        }
+        t.percent = if status == "downloaded" {
+            Some(100.0)
+        } else {
+            t.download_progress
+                .as_ref()
+                .and_then(DownloadProgress::percent)
+        };
         t.log.push(message.into());
         if terminal(status) {
             t.finished_at = Some(now())
@@ -433,6 +444,17 @@ fn append(shared: &Shared, app: &AppHandle, id: &str, line: &str) {
         }
         let _ = app.emit("queue-changed", &e.queue);
     }
+}
+fn download_progress(shared: &Shared, app: &AppHandle, id: &str, progress: DownloadProgress) {
+    let mut e = lock(shared);
+    if let Some(task) = e.queue.tasks.iter_mut().find(|t| t.id == id) {
+        task.last_activity_at = now();
+        task.percent = progress.percent();
+        task.download_progress = Some(progress);
+    }
+    // Progress is transient; status changes persist the final snapshot.
+    e.queue.updated_at = now();
+    let _ = app.emit("queue-changed", &e.queue);
 }
 pub fn prepare(
     shared: &Shared,
@@ -813,7 +835,16 @@ fn run_command(
     shared: &Shared,
     app: &AppHandle,
     task: &Task,
+    command: std::process::Command,
+) -> Result<i32, String> {
+    run_command_monitored(shared, app, task, command, &mut || {})
+}
+fn run_command_monitored(
+    shared: &Shared,
+    app: &AppHandle,
+    task: &Task,
     mut command: std::process::Command,
+    monitor: &mut dyn FnMut(),
 ) -> Result<i32, String> {
     let diagnostic = command
         .get_args()
@@ -855,6 +886,7 @@ fn run_command(
     let direct_download = task.action == "download"
         && catalog::app(&task.app_id).is_ok_and(|a| catalog::direct_download_url(&a).is_some());
     let status = loop {
+        monitor();
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
             break status;
         }
@@ -1065,12 +1097,32 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
             app,
             &task.id,
             "downloading",
-            "Скачивание образа Office 2024 напрямую с сервера Microsoft по HTTPS.",
+            &format!(
+                "Скачивание {} напрямую с сервера Microsoft по HTTPS.",
+                task.name
+            ),
         );
-        crate::downloads::download_direct(&data, task, |command| {
-            run_command(shared, app, task, command)
-        })?;
-        update(shared, app, &task.id, "downloaded", "Образ Office 2024 скачан. Откройте папку загрузок, подключите ProPlus2024Retail.img и запустите setup.exe.");
+        crate::downloads::download_direct(
+            &data,
+            task,
+            |command, monitor| run_command_monitored(shared, app, task, command, monitor),
+            |progress| download_progress(shared, app, &task.id, progress),
+        )?;
+        let name = catalog::direct_download_url(&a)
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap();
+        update(
+            shared,
+            app,
+            &task.id,
+            "downloaded",
+            &format!(
+                "{} скачан. Откройте папку загрузок, подключите {name} и запустите setup.exe.",
+                task.name
+            ),
+        );
         return Ok(());
     }
     let package = catalog::package_id(&a, &task.selection)?;
@@ -1501,6 +1553,7 @@ mod tests {
             message: String::new(),
             log: vec![],
             percent: None,
+            download_progress: None,
             parent_id: None,
             selection: Selection {
                 app_id: "chrome".into(),

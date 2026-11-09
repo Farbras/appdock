@@ -24,21 +24,40 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("demo queue orchestration", () => {
-  it("includes Office 2024 in the download queue", async () => {
-    const { api } = await import("../src/api");
-    const plan = await api.plan([defaultSelection(getApp("word"))], settings);
-    expect(plan.items[0]).toMatchObject({
-      name: "Office 2024",
-      action: "download",
-      excluded: false,
-      blocked: false,
-    });
-    await api.start(plan.token, "demo");
-    await vi.advanceTimersByTimeAsync(5000);
-    const queue = await api.queue("demo");
-    expect(queue.tasks[0].status).toBe("downloaded");
-    expect(queue.running).toBe(false);
-  });
+  it.each([
+    ["word", "2024"],
+    ["office-2021", "2021"],
+    ["office-2019", "2019"],
+    ["office-2016", "2016"],
+  ])(
+    "downloads %s with progress and a completed final snapshot",
+    async (id, year) => {
+      const { api } = await import("../src/api");
+      const plan = await api.plan([defaultSelection(getApp(id))], settings);
+      expect(plan.items[0]).toMatchObject({
+        name: `Office ${year}`,
+        action: "download",
+        excluded: false,
+        blocked: false,
+      });
+      await api.start(plan.token, "demo");
+      await vi.advanceTimersByTimeAsync(700);
+      const active = (await api.queue("demo")).tasks[0];
+      expect(active.status).toBe("downloading");
+      expect(active.percent).toBeGreaterThan(0);
+      expect(active.percent).toBeLessThan(100);
+      expect(active.downloadProgress?.remainingBytes).toBeGreaterThan(0);
+      expect(active.downloadProgress?.bytesPerSecond).toBeGreaterThan(0);
+      expect(active.downloadProgress?.remainingSeconds).toBeGreaterThan(0);
+      await vi.advanceTimersByTimeAsync(5000);
+      const queue = await api.queue("demo");
+      expect(queue.tasks[0].status).toBe("downloaded");
+      expect(queue.tasks[0].percent).toBe(100);
+      expect(queue.tasks[0].downloadProgress?.remainingBytes).toBe(0);
+      expect(queue.tasks[0].downloadProgress?.remainingSeconds).toBe(0);
+      expect(queue.running).toBe(false);
+    },
+  );
   it("expires unconfirmed plans after ten minutes", async () => {
     const { api } = await import("../src/api");
     const p = await api.plan([defaultSelection(getApp("chrome"))], settings);

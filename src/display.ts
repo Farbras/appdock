@@ -1,5 +1,26 @@
 import { categories, getApp, typeNames } from "./catalog";
 import type { Product, Selection } from "./types";
+export function formatBytes(value?: number | null) {
+  if (value == null || !Number.isFinite(value) || value < 0)
+    return "неизвестно";
+  const units = ["Б", "КБ", "МБ", "ГБ", "ТБ"];
+  const unit =
+    value > 0
+      ? Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1)
+      : 0;
+  const index = Math.max(0, unit);
+  return `${(value / 1024 ** index).toLocaleString("ru-RU", { maximumFractionDigits: index === 0 ? 0 : 1 })} ${units[index]}`;
+}
+export function formatRemainingTime(value?: number | null) {
+  if (value == null || !Number.isFinite(value) || value < 0)
+    return "рассчитывается…";
+  const seconds = Math.ceil(value);
+  if (seconds < 60) return `${seconds} с`;
+  const minutes = Math.ceil(seconds / 60);
+  if (minutes < 60) return `≈ ${minutes} мин`;
+  const hours = Math.floor(minutes / 60);
+  return `≈ ${hours} ч${minutes % 60 ? ` ${minutes % 60} мин` : ""}`;
+}
 export const plural = (n: number, one: string, few: string, many: string) =>
   `${n} ${n % 100 >= 11 && n % 100 <= 14 ? many : n % 10 === 1 ? one : n % 10 >= 2 && n % 10 <= 4 ? few : many}`;
 export const programs = (n: number) =>

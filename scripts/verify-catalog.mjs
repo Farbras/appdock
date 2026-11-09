@@ -2,8 +2,8 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 const apps = JSON.parse(fs.readFileSync("catalog/apps.json"));
 const report = JSON.parse(fs.readFileSync("docs/integration-checks.json"));
-assert.equal(apps.length, 80);
-assert.equal(new Set(apps.map((a) => a.id)).size, 80);
+assert.equal(apps.length, 83);
+assert.equal(new Set(apps.map((a) => a.id)).size, apps.length);
 for (const a of apps) {
   for (const key of [
     "id",
