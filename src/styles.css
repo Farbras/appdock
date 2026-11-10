@@ -3014,6 +3014,54 @@ textarea:focus-visible {
   gap: 8px;
   margin: 14px 0;
 }
+.file-detail {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.troubleshoot-body h3 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.troubleshoot-body h4 {
+  font-weight: 600;
+  margin: 22px 0 10px;
+}
+.troubleshoot-body p {
+  margin: 10px 0;
+  line-height: 1.65;
+}
+.troubleshoot-body ul,
+.troubleshoot-body ol {
+  padding-left: 22px;
+  margin: 10px 0;
+}
+.troubleshoot-body ul {
+  list-style: disc;
+}
+.troubleshoot-body ol {
+  list-style: decimal;
+}
+.troubleshoot-body li {
+  margin: 7px 0;
+  line-height: 1.6;
+}
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.check-row h3 {
+  margin: 0;
+}
+.field {
+  display: grid;
+  gap: 8px;
+  margin-block: 16px;
+}
+.custom-preset-references {
+  overflow-wrap: anywhere;
+}
 .workflow-list {
   display: grid;
   gap: 14px;

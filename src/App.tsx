@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { feature } from "./feature-api";
+import { InstalledScreen, MyProgramsScreen } from "./screens/MaintenanceScreen";
+import { TroubleshootDialog } from "./components/TroubleshootDialog";
 import {
   PortabilityScreen,
   SettingsTransfer,
@@ -72,6 +74,12 @@ import {
   terminalStatuses,
 } from "./components/ui";
 function App() {
+  const [troubleshoot, setTroubleshoot] = useState<{
+    appId: string;
+    extensions?: string[];
+    instanceKey?: string;
+    appName?: string;
+  } | null>(null);
   const [profile, setProfile] = useProfile();
   const [updateSelectionRequest, setUpdateSelectionRequest] = useState(0);
   const [rulesRevision, setRulesRevision] = useState(0);
@@ -479,7 +487,13 @@ function App() {
       setNav("queue");
       setSelection((items) =>
         items.filter(
-          (s) => !plan.items.some((i) => i.appId === s.appId && !i.excluded),
+          (s) =>
+            !plan.items.some(
+              (i) =>
+                i.appId === s.appId &&
+                !i.excluded &&
+                !i.tasks.some((t) => t.operation),
+            ),
         ),
       );
       setQueue(await api.queue(settings.mode));
@@ -617,6 +631,7 @@ function App() {
   const pageTitles: Record<string, string> = {
     catalog: "Подготовьте компьютер к работе",
     installed: "Установленные программы",
+    "my-programs": "Мои программы",
     favorites: "Ваши любимые программы",
     queue: "Загрузки и установка",
     presets: "Нужные программы — в одном наборе",
@@ -631,6 +646,7 @@ function App() {
     catalog:
       "Выберите программы, проверьте план и выполните автоматические и ручные шаги.",
     installed: "Программы, обнаруженные на этом компьютере.",
+    "my-programs": "Собственные локальные установщики и личные наборы.",
     favorites: "Всё, что хочется держать под рукой.",
     queue: "Очередь — действия текущего запуска и шаги, требующие участия.",
     presets:
@@ -647,7 +663,7 @@ function App() {
 
   const catalogScreen = useMemo(
     () =>
-      ["catalog", "favorites", "installed"].includes(nav) ? (
+      ["catalog", "favorites"].includes(nav) ? (
         <CatalogScreen
           installed={installed}
           nav={nav}
@@ -914,6 +930,38 @@ function App() {
               />
             )}
             {catalogScreen}
+            {nav === "installed" && (
+              <InstalledScreen
+                key={settings.mode}
+                mode={settings.mode}
+                running={queue.running}
+                revision={queue.updatedAt}
+                notify={notify}
+                onPlan={(p) => {
+                  setRetryContext(null);
+                  setOfflineReviewRoot(null);
+                  setPlan(p);
+                }}
+                onTroubleshoot={(appId, instanceKey, appName) =>
+                  setTroubleshoot({ appId, instanceKey, appName })
+                }
+              />
+            )}
+            {nav === "my-programs" && (
+              <MyProgramsScreen
+                key={settings.mode}
+                mode={settings.mode}
+                running={queue.running}
+                notify={notify}
+                presets={presets}
+                setPresets={setPresets}
+                onPlan={(p) => {
+                  setRetryContext(null);
+                  setOfflineReviewRoot(null);
+                  setPlan(p);
+                }}
+              />
+            )}
             {nav === "presets" && (
               <PresetsScreen
                 presets={presets}
@@ -935,6 +983,11 @@ function App() {
                 }}
                 mode={settings.mode}
                 notify={notify}
+                onPlan={(p) => {
+                  setRetryContext(null);
+                  setOfflineReviewRoot(null);
+                  setPlan(p);
+                }}
               />
             )}
             {(nav === "queue" || nav === "history") && (
@@ -950,6 +1003,22 @@ function App() {
                 onRetry={(runId, status, id) => void retry(runId, status, id)}
                 onEdit={editTask}
                 notify={notify}
+                onTroubleshoot={(t) =>
+                  setTroubleshoot({
+                    appId:
+                      getApp(t.appId) || t.appId === "nodejs"
+                        ? t.appId
+                        : "windows-instance",
+                    extensions: t.selection.extensions,
+                    instanceKey: t.operation?.instance?.key,
+                    appName: t.name,
+                  })
+                }
+                onPlan={(p) => {
+                  setRetryContext(null);
+                  setOfflineReviewRoot(null);
+                  setPlan(p);
+                }}
               />
             )}
             {nav === "settings" && (
@@ -1034,6 +1103,32 @@ function App() {
           onFavorite={() => toggleFavorite(detail.id)}
           favorite={favorites.includes(detail.id)}
           notify={notify}
+          onTroubleshoot={() =>
+            setTroubleshoot({
+              appId: detail.id,
+              extensions: selection.find((s) => s.appId === detail.id)
+                ?.extensions,
+            })
+          }
+        />
+      )}
+      {troubleshoot && (
+        <TroubleshootDialog
+          key={settings.mode + troubleshoot.appId}
+          appId={troubleshoot.appId}
+          instanceKey={troubleshoot.instanceKey}
+          appName={troubleshoot.appName}
+          selectedExtensions={troubleshoot.extensions}
+          mode={settings.mode}
+          running={queue.running}
+          onClose={() => setTroubleshoot(null)}
+          onPlan={(p) => {
+            setTroubleshoot(null);
+            setDetail(null);
+            setRetryContext(null);
+            setOfflineReviewRoot(null);
+            setPlan(p);
+          }}
         />
       )}
       {plan && (

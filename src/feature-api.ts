@@ -76,6 +76,25 @@ export async function feature<T>(
     return invoke<T>("feature", { op, args, mode });
   if (mode === "live")
     throw new Error("Системная операция доступна только в настольной версии");
+  if (
+    [
+      "installed-instances",
+      "uninstall-prepare",
+      "troubleshoot",
+      "fix-prepare",
+      "path-backups",
+      "path-restore-prepare",
+      "custom-list",
+      "custom-add",
+      "custom-edit",
+      "custom-remove",
+      "custom-prepare",
+      "custom-import-validate",
+    ].includes(op)
+  ) {
+    const { demoMaintenance } = await import("./demo-maintenance");
+    return demoMaintenance(op, args) as Promise<T>;
+  }
   let result: unknown;
   switch (op) {
     case "background-state":

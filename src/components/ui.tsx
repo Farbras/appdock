@@ -42,6 +42,7 @@ const icons: Record<string, LucideIcon> = {
 export const navItems = [
   ["catalog", "Каталог", LayoutGrid],
   ["installed", "Установленные", Monitor],
+  ["my-programs", "Мои программы", Package],
   ["updates", "Обновления", RefreshCw],
   ["profile", "Профиль ПК", Monitor],
   ["portability", "Офлайн-набор", Package],
@@ -53,6 +54,9 @@ export const navItems = [
   ["settings", "Настройки", Settings2],
 ] as const;
 export const doneStatuses = [
+  "removed",
+  "repaired",
+  "checked",
   "installed",
   "current",
   "downloaded",

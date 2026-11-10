@@ -1,4 +1,6 @@
 import { installedInstances } from "../catalog";
+import { feature } from "../feature-api";
+import type { CustomApp, Plan } from "../types";
 import type { Product } from "../types";
 import { useEffect, useState } from "react";
 import { api, native, normalizePresetItems } from "../api";
@@ -516,6 +518,7 @@ export function PresetsScreen({
   canUndo,
   mode,
   notify,
+  onPlan,
 }: {
   presets: Preset[];
   setPresets: (p: Preset[]) => void;
@@ -526,6 +529,7 @@ export function PresetsScreen({
   canUndo: boolean;
   mode: Settings["mode"];
   notify: (s: string) => void;
+  onPlan: (p: Plan) => void;
 }) {
   const [editing, setEditing] = useState<Preset | null>(null);
   const [imported, setImported] = useState<Preset | null>(null);
@@ -567,7 +571,14 @@ export function PresetsScreen({
               const file = e.target.files?.[0];
               if (file)
                 try {
-                  setImported(parsePreset(await file.text()));
+                  const parsed = parsePreset(await file.text());
+                  if (parsed.customPrograms?.length)
+                    await feature(
+                      "custom-import-validate",
+                      { programs: parsed.customPrograms },
+                      mode,
+                    );
+                  setImported(parsed);
                 } catch (err) {
                   notify(String(err));
                 }
@@ -603,6 +614,51 @@ export function PresetsScreen({
               </ul>
             )}
             <p>{p.description}</p>
+            {!!p.customPrograms?.length && (
+              <div className="custom-preset-references">
+                <p className="warning-text">
+                  Собственные программы: для каждой явно выберите локальный файл
+                  и просмотрите план. Импорт не разрешает запуск.
+                </p>
+                {p.customPrograms.map((r) => (
+                  <div key={r.sha256}>
+                    <p>Добавлено пользователем · {r.name}</p>
+                    <p className="file-detail">SHA-256: {r.sha256}</p>
+                    <button
+                      className="button secondary"
+                      onClick={() => {
+                        void (async () => {
+                          try {
+                            const a = await feature<CustomApp>(
+                              "custom-add",
+                              {},
+                              mode,
+                            );
+                            if (
+                              a.sha256.toLowerCase() !== r.sha256.toLowerCase()
+                            )
+                              throw new Error(
+                                "Выбранный файл не соответствует SHA-256 набора. Запуск не разрешён.",
+                              );
+                            onPlan(
+                              await feature<Plan>(
+                                "custom-prepare",
+                                { ids: [a.id] },
+                                mode,
+                              ),
+                            );
+                          } catch (e) {
+                            notify(String(e));
+                          }
+                        })();
+                      }}
+                    >
+                      Выбрать локальный файл для {r.name}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <p>{programs(p.items.length)}</p>
             <div className="row-actions">
               <button

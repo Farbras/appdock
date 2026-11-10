@@ -1,9 +1,9 @@
 use crate::{
-    background, catalog, catalog_update, downloads,
+    background, catalog, catalog_update, custom_apps, downloads,
     engine::{self, Shared},
-    managed,
+    maintenance, managed,
     models::*,
-    offline, preferences, readiness, system,
+    offline, preferences, readiness, system, troubleshooting,
 };
 use serde_json::{json, Value};
 use tauri::Emitter;
@@ -40,7 +40,22 @@ pub fn execute(
         }
         _ => (),
     }
-    let _guard = managed::exclusive()?;
+    // Inspections run on Tauri's blocking pool and may wait behind discovery.
+    // They must not fail merely because a read-only scan or another inspection is active.
+    let _guard = if [
+        "installed-instances",
+        "troubleshoot",
+        "path-backups",
+        "custom-list",
+    ]
+    .contains(&op)
+    {
+        managed::OPERATIONS
+            .lock()
+            .map_err(|_| "Не удалось получить доступ к диагностике".to_string())?
+    } else {
+        managed::exclusive()?
+    };
     if background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
         return Err("AppDock завершает работу".into());
     }
@@ -51,6 +66,70 @@ pub fn execute(
         return Err("Дождитесь завершения очереди перед этой операцией".into());
     }
     match op {
+        "installed-instances" => Ok(
+            json!({"instances":maintenance::instances()?,"uninstallSupported":maintenance::supports("uninstall")}),
+        ),
+        "uninstall-prepare" => Ok(json!(maintenance::uninstall_plan(
+            shared,
+            list(&args["keys"])?
+        )?)),
+        "troubleshoot" | "fix-prepare" => {
+            let s = troubleshooting::validated_selection(
+                string(&args, "appId")?,
+                args.get("extensions")
+                    .map(list)
+                    .transpose()?
+                    .unwrap_or_default(),
+            )?;
+            let key = args.get("instanceKey").and_then(Value::as_str);
+            if op == "troubleshoot" {
+                troubleshooting::diagnose(&s, key)
+            } else {
+                Ok(json!(troubleshooting::prepare(
+                    shared,
+                    s,
+                    string(&args, "fix")?,
+                    key
+                )?))
+            }
+        }
+        "path-backups" => troubleshooting::backups(&data),
+        "path-restore-prepare" => Ok(json!(troubleshooting::restore_plan(
+            shared,
+            string(&args, "backupId")?
+        )?)),
+        "custom-list" => Ok(json!(custom_apps::list(&data)?)),
+        "custom-add" => Ok(json!(custom_apps::add(&data)?)),
+        "custom-edit" => {
+            custom_apps::edit(
+                &data,
+                string(&args, "id")?,
+                string(&args, "name")?,
+                string(&args, "description")?,
+                string(&args, "icon")?,
+            )?;
+            engine::lock(shared).pending = None;
+            Ok(Value::Null)
+        }
+        "custom-remove" => {
+            let id = string(&args, "id")?;
+            if engine::lock(shared)
+                .queue
+                .tasks
+                .iter()
+                .any(|t| t.app_id == id && !terminal(&t.status))
+            {
+                return Err("Сначала завершите или отмените задачу этого установщика".into());
+            }
+            custom_apps::remove(&data, id)?;
+            engine::lock(shared).pending = None;
+            Ok(Value::Null)
+        }
+        "custom-prepare" => Ok(json!(maintenance::custom_plan(
+            shared,
+            list(&args["ids"])?
+        )?)),
+        "custom-import-validate" => custom_apps::validate_references(args["programs"].clone()),
         "choose-folder" => {
             let v=system::powershell("Add-Type -AssemblyName System.Windows.Forms; $d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description='Выберите папку AppDock'; if($d.ShowDialog() -eq 'OK'){$d.SelectedPath | ConvertTo-Json -Compress}else{'' | ConvertTo-Json}")?;
             if v.as_str().is_none_or(|s| s.is_empty()) {

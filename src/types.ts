@@ -64,6 +64,7 @@ export interface Selection {
   version?: string;
 }
 export interface Preset {
+  customPrograms?: CustomReference[];
   issues?: string[];
   id: string;
   name: string;
@@ -73,6 +74,9 @@ export interface Preset {
   builtin: boolean;
 }
 export type TaskStatus =
+  | "removed"
+  | "repaired"
+  | "checked"
   | "blocked"
   | "attention"
   | "user-completed"
@@ -99,8 +103,15 @@ export interface DownloadProgress {
   remainingSeconds: number | null;
 }
 export interface QueueTask {
+  operation?: {
+    kind: string;
+    instance?: InstalledInstance;
+    id?: string;
+    sha256?: string;
+    directory?: string;
+  } | null;
   readiness?: ReadinessResult | null;
-  installationOutcome?: "installed" | "updated" | "skipped" | null;
+  installationOutcome?: string | null;
   failureStage?: string | null;
   offlineRoot?: string | null;
   resumeFrom?: string | null;
@@ -108,11 +119,17 @@ export interface QueueTask {
   dependencies?: string[];
   lastActivityAt?: number;
   actualVersion?: string | null;
-  evidence?: "detected" | "user" | null;
+  evidence?: "detected" | "user" | "absent" | null;
   id: string;
   appId: string;
   name: string;
-  action: Selection["action"] | "extension";
+  action:
+    | Selection["action"]
+    | "extension"
+    | "uninstall"
+    | "repair"
+    | "fix"
+    | "custom-install";
   status: TaskStatus;
   message: string;
   log: string[];
@@ -124,6 +141,44 @@ export interface QueueTask {
   selection: Selection;
   startedAt?: number | null;
   finishedAt?: number | null;
+}
+export interface InstalledInstance {
+  key: string;
+  productCode: string;
+  scope: string;
+  name: string;
+  version: string;
+  publisher: string;
+  msi: boolean;
+  appId: string | null;
+}
+export interface CustomReference {
+  name: string;
+  sha256: string;
+}
+export interface CustomApp extends CustomReference {
+  id: string;
+  description: string;
+  icon: string;
+  fileName: string;
+  source: string;
+  size: number;
+  kind: "exe" | "msi";
+  version: string | null;
+  publisher: string | null;
+  signature: "valid" | "unsigned" | "invalid" | "unknown";
+  signatureDetail: string;
+}
+export interface TroubleshootingReport {
+  readiness: ReadinessResult;
+  checked: string[];
+  problems: string[];
+  unknown: string[];
+  manual: string[];
+  pathAvailable: boolean;
+  path?: string;
+  repairAvailable: boolean;
+  missingExtensions: string[];
 }
 export interface ReadinessResult {
   state: "ready" | "action" | "unknown";

@@ -124,12 +124,28 @@ export const itemSchema = z.preprocess(
     version: z.string().max(40).optional(),
   }),
 );
-const presetSchema = z.object({
-  schemaVersion: z.union([z.literal(1), z.literal(2)]),
-  name: z.string().trim().min(1).max(80),
-  description: z.string().max(300).default("Импортированный набор"),
-  items: z.array(itemSchema).min(1).max(100),
-});
+const presetSchema = z
+  .object({
+    schemaVersion: z.union([z.literal(1), z.literal(2)]),
+    name: z.string().trim().min(1).max(80),
+    description: z.string().max(300).default("Импортированный набор"),
+    items: z.array(itemSchema).max(100),
+    customPrograms: z
+      .array(
+        z
+          .object({
+            name: z.string().trim().min(1).max(160),
+            sha256: z.string().regex(/^[a-fA-F0-9]{64}$/),
+          })
+          .strict(),
+      )
+      .max(100)
+      .optional(),
+  })
+  .refine(
+    (p) => p.items.length + (p.customPrograms?.length || 0) > 0,
+    "Набор пуст",
+  );
 export function selectionErrors(s: Selection): string[] {
   const app = getApp(s.appId);
   if (!app) return ["Программа отсутствует в доверенном каталоге"];
@@ -205,7 +221,25 @@ export function sanitizeSelection(
 export function parsePreset(text: string): Preset {
   if (text.length > 200_000)
     throw new Error("Размер набора не должен превышать 200 КБ");
-  const p = presetSchema.parse(JSON.parse(text));
+  const raw = JSON.parse(text);
+  if (
+    raw?.customPrograms !== undefined &&
+    !z
+      .array(
+        z
+          .object({
+            name: z.string().trim().min(1).max(160),
+            sha256: z.string().regex(/^[a-fA-F0-9]{64}$/),
+          })
+          .strict(),
+      )
+      .max(100)
+      .safeParse(raw.customPrograms).success
+  )
+    throw new Error(
+      "Собственные программы: разрешены только название и SHA-256. Команды, пути запуска, аргументы и чужие локальные ID запрещены.",
+    );
+  const p = presetSchema.parse(raw);
   assertUniquePrograms(p.items);
   const warnings: string[] = [];
   const items = p.items.map((s) => {
@@ -225,6 +259,7 @@ export function parsePreset(text: string): Preset {
     name: p.name,
     description: p.description,
     items,
+    customPrograms: p.customPrograms,
     icon: "Package",
     builtin: false,
     issues: warnings,
@@ -238,6 +273,7 @@ export function serializePreset(p: Preset) {
       name: p.name,
       description: p.description,
       items: p.items.map((s) => sanitizeSelection(s)),
+      customPrograms: p.customPrograms,
     },
     null,
     2,

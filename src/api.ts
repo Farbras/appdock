@@ -130,7 +130,9 @@ function runDemo() {
         return;
       }
       task.startedAt = Date.now();
-      for (const stage of demoStages(task.action)) {
+      for (const stage of task.operation
+        ? (["checking", "configuring"] as TaskStatus[])
+        : demoStages(task.action)) {
         task.status = stage;
         task.lastActivityAt = Date.now();
         task.message = "Демонстрация этапа. Системные операции не выполняются.";
@@ -176,6 +178,10 @@ function runDemo() {
           ? "Завершите шаги по официальной инструкции."
           : "Демонстрация завершена. Компьютер не изменён.";
       task.finishedAt = Date.now();
+      if (task.operation) {
+        const { finishDemoOperation } = await import("./demo-maintenance");
+        finishDemoOperation(task);
+      }
       if (task.status === "downloaded" && task.downloadProgress) {
         task.percent = 100;
         task.downloadProgress.downloadedBytes =
@@ -205,6 +211,49 @@ function runDemo() {
   }, 100);
 }
 export const api = {
+  async demoOperationPlan(
+    tasks: QueueTask[],
+    warnings: string[],
+  ): Promise<Plan> {
+    if (demoQueue.running || demoQueue.tasks.some((t) => !terminal(t.status)))
+      throw new Error("Сначала завершите или отмените сохранённую очередь");
+    if (!tasks.length) throw new Error("Выберите действия");
+    const plan: Plan = {
+      token: crypto.randomUUID(),
+      mode: "demo",
+      system: demoSystem,
+      warnings: [
+        "ДЕМО: все сведения и действия виртуальные; компьютер не изменяется.",
+        ...warnings,
+      ],
+      items: tasks.map((t) => ({
+        appId: t.appId,
+        name: t.name,
+        action: t.action,
+        selection: t.selection,
+        tasks: [t],
+        blocked: false,
+        excluded: false,
+        expected: t.message,
+        warnings: t.log,
+        installedVersion: t.actualVersion,
+      })),
+    };
+    pending = {
+      createdAt: Date.now(),
+      plan,
+      tasks,
+      items: tasks.map((t) => t.selection),
+      settings: {
+        mode: "demo",
+        theme: "dark",
+        view: "grid",
+        skipCurrent: true,
+        parallelDownloads: 1,
+      },
+    };
+    return plan;
+  },
   async subscribe(mode: Settings["mode"], fn: (q: QueueState) => void) {
     if (mode === "live" && native)
       return listen<QueueState>("queue-changed", (e) => fn(e.payload));

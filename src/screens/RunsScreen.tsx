@@ -9,7 +9,13 @@ import { Modal } from "../components/ui";
 import { DownloadStatus } from "../components/DownloadStatus";
 import { buildDiagnostics, readableReport } from "../diagnostics";
 import { currentTasks, success, terminal } from "../queue";
-import type { QueueState, QueueTask, Settings, TaskStatus } from "../types";
+import type {
+  Plan,
+  QueueState,
+  QueueTask,
+  Settings,
+  TaskStatus,
+} from "../types";
 export const date = (value?: number | null) =>
   value ? new Date(value).toLocaleString("ru-RU") : "—";
 export function RunsScreen({
@@ -20,6 +26,8 @@ export function RunsScreen({
   onRetry,
   onEdit,
   notify,
+  onTroubleshoot,
+  onPlan,
 }: {
   queue: QueueState;
   history: boolean;
@@ -28,6 +36,8 @@ export function RunsScreen({
   onRetry: (runId: string, status: TaskStatus, taskId?: string) => void;
   onEdit: (task: QueueTask) => void;
   notify: (message: string) => void;
+  onTroubleshoot: (t: QueueTask) => void;
+  onPlan: (p: Plan) => void;
 }) {
   const [restartTask, setRestartTask] = useState<QueueTask | null>(null);
   const [query, setQuery] = useState("");
@@ -315,7 +325,8 @@ export function RunsScreen({
                     key={status}
                     className="button secondary"
                     disabled={
-                      queue.running || !tasks.some((t) => t.status === status)
+                      queue.running ||
+                      !tasks.some((t) => t.status === status && !t.operation)
                     }
                     onClick={() => onRetry(run.id, status)}
                   >
@@ -333,8 +344,9 @@ export function RunsScreen({
               {[...new Set(tasks.map((t) => t.appId))].map((appId) => (
                 <details className="task-group" open key={appId}>
                   <summary>
-                    {getApp(appId).name} ·{" "}
-                    {taskCount(tasks.filter((t) => t.appId === appId).length)}
+                    {getApp(appId)?.name ||
+                      tasks.find((t) => t.appId === appId)?.name}{" "}
+                    · {taskCount(tasks.filter((t) => t.appId === appId).length)}
                   </summary>
                   {tasks
                     .filter((t) => t.appId === appId)
@@ -379,6 +391,58 @@ export function RunsScreen({
                             running={queue.running}
                             notify={notify}
                           />
+                          {task.action !== "uninstall" &&
+                            [
+                              "error",
+                              "blocked",
+                              "action-required",
+                              "installed",
+                              "current",
+                              "reboot-required",
+                              "repaired",
+                              "checked",
+                            ].includes(task.status) && (
+                              <button
+                                className="button secondary"
+                                disabled={queue.running}
+                                onClick={() => onTroubleshoot(task)}
+                              >
+                                Программа не работает
+                              </button>
+                            )}
+                          {task.operation && (
+                            <p>
+                              Результат команды:{" "}
+                              {(
+                                {
+                                  "uninstaller-completed":
+                                    "деинсталлятор завершился успешно",
+                                  "uninstaller-failed":
+                                    "деинсталлятор сообщил ошибку",
+                                  "process-completed":
+                                    "процесс завершился; установка не подтверждена",
+                                  "repair-completed":
+                                    "команда восстановления завершилась",
+                                  "repair-failed":
+                                    "команда восстановления сообщила ошибку",
+                                  "process-failed":
+                                    "процесс сообщил ошибку или отмену",
+                                  "check-completed":
+                                    "проверка / действие завершены",
+                                  "fix-failed":
+                                    "исправление завершилось ошибкой",
+                                } as Record<string, string>
+                              )[task.installationOutcome || ""] ||
+                                task.installationOutcome ||
+                                "ещё неизвестен"}
+                              .{" "}
+                              {task.evidence === "absent"
+                                ? "Отсутствие экземпляра подтверждено обнаружением."
+                                : task.action === "uninstall"
+                                  ? "Отсутствие программы не подтверждено."
+                                  : ""}
+                            </p>
+                          )}
                           <p>
                             {actionNames[task.action]} · начало{" "}
                             {date(task.startedAt)} · завершение{" "}
@@ -399,97 +463,143 @@ export function RunsScreen({
                                 ? "Отметка пользователя"
                                 : "Результат исполнителя"}
                           </p>
-                          {task.status === "action-required" && (
-                            <>
-                              <h4>Памятка для установщика</h4>
-                              <ol>
-                                <li>
-                                  Откройте официальный источник{" "}
-                                  {getApp(appId).website}.
-                                </li>
-                                <li>
-                                  Проверьте требования, лицензию и выберите
-                                  редакцию.
-                                </li>
-                                <li>
-                                  Выполните установку или настройку:{" "}
-                                  {Object.entries(task.selection.options)
-                                    .map(
-                                      ([k, v]) =>
-                                        `${optionLabel(getApp(appId), k)}: ${optionValue(getApp(appId), k, v)}`,
-                                    )
-                                    .join("; ") ||
-                                    "по инструкции производителя"}
-                                  .
-                                </li>
-                                <li>
-                                  Проверьте результат обнаружением или отдельно
-                                  отметьте выполненный шаг.
-                                </li>
-                              </ol>
-                              <p>{getApp(appId).notes}</p>
-                            </>
-                          )}
-                          <div className="row-actions">
-                            <button
-                              className="button secondary"
-                              onClick={() =>
-                                void api
-                                  .source(appId)
-                                  .catch((e) => notify(String(e)))
-                              }
-                            >
-                              Официальный источник
-                            </button>
-                            {["error", "cancelled", "blocked"].includes(
-                              task.status,
-                            ) && (
+                          {!task.operation &&
+                            task.status === "action-required" && (
                               <>
-                                <button
-                                  className="button secondary"
-                                  disabled={queue.running}
-                                  onClick={() =>
-                                    onRetry(run.id, task.status, task.id)
-                                  }
-                                >
-                                  Проверить повтор
-                                </button>
-                                <button
-                                  className="button secondary"
-                                  disabled={queue.running}
-                                  onClick={() => onEdit(task)}
-                                >
-                                  Изменить параметры
-                                </button>
+                                <h4>Памятка для установщика</h4>
+                                <ol>
+                                  <li>
+                                    Откройте официальный источник{" "}
+                                    {getApp(appId).website}.
+                                  </li>
+                                  <li>
+                                    Проверьте требования, лицензию и выберите
+                                    редакцию.
+                                  </li>
+                                  <li>
+                                    Выполните установку или настройку:{" "}
+                                    {Object.entries(task.selection.options)
+                                      .map(
+                                        ([k, v]) =>
+                                          `${optionLabel(getApp(appId), k)}: ${optionValue(getApp(appId), k, v)}`,
+                                      )
+                                      .join("; ") ||
+                                      "по инструкции производителя"}
+                                    .
+                                  </li>
+                                  <li>
+                                    Проверьте результат обнаружением или
+                                    отдельно отметьте выполненный шаг.
+                                  </li>
+                                </ol>
+                                <p>{getApp(appId).notes}</p>
                               </>
                             )}
-                            {["action-required", "user-completed"].includes(
-                              task.status,
-                            ) && (
+                          <div className="row-actions">
+                            {getApp(appId) && (
                               <button
                                 className="button secondary"
                                 onClick={() =>
                                   void api
-                                    .verifyManual(task.id, mode)
-                                    .then(() =>
-                                      notify("Обнаружение подтверждено"),
-                                    )
+                                    .source(appId)
                                     .catch((e) => notify(String(e)))
                                 }
                               >
-                                Проверить результат
+                                Официальный источник
                               </button>
                             )}
-                            {task.status === "action-required" && (
-                              <button
-                                className="button secondary"
-                                onClick={() =>
-                                  onControl("complete-manual", task.id)
-                                }
-                              >
-                                Шаг выполнен
-                              </button>
-                            )}
+                            {task.operation &&
+                              [
+                                "error",
+                                "cancelled",
+                                "blocked",
+                                "action-required",
+                              ].includes(task.status) && (
+                                <button
+                                  className="button secondary"
+                                  disabled={queue.running}
+                                  onClick={() => {
+                                    const op =
+                                      task.action === "uninstall"
+                                        ? "uninstall-prepare"
+                                        : task.action === "custom-install"
+                                          ? "custom-prepare"
+                                          : "fix-prepare";
+                                    const args =
+                                      task.action === "uninstall"
+                                        ? {
+                                            keys: [
+                                              task.operation!.instance?.key,
+                                            ],
+                                          }
+                                        : task.action === "custom-install"
+                                          ? { ids: [task.appId] }
+                                          : {
+                                              appId: task.appId,
+                                              extensions:
+                                                task.selection.extensions,
+                                              fix: "recheck",
+                                            };
+                                    void feature<Plan>(op, args, mode)
+                                      .then(onPlan)
+                                      .catch((e) => notify(String(e)));
+                                  }}
+                                >
+                                  Просмотреть новый план
+                                </button>
+                              )}
+                            {!task.operation &&
+                              ["error", "cancelled", "blocked"].includes(
+                                task.status,
+                              ) && (
+                                <>
+                                  <button
+                                    className="button secondary"
+                                    disabled={queue.running}
+                                    onClick={() =>
+                                      onRetry(run.id, task.status, task.id)
+                                    }
+                                  >
+                                    Проверить повтор
+                                  </button>
+                                  <button
+                                    className="button secondary"
+                                    disabled={queue.running}
+                                    onClick={() => onEdit(task)}
+                                  >
+                                    Изменить параметры
+                                  </button>
+                                </>
+                              )}
+                            {!task.operation &&
+                              ["action-required", "user-completed"].includes(
+                                task.status,
+                              ) && (
+                                <button
+                                  className="button secondary"
+                                  onClick={() =>
+                                    void api
+                                      .verifyManual(task.id, mode)
+                                      .then(() =>
+                                        notify("Обнаружение подтверждено"),
+                                      )
+                                      .catch((e) => notify(String(e)))
+                                  }
+                                >
+                                  Проверить результат
+                                </button>
+                              )}
+                            {!task.operation &&
+                              task.status === "action-required" && (
+                                <button
+                                  className="button secondary"
+                                  onClick={() =>
+                                    onControl("complete-manual", task.id)
+                                  }
+                                >
+                                  Шаг выполнен
+                                </button>
+                              )}
                             {task.status === "queued" && (
                               <button
                                 className="button secondary"

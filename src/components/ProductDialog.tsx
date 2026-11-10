@@ -51,6 +51,7 @@ export function ProductDialog({
   favorite,
   onFavorite,
   notify,
+  onTroubleshoot,
 }: {
   app: Product;
   selection?: Selection;
@@ -62,6 +63,7 @@ export function ProductDialog({
   favorite: boolean;
   onFavorite: () => void;
   notify: (s: string) => void;
+  onTroubleshoot?: () => void;
 }) {
   const [draft, setDraft] = useState<Selection>(() =>
     structuredClone(selection || defaultSelection(app)),
@@ -94,6 +96,11 @@ export function ProductDialog({
   return (
     <Modal title="Параметры программы" wide onClose={onClose}>
       <div className="modal-body">
+        {installed && onTroubleshoot && (
+          <button className="button secondary" onClick={onTroubleshoot}>
+            Программа не работает
+          </button>
+        )}
         <div className="product-detail-heading">
           <Logo app={app} />
           <div>

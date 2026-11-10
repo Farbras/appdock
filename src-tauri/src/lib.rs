@@ -1,9 +1,11 @@
 mod background;
 mod catalog;
 mod catalog_update;
+mod custom_apps;
 mod downloads;
 mod engine;
 mod features;
+mod maintenance;
 mod managed;
 mod models;
 mod offline;
@@ -12,6 +14,7 @@ mod readiness;
 mod resumable;
 mod system;
 mod transfer_control;
+mod troubleshooting;
 mod winget;
 mod winget_progress;
 mod winget_terminal;
@@ -259,6 +262,7 @@ fn set_runtime_mode(state: State<'_, Shared>, mode: String) -> Result<(), String
         return Err("Дождитесь завершения очереди перед сменой режима".into());
     }
     background::DEMO.store(mode == "demo", std::sync::atomic::Ordering::Relaxed);
+    engine::lock(&state).pending = None;
     Ok(())
 }
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

@@ -120,6 +120,7 @@ pub fn build_tasks(items: &[Selection]) -> Result<Vec<Task>, String> {
         catalog::validate(selection)?;
         let parent = uuid::Uuid::new_v4().to_string();
         tasks.push(Task {
+            operation: None,
             readiness: None,
             installation_outcome: None,
             offline_root: None,
@@ -289,21 +290,27 @@ fn valid_saved_queue(q: &Queue) -> bool {
             !t.id.is_empty()
                 && t.id.len() <= 80
                 && t.app_id == t.selection.app_id
-                && catalog::app(&t.app_id).is_ok()
-                && [
-                    "install",
-                    "download",
-                    "open",
-                    "shortcut",
-                    "guide",
-                    "extension",
-                ]
-                .contains(&t.action.as_str())
+                && (crate::maintenance::valid_task(t)
+                    || (catalog::app(&t.app_id).is_ok()
+                        && [
+                            "install",
+                            "download",
+                            "open",
+                            "shortcut",
+                            "guide",
+                            "extension",
+                        ]
+                        .contains(&t.action.as_str())))
         })
         && q.runs.iter().all(|r| {
             (1..=3).contains(&r.parallel_downloads)
                 && ["live", "demo"].contains(&r.mode.as_str())
-                && r.selections.iter().all(|s| catalog::app(&s.app_id).is_ok())
+                && r.selections.iter().all(|s| {
+                    catalog::app(&s.app_id).is_ok()
+                        || crate::custom_apps::valid_id(&s.app_id)
+                        || s.app_id == "windows-instance"
+                        || crate::troubleshooting::valid_readiness_selection(s)
+                })
         })
         && (q.runs.is_empty()
             || q.tasks
@@ -475,7 +482,7 @@ pub fn update(shared: &Shared, app: &AppHandle, id: &str, status: &str, message:
         );
     }
 }
-fn append(shared: &Shared, app: &AppHandle, id: &str, line: &str) {
+pub(crate) fn append(shared: &Shared, app: &AppHandle, id: &str, line: &str) {
     let mut e = lock(shared);
     if let Some(t) = e.queue.tasks.iter_mut().find(|t| t.id == id) {
         t.last_activity_at = now();
@@ -786,6 +793,9 @@ pub fn prepare(
 }
 pub fn start(shared: &Shared, token: &str, app: AppHandle) -> Result<(), String> {
     let _operation = crate::managed::exclusive()?;
+    if crate::background::DEMO.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("Системные действия отключены в деморежиме".into());
+    }
     if crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
         return Err("AppDock завершает работу; запустите приложение заново для продолжения".into());
     }
@@ -887,6 +897,9 @@ pub fn prepare_retry(
     if chosen.is_empty() {
         return Err("В выбранном запуске нет задач с этим статусом".into());
     }
+    if chosen.iter().any(|t| t.operation.is_some()) {
+        return Err("Для удаления, исправления и своего установщика требуется отдельный новый план действия".into());
+    }
     if let Some(root) = chosen.iter().find_map(|t| t.offline_root.as_deref()) {
         return crate::offline::plan(
             shared,
@@ -967,7 +980,7 @@ pub fn prepare_retry(
     }
     Ok(plan)
 }
-fn run_command(
+pub(crate) fn run_command(
     shared: &Shared,
     app: &AppHandle,
     task: &Task,
@@ -1087,6 +1100,16 @@ fn run_command_monitored(
 }
 fn execute(shared: &Shared, app: &AppHandle, task: Task) {
     let outcome = execute_inner(shared, app, &task);
+    if outcome.is_err()
+        && (task.action == "extension" || matches!(task.action.as_str(), "fix" | "repair"))
+    {
+        let checked = crate::readiness::check(&task.selection);
+        let mut e = lock(shared);
+        if let Some(t) = e.queue.tasks.iter_mut().find(|t| t.id == task.id) {
+            t.readiness = Some(checked);
+        }
+        let _ = e.save();
+    }
     if outcome.is_ok() && ["install", "extension"].contains(&task.action.as_str()) {
         let should_check = lock(shared).queue.tasks.iter().any(|t| {
             t.id == task.id
@@ -1233,6 +1256,9 @@ fn run_winget(
     )
 }
 fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), String> {
+    if task.operation.is_some() {
+        return crate::maintenance::execute(shared, app, task);
+    }
     let dependency = check_recovered_dependencies(shared, task);
     if let Some(reason) = dependency {
         update(shared, app, &task.id, "blocked", &reason);
@@ -1865,6 +1891,9 @@ pub fn control(
     if action == "resume" && crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
         return Err("AppDock завершает работу".into());
     }
+    if action == "resume" && crate::background::DEMO.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("Системные действия отключены в деморежиме".into());
+    }
     let mut should_spawn = false;
     {
         let mut e = lock(shared);
@@ -1992,6 +2021,7 @@ mod tests {
     use super::*;
     fn task(status: &str) -> Task {
         Task {
+            operation: None,
             readiness: None,
             installation_outcome: None,
             offline_root: None,
@@ -2061,6 +2091,26 @@ mod tests {
         assert_eq!(q.tasks[3].status, "cancelled");
         let installer = q.tasks[2].id.clone();
         assert!(control_transfers(&mut q, "pause", Some(&installer)).is_err());
+    }
+    #[test]
+    fn stopping_uninstalls_cancels_only_waiting_tasks_and_errors_do_not_block_unrelated_tasks() {
+        let mut q = Queue::default();
+        q.current_run_id = Some("run".into());
+        q.tasks = ["installing", "queued", "error"]
+            .into_iter()
+            .map(|status| {
+                let mut t = task(status);
+                t.run_id = "run".into();
+                t.action = "uninstall".into();
+                t
+            })
+            .collect();
+        assert!(dependency_failure(&q.tasks[1], &q.tasks).is_none());
+        control_transfers(&mut q, "cancel", None).unwrap();
+        assert_eq!(q.tasks[0].status, "installing");
+        assert!(!q.tasks[0].cancel_requested);
+        assert_eq!(q.tasks[1].status, "cancelled");
+        assert_eq!(q.tasks[2].status, "error");
     }
 
     #[test]

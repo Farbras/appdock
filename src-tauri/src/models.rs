@@ -23,6 +23,9 @@ pub enum TaskStatus {
     Blocked,
     Attention,
     UserCompleted,
+    Removed,
+    Repaired,
+    Checked,
 }
 impl TaskStatus {
     pub fn as_str(&self) -> &'static str {
@@ -45,6 +48,9 @@ impl TaskStatus {
             Self::Blocked => "blocked",
             Self::Attention => "attention",
             Self::UserCompleted => "user-completed",
+            Self::Removed => "removed",
+            Self::Repaired => "repaired",
+            Self::Checked => "checked",
         }
     }
 }
@@ -113,6 +119,8 @@ impl DownloadProgress {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Task {
+    #[serde(default)]
+    pub operation: Option<crate::maintenance::Operation>,
     #[serde(default)]
     pub resume_from: Option<String>,
     #[serde(default)]
@@ -303,6 +311,9 @@ pub fn terminal(status: &str) -> bool {
     matches!(
         status,
         "installed"
+            | "removed"
+            | "repaired"
+            | "checked"
             | "blocked"
             | "user-completed"
             | "current"

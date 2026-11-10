@@ -32,6 +32,7 @@ export function PlanDialog({
   const [ack, setAck] = useState(false);
   const tasks = plan.items.flatMap((i) => i.tasks);
   const local = tasks.some((t) => t.offlineRoot);
+  const operationPlan = tasks.some((t) => t.operation);
   const counts = Object.entries(
     tasks.reduce(
       (r, t) => ({ ...r, [t.action]: (r[t.action] || 0) + 1 }),
@@ -42,19 +43,22 @@ export function PlanDialog({
     <Modal title="Проверим всё перед запуском" wide onClose={onClose}>
       <div className="modal-body">
         <h3>
-          {programs(plan.items.length)} · {taskCount(tasks.length)}
+          {programs(new Set(plan.items.map((i) => i.appId)).size)} ·{" "}
+          {taskCount(tasks.length)}
         </h3>
         <p className="muted-text">
           {plan.mode === "demo"
             ? "Демонстрация без изменения компьютера"
             : "Рабочий режим"}{" "}
           ·{" "}
-          {local
-            ? "Последовательная локальная установка без скачивания"
-            : settings.skipCurrent
-              ? "Пропускать актуальные версии"
-              : "Проверять обновление установленных"}{" "}
-          {!local && (
+          {operationPlan
+            ? "Последовательное выполнение подтверждённого плана"
+            : local
+              ? "Последовательная локальная установка без скачивания"
+              : settings.skipCurrent
+                ? "Пропускать актуальные версии"
+                : "Проверять обновление установленных"}{" "}
+          {!local && !operationPlan && (
             <> · параллельных загрузок: {settings.parallelDownloads}</>
           )}
         </p>
@@ -72,6 +76,35 @@ export function PlanDialog({
         ))}
         <div className="plan-items">
           {plan.items.map((item) => {
+            if (operationPlan)
+              return (
+                <section
+                  className="plan-item plan-expanded"
+                  key={item.tasks[0]?.id || item.appId}
+                >
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>{actionNames[item.action]}</p>
+                    {item.installedVersion && (
+                      <p>Установленная версия: {item.installedVersion}</p>
+                    )}
+                    <p>{item.expected}</p>
+                    {item.warnings.map((w, i) => (
+                      <p className="file-detail" key={i}>
+                        {w}
+                      </p>
+                    ))}
+                    {item.tasks[0]?.operation?.instance && (
+                      <p>
+                        Область:{" "}
+                        {item.tasks[0].operation.instance.scope === "user"
+                          ? "Текущий пользователь"
+                          : "Все пользователи"}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              );
             const app = getApp(item.appId);
             const s = item.selection;
             const edition = app.editions.find(
@@ -183,13 +216,15 @@ export function PlanDialog({
             : `${(plan.system.freeDiskMb / 1024).toFixed(1)} ГБ`}{" "}
           · {plan.system.arch}
         </p>
-        <button
-          className="button secondary"
-          onClick={onRefresh}
-          disabled={busy}
-        >
-          Повторить проверку
-        </button>
+        {!operationPlan && (
+          <button
+            className="button secondary"
+            onClick={onRefresh}
+            disabled={busy}
+          >
+            Повторить проверку
+          </button>
+        )}
         <label className="acknowledgement">
           <input
             type="checkbox"

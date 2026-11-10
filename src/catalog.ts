@@ -26,6 +26,9 @@ export const typeNames: Record<string, string> = {
   emulator: "Эмулятор",
 };
 export const statusNames: Record<string, string> = {
+  removed: "Удаление подтверждено",
+  repaired: "Готовность подтверждена",
+  checked: "Проверено",
   queued: "В очереди",
   checking: "Проверка",
   downloading: "Скачивание",
@@ -171,6 +174,10 @@ export function matchInstalled(
   );
 }
 export const actionNames: Record<string, string> = {
+  uninstall: "Удаление",
+  repair: "Восстановление",
+  fix: "Исправление / проверка",
+  "custom-install": "Собственный установщик",
   install: "Установка / обновление",
   download: "Скачивание",
   guide: "Ручные шаги",

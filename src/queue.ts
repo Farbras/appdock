@@ -12,6 +12,9 @@ import { assertUniquePrograms } from "./domain";
 export const terminal = (status: string) =>
   [
     "installed",
+    "removed",
+    "repaired",
+    "checked",
     "current",
     "error",
     "cancelled",
@@ -25,6 +28,9 @@ export const terminal = (status: string) =>
   ].includes(status);
 export const success = (status: string) =>
   [
+    "removed",
+    "repaired",
+    "checked",
     "installed",
     "current",
     "reboot-required",
@@ -76,7 +82,7 @@ export function migrateQueue(value: QueueState): QueueState {
     (value.schemaVersion || 1) > 2 ||
     value.tasks.some(
       (t) =>
-        !getApp(t.appId) ||
+        (!getApp(t.appId) && !t.operation) ||
         !t.selection ||
         !Array.isArray(t.log) ||
         !t.id ||
@@ -122,7 +128,13 @@ export function migrateQueue(value: QueueState): QueueState {
   )
     throw new Error("Сохранённые параметры запуска повреждены");
   for (const run of q.runs)
-    for (const s of run.selections) sanitizeSelection(s, true);
+    for (const s of run.selections)
+      if (
+        !q.tasks.some(
+          (t) => t.runId === run.id && t.operation && t.appId === s.appId,
+        )
+      )
+        sanitizeSelection(s, true);
   if (
     q.runs.length &&
     q.tasks.some((t) => !q.runs!.some((r) => r.id === t.runId))

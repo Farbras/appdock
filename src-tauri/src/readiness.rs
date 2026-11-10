@@ -21,7 +21,7 @@ fn result(state: &str, reason: String, version: Option<String>, launch: bool) ->
     }.into(), version, checked_at: now(), can_launch: launch }
 }
 fn fresh_path() -> Result<Vec<PathBuf>, String> {
-    let v=system::powershell("([Environment]::GetEnvironmentVariable('Path','Machine')+';'+[Environment]::GetEnvironmentVariable('Path','User')) | ConvertTo-Json -Compress")?;
+    let v=system::powershell("[Environment]::ExpandEnvironmentVariables(([Environment]::GetEnvironmentVariable('Path','Machine')+';'+[Environment]::GetEnvironmentVariable('Path','User'))) | ConvertTo-Json -Compress")?;
     Ok(v.as_str()
         .unwrap_or("")
         .split(';')
@@ -33,7 +33,9 @@ pub fn quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "''"))
 }
 pub fn executable(id: &str) -> Result<PathBuf, String> {
-    catalog::app(id)?;
+    if id != "nodejs" {
+        catalog::app(id)?;
+    }
     let (exe, suffixes): (&str, &[&str]) = match id {
         "python" => (
             "python.exe",
@@ -94,8 +96,13 @@ fn output(mut cmd: std::process::Command, args: &[&str]) -> Result<String, Strin
     Ok(text.chars().take(4000).collect())
 }
 pub fn check(s: &Selection) -> Readiness {
-    if let Err(e) = catalog::validate(s) {
-        return result("unknown", e, None, false);
+    if !crate::troubleshooting::valid_readiness_selection(s) {
+        return result(
+            "unknown",
+            "Для программы нет разрешённого адаптера или параметры не поддерживаются".into(),
+            None,
+            false,
+        );
     }
     let path = match executable(&s.app_id) {
         Ok(p) => p,
@@ -124,6 +131,7 @@ pub fn check(s: &Selection) -> Readiness {
     let version = version.lines().next().unwrap_or("").to_string();
     if s.app_id == "python" && !version.starts_with("Python ")
         || s.app_id == "git" && !version.starts_with("git version ")
+        || s.app_id == "nodejs" && !version.starts_with('v')
     {
         return result(
             "unknown",
@@ -168,7 +176,7 @@ pub fn check(s: &Selection) -> Readiness {
             Err(e) => return result("unknown", e, Some(version), false),
         }
     }
-    if ["python", "git"].contains(&s.app_id.as_str()) {
+    if ["python", "git", "node", "nodejs"].contains(&s.app_id.as_str()) {
         match fresh_path(){
             Ok(dirs) if dirs.iter().any(|d|matches!((d.canonicalize().ok(),path.parent().and_then(|p|p.canonicalize().ok())),(Some(a),Some(b)) if a==b))=>(),
             Ok(_)=>return result("action","Исполняемый файл запускается напрямую, но его папка отсутствует в актуальном PATH Windows. Добавьте программу в PATH через официальный мастер; затем откройте новый терминал и повторите проверку.".into(),Some(version),false),
