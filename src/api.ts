@@ -89,80 +89,119 @@ const persist = () => {
   publish();
 };
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+let demoWorkerActive = false;
+async function downloadReady(task: QueueTask) {
+  while (task.downloadPaused && !task.cancelRequested) await wait(50);
+  if (!task.cancelRequested) return true;
+  task.status = "cancelled";
+  task.downloadPaused = false;
+  task.cancelRequested = false;
+  task.finishedAt = Date.now();
+  task.message = "Скачивание отменено пользователем";
+  if (task.downloadProgress) {
+    task.downloadProgress.bytesPerSecond = 0;
+    task.downloadProgress.remainingSeconds = null;
+  }
+  persist();
+  return false;
+}
 function runDemo() {
-  if (timer) return;
+  if (timer || demoWorkerActive) return;
   timer = setTimeout(async () => {
     timer = null;
     if (!demoQueue.running || demoQueue.paused) return;
-    const task = demoQueue.tasks.find(
-      (t) => t.runId === demoQueue.currentRunId && t.status === "queued",
-    );
-    if (!task) {
-      finishRun(demoQueue);
-      persist();
-      return;
-    }
-    const failure = dependencyFailure(task, demoQueue.tasks);
-    if (failure) {
-      task.status = "blocked";
-      task.message = failure;
-      task.finishedAt = Date.now();
-      persist();
-      runDemo();
-      return;
-    }
-    task.startedAt = Date.now();
-    for (const stage of demoStages(task.action)) {
-      task.status = stage;
-      task.lastActivityAt = Date.now();
-      task.message = "Демонстрация этапа. Системные операции не выполняются.";
-      task.log.push(`[ДЕМО] ${statusNames[stage]}`);
-      if (stage === "downloading" && task.action === "download") {
-        const total = (getApp(task.appId).downloadMb || 100) * 1048576;
-        for (const fraction of [0.15, 0.5, 0.85]) {
-          task.percent = fraction * 100;
-          task.downloadProgress = {
-            downloadedBytes: Math.round(total * fraction),
-            totalBytes: total,
-            remainingBytes: Math.round(total * (1 - fraction)),
-            bytesPerSecond: 20 * 1048576,
-            remainingSeconds: Math.ceil(
-              (total * (1 - fraction)) / (20 * 1048576),
-            ),
-          };
+    demoWorkerActive = true;
+    try {
+      const task = demoQueue.tasks.find(
+        (t) => t.runId === demoQueue.currentRunId && t.status === "queued",
+      );
+      if (!task) {
+        finishRun(demoQueue);
+        persist();
+        return;
+      }
+      const failure = dependencyFailure(task, demoQueue.tasks);
+      if (failure) {
+        task.status = "blocked";
+        task.message = failure;
+        task.finishedAt = Date.now();
+        persist();
+        runDemo();
+        return;
+      }
+      task.startedAt = Date.now();
+      for (const stage of demoStages(task.action)) {
+        task.status = stage;
+        task.lastActivityAt = Date.now();
+        task.message = "Демонстрация этапа. Системные операции не выполняются.";
+        task.log.push(`[ДЕМО] ${statusNames[stage]}`);
+        if (stage === "downloading") {
+          task.downloadPaused = demoQueue.paused;
           persist();
-          await wait(250);
+          const total = (getApp(task.appId).downloadMb || 100) * 1048576;
+          for (const fraction of [0.15, 0.5, 0.85, 1]) {
+            if (!(await downloadReady(task))) return;
+            task.percent = fraction * 100;
+            task.downloadProgress = {
+              downloadedBytes: Math.round(total * fraction),
+              totalBytes: total,
+              remainingBytes: Math.round(total * (1 - fraction)),
+              bytesPerSecond: fraction === 1 ? 0 : 20 * 1048576,
+              remainingSeconds: Math.ceil(
+                (total * (1 - fraction)) / (20 * 1048576),
+              ),
+            };
+            persist();
+            await wait(250);
+          }
+          if (!(await downloadReady(task))) return;
         }
+        persist();
+        await wait(250);
+      }
+      task.status =
+        task.action === "extension"
+          ? "installed"
+          : task.action === "download"
+            ? "downloaded"
+            : task.action === "open"
+              ? "opened"
+              : task.action === "shortcut"
+                ? "shortcut-created"
+                : task.action === "guide"
+                  ? "action-required"
+                  : "installed";
+      task.message =
+        task.status === "action-required"
+          ? "Завершите шаги по официальной инструкции."
+          : "Демонстрация завершена. Компьютер не изменён.";
+      task.finishedAt = Date.now();
+      if (task.status === "downloaded" && task.downloadProgress) {
+        task.percent = 100;
+        task.downloadProgress.downloadedBytes =
+          task.downloadProgress.totalBytes!;
+        task.downloadProgress.remainingBytes = 0;
+        task.downloadProgress.bytesPerSecond = 0;
+        task.downloadProgress.remainingSeconds = 0;
       }
       persist();
-      await wait(250);
+      runDemo();
+    } finally {
+      demoWorkerActive = false;
+      const current = demoQueue.tasks.filter(
+        (t) => t.runId === demoQueue.currentRunId,
+      );
+      if (
+        demoQueue.running &&
+        current.length &&
+        current.every((t) => terminal(t.status))
+      ) {
+        finishRun(demoQueue);
+        demoQueue.paused = false;
+        persist();
+      }
+      if (demoQueue.running && !demoQueue.paused) runDemo();
     }
-    task.status =
-      task.action === "extension"
-        ? "installed"
-        : task.action === "download"
-          ? "downloaded"
-          : task.action === "open"
-            ? "opened"
-            : task.action === "shortcut"
-              ? "shortcut-created"
-              : task.action === "guide"
-                ? "action-required"
-                : "installed";
-    task.message =
-      task.status === "action-required"
-        ? "Завершите шаги по официальной инструкции."
-        : "Демонстрация завершена. Компьютер не изменён.";
-    task.finishedAt = Date.now();
-    if (task.status === "downloaded" && task.downloadProgress) {
-      task.percent = 100;
-      task.downloadProgress.downloadedBytes = task.downloadProgress.totalBytes!;
-      task.downloadProgress.remainingBytes = 0;
-      task.downloadProgress.bytesPerSecond = 0;
-      task.downloadProgress.remainingSeconds = 0;
-    }
-    persist();
-    runDemo();
   }, 100);
 }
 export const api = {
@@ -335,11 +374,52 @@ export const api = {
     if (mode === "live" && native)
       return invoke<void>("queue_control", { action, taskId: taskId ?? null });
     if (action === "retry") throw new Error("Повтор требует нового плана");
-    if (action === "pause") demoQueue.paused = true;
-    if (action === "resume") {
+    const task = taskId ? demoQueue.tasks.find((t) => t.id === taskId) : null;
+    const downloading = (t: QueueTask) =>
+      t.status === "downloading" && t.downloadProgress?.remainingBytes !== 0;
+    if (
+      taskId &&
+      ["pause", "resume", "cancel"].includes(action) &&
+      (!task ||
+        (!(task.status === "queued" && action === "cancel") &&
+          (!downloading(task) || task.cancelRequested)))
+    )
+      throw new Error(
+        "Эта задача больше не скачивается. Работающий установщик не прерывается.",
+      );
+    if (action === "pause" && !taskId) demoQueue.paused = true;
+    if (action === "resume" && !taskId) {
       demoQueue.paused = false;
       demoQueue.running = true;
       runDemo();
+    }
+    for (const t of demoQueue.tasks.filter(
+      (t) =>
+        t.runId === demoQueue.currentRunId &&
+        (!taskId || t.id === taskId) &&
+        downloading(t) &&
+        !t.cancelRequested,
+    )) {
+      if (action === "pause") {
+        t.downloadPaused = true;
+        t.message = "Скачивание приостановлено. Нажмите «Продолжить».";
+      }
+      if (action === "resume") {
+        t.downloadPaused = false;
+        t.message = "Скачивание продолжается";
+      }
+      if (action === "cancel") {
+        t.cancelRequested = true;
+        t.downloadPaused = false;
+        t.message = "Отмена скачивания…";
+      }
+      if (
+        ["pause", "resume", "cancel"].includes(action) &&
+        t.downloadProgress
+      ) {
+        t.downloadProgress.bytesPerSecond = 0;
+        t.downloadProgress.remainingSeconds = null;
+      }
     }
     if (action === "cancel")
       for (const t of demoQueue.tasks.filter(
@@ -350,8 +430,7 @@ export const api = {
       )) {
         t.status = "cancelled";
         t.finishedAt = Date.now();
-        t.message =
-          "Отменено пользователем. Работающий процесс не прерывается.";
+        t.message = "Отменено пользователем до запуска";
       }
     if (action === "complete-manual") {
       const task = demoQueue.tasks.find(
@@ -372,6 +451,18 @@ export const api = {
     if (action === "clear") {
       if (demoQueue.running) throw new Error("Сначала завершите очередь");
       clearFinished(demoQueue);
+    }
+    const current = demoQueue.tasks.filter(
+      (t) => t.runId === demoQueue.currentRunId,
+    );
+    if (
+      demoQueue.running &&
+      !demoWorkerActive &&
+      current.length &&
+      current.every((t) => terminal(t.status))
+    ) {
+      finishRun(demoQueue);
+      demoQueue.paused = false;
     }
     persist();
   },

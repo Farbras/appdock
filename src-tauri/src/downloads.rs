@@ -1,55 +1,30 @@
 use crate::{catalog, models::*, system};
 use serde_json::{json, Value};
 use std::{
-    io::Read,
     path::{Path, PathBuf},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
-// Only use the final, complete successful response, never redirect/error lengths.
-fn content_length(headers: &str) -> Option<u64> {
-    let normalized = headers.replace("\r\n", "\n");
-    let last = normalized.trim_end_matches('\n').rsplit("\n\n").next()?;
-    if !normalized.ends_with("\n\n") {
-        return None;
-    }
-    let mut lines = last.lines();
-    let status = lines
-        .next()?
-        .split_whitespace()
-        .nth(1)?
-        .parse::<u16>()
-        .ok()?;
-    if !(200..300).contains(&status) {
-        return None;
-    }
-    let mut length = None;
-    for line in lines {
-        if let Some((key, value)) = line.split_once(':') {
-            if key.eq_ignore_ascii_case("transfer-encoding") {
-                return None;
-            }
-            if key.eq_ignore_ascii_case("content-length") {
-                length = value.trim().parse().ok();
-            }
-        }
-    }
-    length
-}
-struct TransferMeter {
+pub(crate) struct TransferMeter {
     sampled_at: Duration,
     downloaded: u64,
     progress: DownloadProgress,
 }
 impl TransferMeter {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             sampled_at: Duration::ZERO,
             downloaded: 0,
             progress: DownloadProgress::new(0, None, 0.0),
         }
     }
-    fn sample(
+    pub(crate) fn with_offset(offset: u64) -> Self {
+        let mut m = Self::new();
+        m.downloaded = offset;
+        m.progress = DownloadProgress::new(offset, None, 0.0);
+        m
+    }
+    pub(crate) fn sample(
         &mut self,
         elapsed: Duration,
         downloaded: u64,
@@ -92,11 +67,54 @@ fn files_under(
             files_under(&path, root, depth + 1, out)?
         } else if ty.is_file()
             && entry.file_name() != "appdock-origin.json"
+            && entry.file_name() != "resume.json"
             && !entry.file_name().to_string_lossy().ends_with(".part")
         {
             out.push(path)
         }
     }
+    Ok(())
+}
+pub fn discard_partial(data: &Path, task: &Task) -> Result<(), String> {
+    let a = catalog::app(&task.app_id)?;
+    if task.action != "download" || catalog::direct_download_url(&a).is_none() {
+        return Ok(());
+    }
+    let dir = task_dir(data, task)?;
+    if !dir.exists() {
+        return Ok(());
+    }
+    for e in std::fs::read_dir(&dir)
+        .map_err(|e| e.to_string())?
+        .flatten()
+    {
+        let name = e.file_name().to_string_lossy().into_owned();
+        if (name.ends_with(".part") || name == "resume.json")
+            && e.file_type().map_err(|e| e.to_string())?.is_file()
+        {
+            std::fs::remove_file(e.path()).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+pub fn clear_finished_with_parts(queue: &mut Queue, data: &Path) -> Result<(), String> {
+    let mut next = queue.clone();
+    crate::models::clear_finished(&mut next);
+    let keep: std::collections::HashSet<_> = next
+        .tasks
+        .iter()
+        .filter_map(|t| task_dir(data, t).ok())
+        .collect();
+    for task in queue
+        .tasks
+        .iter()
+        .filter(|t| !next.tasks.iter().any(|n| n.id == t.id))
+    {
+        if !task_dir(data, task).is_ok_and(|dir| keep.contains(&dir)) {
+            discard_partial(data, task)?;
+        }
+    }
+    *queue = next;
     Ok(())
 }
 fn modified(meta: &std::fs::Metadata) -> Option<u64> {
@@ -106,10 +124,11 @@ fn modified(meta: &std::fs::Metadata) -> Option<u64> {
         .ok()
         .map(|d| d.as_secs())
 }
-fn task_dir(data: &Path, task: &Task) -> Result<PathBuf, String> {
+pub fn task_dir(data: &Path, task: &Task) -> Result<PathBuf, String> {
     catalog::app(&task.app_id)?;
-    uuid::Uuid::parse_str(&task.id).map_err(|_| "Неверный идентификатор загрузки")?;
-    Ok(system::download_dir(data).join(&task.app_id).join(&task.id))
+    let id = task.resume_from.as_deref().unwrap_or(&task.id);
+    uuid::Uuid::parse_str(id).map_err(|_| "Неверный идентификатор загрузки")?;
+    Ok(system::download_dir(data).join(&task.app_id).join(id))
 }
 pub fn inventory(data: &Path) -> Result<Value, String> {
     let root = system::download_dir(data);
@@ -204,103 +223,6 @@ pub fn record(data: &Path, task: &Task) -> Result<(), String> {
     let files:Vec<_>=paths.iter().filter_map(|p|{let m=p.metadata().ok()?;Some(json!({"name":p.file_name()?.to_string_lossy(),"size":m.len(),"modified":modified(&m)}))}).collect();
     std::fs::write(dir.join("appdock-origin.json"),serde_json::to_vec_pretty(&json!({"schemaVersion":2,"appId":task.app_id,"version":version,"source":direct_url.unwrap_or(catalog::text(&a,"website")),"packageId":package,"verification":if direct_url.is_some(){"https"}else{"winget"},"checkedAt":now(),"files":files})).map_err(|e|e.to_string())?).map_err(|e|e.to_string())
 }
-pub fn download_direct(
-    data: &Path,
-    task: &Task,
-    run: impl FnOnce(std::process::Command, &mut dyn FnMut()) -> Result<i32, String>,
-    mut progress: impl FnMut(DownloadProgress),
-) -> Result<(), String> {
-    let a = catalog::validate(&task.selection)?;
-    if task.action != "download" || task.selection.action != "download" {
-        return Err("Прямая ссылка доступна только для скачивания".into());
-    }
-    let url = catalog::direct_download_url(&a).ok_or("Прямая ссылка отсутствует в каталоге")?;
-    let name = url.rsplit('/').next().unwrap_or("");
-    if !url.starts_with("https://")
-        || name.is_empty()
-        || name == "."
-        || name == ".."
-        || !name
-            .bytes()
-            .all(|b| b.is_ascii_alphanumeric() || b"-_.".contains(&b))
-    {
-        return Err("Недопустимая ссылка скачивания в каталоге".into());
-    }
-    let dir = task_dir(data, task)?;
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    let partial = dir.join(format!("{name}.part"));
-    let headers = dir.join(format!("{name}.headers.part"));
-    let destination = dir.join(name);
-    let mut command = system::command("curl.exe");
-    command
-        .args([
-            "--disable",
-            "--fail",
-            "--location",
-            "--proto",
-            "=https",
-            "--proto-redir",
-            "=https",
-            "--connect-timeout",
-            "30",
-            "--retry",
-            "2",
-            "--silent",
-            "--show-error",
-        ])
-        .arg("--dump-header")
-        .arg(&headers)
-        .arg("--output")
-        .arg(&partial)
-        .arg(url);
-    let total_bytes = || {
-        let mut bytes = Vec::new();
-        std::fs::File::open(&headers)
-            .ok()?
-            .take(65_536)
-            .read_to_end(&mut bytes)
-            .ok()?;
-        content_length(&String::from_utf8_lossy(&bytes))
-    };
-    let began = Instant::now();
-    let mut meter = TransferMeter::new();
-    progress(meter.progress.clone());
-    let result = (|| {
-        let code = run(command, &mut || {
-            let downloaded = std::fs::metadata(&partial).map(|m| m.len()).unwrap_or(0);
-            if let Some(sample) = meter.sample(began.elapsed(), downloaded, total_bytes()) {
-                progress(sample);
-            }
-        })?;
-        if code != 0 {
-            return Err(format!(
-                "Ошибка скачивания (curl: {code}). Проверьте сеть и повторите загрузку."
-            ));
-        }
-        let downloaded = std::fs::metadata(&partial)
-            .map_err(|e| e.to_string())?
-            .len();
-        if downloaded == 0 {
-            return Err("Сервер вернул пустой файл".into());
-        }
-        if total_bytes().is_some_and(|total| total != downloaded) {
-            return Err("Файл скачан не полностью. Повторите загрузку.".into());
-        }
-        std::fs::rename(&partial, &destination).map_err(|e| e.to_string())?;
-        record(data, task)?;
-        progress(DownloadProgress::new(
-            downloaded,
-            Some(downloaded),
-            meter.progress.bytes_per_second,
-        ));
-        Ok(())
-    })();
-    let _ = std::fs::remove_file(&headers);
-    if result.is_err() {
-        let _ = std::fs::remove_file(&partial);
-    }
-    result
-}
 pub fn require_live(mode: &str) -> Result<(), String> {
     if mode != "live" {
         return Err("Реальные файлы недоступны в деморежиме".into());
@@ -384,158 +306,39 @@ mod tests {
         .remove(0)
     }
     #[test]
-    fn direct_download_uses_catalog_url_and_records_its_actual_source() {
-        let data = std::env::temp_dir().join(format!("appdock-direct-{}", uuid::Uuid::new_v4()));
-        let task = office_task();
-        let dir = task_dir(&data, &task).unwrap();
-        download_direct(&data, &task, |command, monitor| {
-            assert_eq!(command.get_program(), "curl.exe");
-            let args: Vec<_> = command.get_args().collect();
-            assert_eq!(args.last().unwrap().to_str().unwrap(),
-                "https://officecdn.microsoft.com/db/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/media/ru-ru/ProPlus2024Retail.img");
-            assert!(args.windows(2).any(|pair| pair == ["--proto-redir", "=https"]));
-            assert!(!args.contains(&std::ffi::OsStr::new("--insecure")));
-            let output = args[args.iter().position(|a| *a == "--output").unwrap() + 1];
-            std::fs::write(output, b"office image fixture").unwrap();
-            monitor();
-            assert_eq!(inventory(&data).unwrap()["files"].as_array().unwrap().len(), 0);
-            Ok(0)
-        }, |_| {}).unwrap();
-        assert!(dir.join("ProPlus2024Retail.img").is_file());
-        assert!(!dir.join("ProPlus2024Retail.img.part").exists());
-        let list = inventory(&data).unwrap();
-        let file = &list["files"][0];
-        assert_eq!(file["name"], "ProPlus2024Retail.img");
-        assert_eq!(file["version"], "2024");
-        assert_eq!(
-            file["source"],
-            catalog::app("word").unwrap()["install"]["downloadUrl"]
-        );
-        assert!(file["verification"].as_str().unwrap().contains("HTTPS"));
-        assert!(!file["verification"].as_str().unwrap().contains("WinGet"));
-        std::fs::remove_dir_all(data).unwrap();
-    }
-    #[test]
-    fn failed_or_empty_direct_downloads_never_publish_an_image() {
-        let data =
-            std::env::temp_dir().join(format!("appdock-direct-errors-{}", uuid::Uuid::new_v4()));
-        let task = office_task();
-        let dir = task_dir(&data, &task).unwrap();
-        for outcome in [Ok(22), Err("network error".to_string()), Ok(0)] {
-            let result = download_direct(
-                &data,
-                &task,
-                |_, _| {
-                    std::fs::write(dir.join("ProPlus2024Retail.img.part"), b"").unwrap();
-                    outcome
-                },
-                |_| {},
-            );
-            assert!(result.is_err());
-            assert!(!dir.join("ProPlus2024Retail.img").exists());
-            assert!(!dir.join("ProPlus2024Retail.img.part").exists());
-            assert_eq!(
-                inventory(&data).unwrap()["files"].as_array().unwrap().len(),
-                0
-            );
-        }
-        std::fs::remove_dir_all(data).unwrap();
-    }
-    #[test]
-    fn every_office_version_downloads_its_own_image_with_complete_progress() {
-        let data = std::env::temp_dir().join(format!("appdock-office-{}", uuid::Uuid::new_v4()));
-        for (id, version, file) in [
-            ("word", "2024", "ProPlus2024Retail.img"),
-            ("office-2021", "2021", "ProPlus2021Retail.img"),
-            ("office-2019", "2019", "ProPlus2019Retail.img"),
-            ("office-2016", "2016", "ProPlusRetail.img"),
+    fn direct_origins_and_resume_metadata_are_not_published_as_received_files() {
+        let data = std::env::temp_dir().join(format!("appdock-origins-{}", uuid::Uuid::new_v4()));
+        for (id, file) in [
+            ("word", "ProPlus2024Retail.img"),
+            ("office-2021", "ProPlus2021Retail.img"),
+            ("office-2019", "ProPlus2019Retail.img"),
+            ("office-2016", "ProPlusRetail.img"),
         ] {
-            let mut selection = office_task().selection;
-            selection.app_id = id.into();
-            let task = crate::engine::build_tasks(&[selection]).unwrap().remove(0);
-            let mut samples = vec![];
-            download_direct(
-                &data,
-                &task,
-                |command, monitor| {
-                    let args: Vec<_> = command.get_args().collect();
-                    let url = args.last().unwrap().to_str().unwrap();
-                    assert_eq!(
-                        url,
-                        catalog::app(id).unwrap()["install"]["downloadUrl"]
-                            .as_str()
-                            .unwrap()
-                    );
-                    assert!(url.ends_with(file));
-                    assert_eq!(url.contains("/pr/"), id == "office-2016");
-                    let output = args[args.iter().position(|a| *a == "--output").unwrap() + 1];
-                    let headers =
-                        args[args.iter().position(|a| *a == "--dump-header").unwrap() + 1];
-                    std::fs::write(headers, b"HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n")
-                        .unwrap();
-                    std::fs::write(output, b"image").unwrap();
-                    monitor();
-                    Ok(0)
-                },
-                |p| samples.push(p),
-            )
-            .unwrap();
-            let final_sample = samples.last().unwrap();
-            assert_eq!(final_sample.percent(), Some(100.0));
-            assert_eq!(final_sample.downloaded_bytes, 5);
-            assert_eq!(final_sample.remaining_bytes, Some(0));
-            assert_eq!(final_sample.remaining_seconds, Some(0));
+            let mut task = office_task();
+            task.app_id = id.into();
+            task.selection.app_id = id.into();
             let dir = task_dir(&data, &task).unwrap();
-            assert!(dir.join(file).is_file());
-            assert!(!dir.join(format!("{file}.headers.part")).exists());
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join("resume.json"), b"{}").unwrap();
+            std::fs::write(dir.join(format!("{file}.part")), b"incomplete").unwrap();
+            let before = inventory(&data).unwrap()["files"].as_array().unwrap().len();
+            std::fs::write(dir.join(file), b"completed fixture").unwrap();
+            record(&data, &task).unwrap();
+            let inv = inventory(&data).unwrap();
+            assert_eq!(inv["files"].as_array().unwrap().len(), before + 1);
             let origin: Value =
                 serde_json::from_slice(&std::fs::read(dir.join("appdock-origin.json")).unwrap())
                     .unwrap();
-            assert_eq!(origin["version"], version);
+            assert_eq!(
+                origin["source"],
+                catalog::app(id).unwrap()["install"]["downloadUrl"]
+            );
+            assert_eq!(origin["verification"], "https");
+            discard_partial(&data, &task).unwrap();
+            assert!(dir.join(file).is_file());
+            assert!(!dir.join("resume.json").exists());
         }
-        assert_eq!(
-            inventory(&data).unwrap()["files"].as_array().unwrap().len(),
-            4
-        );
         std::fs::remove_dir_all(data).unwrap();
-    }
-    #[test]
-    fn partial_images_and_header_files_are_cleaned_up_on_size_mismatch() {
-        let data = std::env::temp_dir().join(format!("appdock-partial-{}", uuid::Uuid::new_v4()));
-        let task = office_task();
-        let dir = task_dir(&data, &task).unwrap();
-        let result = download_direct(
-            &data,
-            &task,
-            |command, _| {
-                let args: Vec<_> = command.get_args().collect();
-                let output = args[args.iter().position(|a| *a == "--output").unwrap() + 1];
-                let headers = args[args.iter().position(|a| *a == "--dump-header").unwrap() + 1];
-                std::fs::write(headers, b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\n").unwrap();
-                std::fs::write(output, b"short").unwrap();
-                Ok(0)
-            },
-            |_| {},
-        );
-        assert!(result.unwrap_err().contains("не полностью"));
-        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 0);
-        std::fs::remove_dir_all(data).unwrap();
-    }
-    #[test]
-    fn size_comes_only_from_the_final_complete_successful_response() {
-        assert_eq!(content_length("HTTP/1.1 302 Found\r\nContent-Length: 8\r\n\r\nHTTP/2 200\r\ncOnTeNt-LeNgTh: 4000000000\r\n\r\n"), Some(4_000_000_000));
-        assert_eq!(content_length("HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nHTTP/1.1 503 Busy\r\nContent-Length: 3\r\n\r\n"), None);
-        assert_eq!(
-            content_length("HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nHTTP/2 200\r\nContent-Len"),
-            None
-        );
-        assert_eq!(
-            content_length(
-                "HTTP/1.1 200 OK\r\nContent-Length: 8\r\nTransfer-Encoding: chunked\r\n\r\n"
-            ),
-            None
-        );
-        assert_eq!(content_length("HTTP/2 200\r\n\r\n"), None);
     }
     #[test]
     fn transfer_statistics_handle_throttling_stalls_retries_and_unknown_sizes() {
@@ -562,6 +365,30 @@ mod tests {
         let p = meter.sample(Duration::from_secs(2), 510, None).unwrap();
         assert_eq!(p.bytes_per_second, 1000.0);
         assert_eq!(p.remaining_seconds, None);
+    }
+    #[test]
+    fn clearing_old_failure_keeps_parts_used_by_a_recovered_retry() {
+        let data = std::env::temp_dir().join(uuid::Uuid::new_v4().to_string());
+        let mut old = office_task();
+        old.status = "error".into();
+        let dir = task_dir(&data, &old).unwrap();
+        std::fs::create_dir_all(&dir).unwrap();
+        let part = dir.join("test.part");
+        std::fs::write(&part, b"keep").unwrap();
+        let mut retry = old.clone();
+        retry.id = uuid::Uuid::new_v4().to_string();
+        retry.resume_from = Some(old.id.clone());
+        retry.status = "queued".into();
+        let mut q = Queue::default();
+        q.tasks = vec![old, retry];
+        clear_finished_with_parts(&mut q, &data).unwrap();
+        assert_eq!(q.tasks.len(), 1);
+        assert!(part.exists());
+        q.tasks[0].status = "error".into();
+        clear_finished_with_parts(&mut q, &data).unwrap();
+        assert!(q.tasks.is_empty());
+        assert!(!part.exists());
+        std::fs::remove_dir_all(data).unwrap();
     }
     #[test]
     fn cache_isolated_per_task_and_rejects_unlisted_paths() {

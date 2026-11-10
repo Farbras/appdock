@@ -10,14 +10,24 @@ fn bundled_apps() -> &'static Vec<Value> {
     })
 }
 pub fn apps() -> Vec<Value> {
+    active().read().unwrap_or_else(|e| e.into_inner()).clone()
+}
+pub fn bundled() -> Vec<Value> {
     bundled_apps().clone()
+}
+fn active() -> &'static std::sync::RwLock<Vec<Value>> {
+    static ACTIVE: OnceLock<std::sync::RwLock<Vec<Value>>> = OnceLock::new();
+    ACTIVE.get_or_init(|| std::sync::RwLock::new(bundled()))
+}
+pub fn activate(apps: Vec<Value>) {
+    *active().write().unwrap_or_else(|e| e.into_inner()) = apps;
 }
 pub fn extensions() -> Vec<Value> {
     serde_json::from_str(include_str!("../../catalog/extensions.json"))
         .expect("Invalid extension catalog")
 }
 pub fn app(id: &str) -> Result<Value, String> {
-    bundled_apps()
+    apps()
         .iter()
         .find(|a| a["id"] == id)
         .cloned()

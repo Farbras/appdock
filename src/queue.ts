@@ -168,6 +168,8 @@ export function migrateQueue(value: QueueState): QueueState {
         t.status = "queued";
         t.percent = null;
         t.downloadProgress = null;
+        t.downloadPaused = false;
+        t.cancelRequested = false;
         t.message =
           "Восстановлено. Состояние будет проверено перед продолжением.";
       }

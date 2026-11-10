@@ -24,6 +24,97 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("demo queue orchestration", () => {
+  it("freezes an active download and resumes its only task without launching a second worker", async () => {
+    const { api } = await import("../src/api");
+    const plan = await api.plan([defaultSelection(getApp("chrome"))], settings);
+    await api.start(plan.token, "demo");
+    await vi.advanceTimersByTimeAsync(700);
+    const active = (await api.queue("demo")).tasks[0];
+    await api.control("pause", "demo");
+    await vi.advanceTimersByTimeAsync(2000);
+    let q = await api.queue("demo");
+    expect(q.tasks[0].status).toBe("downloading");
+    expect(q.tasks[0].downloadPaused).toBe(true);
+    expect(q.tasks[0].percent).toBe(active.percent);
+    expect(q.tasks[0].downloadProgress?.downloadedBytes).toBe(
+      active.downloadProgress?.downloadedBytes,
+    );
+    expect(q.tasks[0].downloadProgress?.bytesPerSecond).toBe(0);
+    await api.control("resume", "demo");
+    await vi.advanceTimersByTimeAsync(5000);
+    q = await api.queue("demo");
+    expect(q.tasks).toHaveLength(1);
+    expect(q.tasks[0].status).toBe("installed");
+    expect(q.running).toBe(false);
+  });
+  it("cancels a paused download and continues the next independent task", async () => {
+    const { api } = await import("../src/api");
+    const plan = await api.plan(
+      [defaultSelection(getApp("chrome")), defaultSelection(getApp("firefox"))],
+      settings,
+    );
+    await api.start(plan.token, "demo");
+    await vi.advanceTimersByTimeAsync(700);
+    const active = (await api.queue("demo")).tasks[0];
+    await api.control("pause", "demo", active.id);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect((await api.queue("demo")).paused).toBe(false);
+    await api.control("cancel", "demo", active.id);
+    await vi.advanceTimersByTimeAsync(5000);
+    const q = await api.queue("demo");
+    expect(q.tasks.map((t) => t.status)).toEqual(["cancelled", "installed"]);
+    expect(q.tasks[0].percent).toBe(active.percent);
+    expect(q.running).toBe(false);
+  });
+  it("global cancellation stops a paused active transfer and queued tasks", async () => {
+    const { api } = await import("../src/api");
+    const plan = await api.plan(
+      [defaultSelection(getApp("chrome")), defaultSelection(getApp("firefox"))],
+      settings,
+    );
+    await api.start(plan.token, "demo");
+    await vi.advanceTimersByTimeAsync(700);
+    await api.control("pause", "demo");
+    await api.control("cancel", "demo");
+    await vi.advanceTimersByTimeAsync(1000);
+    const q = await api.queue("demo");
+    expect(q.tasks.every((t) => t.status === "cancelled")).toBe(true);
+    expect(q.running).toBe(false);
+    expect(q.paused).toBe(false);
+  });
+  it("rejects download controls after the installer has started", async () => {
+    const { api } = await import("../src/api");
+    const plan = await api.plan([defaultSelection(getApp("chrome"))], settings);
+    await api.start(plan.token, "demo");
+    await vi.advanceTimersByTimeAsync(1650);
+    const active = (await api.queue("demo")).tasks[0];
+    expect(active.status).toBe("installing");
+    await expect(api.control("cancel", "demo", active.id)).rejects.toThrow(
+      "установщик",
+    );
+    await api.control("cancel", "demo");
+    await vi.advanceTimersByTimeAsync(1000);
+    expect((await api.queue("demo")).tasks[0].status).toBe("installed");
+  });
+  it.each(["chrome", "firefox", "vscode", "python", "visual-studio"])(
+    "reports download progress for %s during installation",
+    async (id) => {
+      const { api } = await import("../src/api");
+      const plan = await api.plan([defaultSelection(getApp(id))], settings);
+      await api.start(plan.token, "demo");
+      await vi.advanceTimersByTimeAsync(700);
+      const active = (await api.queue("demo")).tasks[0];
+      expect(active.status).toBe("downloading");
+      expect(active.downloadProgress?.remainingBytes).toBeGreaterThan(0);
+      expect(active.downloadProgress?.bytesPerSecond).toBeGreaterThan(0);
+      expect(active.downloadProgress?.remainingSeconds).toBeGreaterThan(0);
+      await vi.advanceTimersByTimeAsync(5000);
+      const done = (await api.queue("demo")).tasks[0];
+      expect(done.status).toBe("installed");
+      expect(done.percent).toBe(100);
+      expect(done.downloadProgress?.remainingBytes).toBe(0);
+    },
+  );
   it.each([
     ["word", "2024"],
     ["office-2021", "2021"],

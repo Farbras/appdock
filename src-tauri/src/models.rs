@@ -114,6 +114,16 @@ impl DownloadProgress {
 #[serde(rename_all = "camelCase")]
 pub struct Task {
     #[serde(default)]
+    pub resume_from: Option<String>,
+    #[serde(default)]
+    pub failure_stage: Option<String>,
+    #[serde(default)]
+    pub readiness: Option<crate::readiness::Readiness>,
+    #[serde(default)]
+    pub installation_outcome: Option<String>,
+    #[serde(default)]
+    pub offline_root: Option<String>,
+    #[serde(default)]
     pub run_id: String,
     #[serde(default)]
     pub dependencies: Vec<String>,
@@ -133,6 +143,10 @@ pub struct Task {
     pub percent: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub download_progress: Option<DownloadProgress>,
+    #[serde(default)]
+    pub download_paused: bool,
+    #[serde(default)]
+    pub cancel_requested: bool,
     pub parent_id: Option<String>,
     pub selection: Selection,
     pub started_at: Option<u64>,

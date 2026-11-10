@@ -7,6 +7,72 @@ import { expandTasks } from "../src/queue";
 import { defaultSelection, getApp } from "../src/catalog";
 
 describe("download status", () => {
+  it("offers pause/resume and cancel only while a transfer is active", () => {
+    const task = expandTasks([defaultSelection(getApp("chrome"))])[0];
+    task.status = "downloading";
+    task.percent = 50;
+    const onControl = () => {};
+    let html = renderToStaticMarkup(
+      createElement(DownloadStatus, { task, onControl }),
+    );
+    expect(html).toContain("Пауза: Google Chrome");
+    expect(html).toContain("Отменить: Google Chrome");
+    task.downloadPaused = true;
+    html = renderToStaticMarkup(
+      createElement(DownloadStatus, { task, onControl }),
+    );
+    expect(html).toContain("Продолжить: Google Chrome");
+    expect(html).toContain("Скачивание приостановлено");
+    expect(html).toContain("0 Б/с");
+    expect(html).toContain("50%");
+    task.cancelRequested = true;
+    html = renderToStaticMarkup(
+      createElement(DownloadStatus, { task, onControl }),
+    );
+    expect(html).toContain("Отмена скачивания…");
+    expect(html.match(/disabled=/g)).toHaveLength(2);
+    task.status = "installing";
+    expect(
+      renderToStaticMarkup(createElement(DownloadStatus, { task, onControl })),
+    ).not.toContain("<button");
+  });
+  it.each(["chrome", "firefox", "sqlite", "vscode", "python", "visual-studio"])(
+    "shows download metrics for %s before installation and keeps the completed transfer visible",
+    (appId) => {
+      const task = expandTasks([defaultSelection(getApp(appId))])[0];
+      task.status = "downloading";
+      let html = renderToStaticMarkup(createElement(DownloadStatus, { task }));
+      expect(html).toContain("Скачивание");
+      expect(html).toContain("рассчитывается…");
+      task.downloadProgress = {
+        downloadedBytes: 52428800,
+        totalBytes: 104857600,
+        remainingBytes: 52428800,
+        bytesPerSecond: 10485760,
+        remainingSeconds: 5,
+      };
+      html = renderToStaticMarkup(createElement(DownloadStatus, { task }));
+      for (const value of ["50%", "50 МБ", "10 МБ/с", "5 с"])
+        expect(html).toContain(value);
+      task.status = "installing";
+      task.downloadProgress.downloadedBytes = 104857600;
+      task.downloadProgress.remainingBytes = 0;
+      task.downloadProgress.remainingSeconds = 0;
+      html = renderToStaticMarkup(createElement(DownloadStatus, { task }));
+      expect(html).toContain("Загрузка завершена");
+      expect(html).toContain("100%");
+      expect(html).toContain("0 Б");
+      expect(html).not.toContain("10 МБ/с");
+    },
+  );
+  it("does not display download telemetry for a queued or manual task", () => {
+    for (const id of ["chrome", "postgres"]) {
+      const task = expandTasks([defaultSelection(getApp(id))])[0];
+      expect(
+        renderToStaticMarkup(createElement(DownloadStatus, { task })),
+      ).toBe("");
+    }
+  });
   it("shows large image sizes, speed, percentage and ETA before opening task details", () => {
     const task = expandTasks([defaultSelection(getApp("office-2021"))])[0];
     task.status = "downloading";

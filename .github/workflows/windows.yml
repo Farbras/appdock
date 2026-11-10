@@ -35,6 +35,8 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw 'UI scenarios failed' }
             npm run test:ui:audit
             if ($LASTEXITCODE -ne 0) { throw 'Audit regression scenarios failed' }
+            npm run test:ui:features
+            if ($LASTEXITCODE -ne 0) { throw 'Feature scenarios failed' }
           } finally { Stop-Process -Id $server.Id -ErrorAction SilentlyContinue }
       - run: npm run bundle
       - uses: actions/upload-artifact@v4
@@ -50,3 +52,6 @@ jobs:
             artifacts/fix-2026-11-02/failure.json
             artifacts/fix-2026-11-02/*.png
             artifacts/ui-smoke-failure.*
+            artifacts/ui-features-smoke.json
+            artifacts/offline-*-1020.png
+            artifacts/features-*-1020.png

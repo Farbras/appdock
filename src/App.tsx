@@ -1,3 +1,10 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { feature } from "./feature-api";
+import {
+  PortabilityScreen,
+  SettingsTransfer,
+} from "./screens/PortabilityScreen";
 import {
   ArrowRight,
   Bell,
@@ -66,6 +73,13 @@ import {
 } from "./components/ui";
 function App() {
   const [profile, setProfile] = useProfile();
+  const [updateSelectionRequest, setUpdateSelectionRequest] = useState(0);
+  const [rulesRevision, setRulesRevision] = useState(0);
+  useEffect(() => {
+    const changed = () => setRulesRevision((n) => n + 1);
+    window.addEventListener("appdock-update-rules", changed);
+    return () => window.removeEventListener("appdock-update-rules", changed);
+  }, []);
   const [undoSelection, setUndoSelection] = useState<Selection[] | null>(null);
   const [reviewItems, setReviewItems] = useState<Selection[]>([]);
   const [editDraft, setEditDraft] = useState<Selection | undefined>();
@@ -124,6 +138,9 @@ function App() {
   const [wizard, setWizard] = useState(false);
   const [wizardId, setWizardId] = useState("python-dev");
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [offlineReviewRoot, setOfflineReviewRoot] = useState<string | null>(
+    null,
+  );
   const [saveName, setSaveName] = useState<string | null>(null);
   const [editingPreset, setEditingPreset] = useState<string | null>(null);
 
@@ -189,11 +206,87 @@ function App() {
       clearInterval(id);
     };
   }, [settings.mode]);
+  useEffect(() => {
+    if (!native) return;
+    void invoke("set_runtime_mode", { mode: settings.mode }).catch((e) =>
+      notify(String(e)),
+    );
+    if (settings.mode !== "live") return;
+    let alive = true;
+    const stops: (() => void)[] = [];
+    const navigate = (route: string) => {
+      if (!alive) return;
+      setNav(route);
+      if (route === "updates") setUpdateSelectionRequest((n) => n + 1);
+    };
+    void listen<string>("appdock-navigate", (e) => navigate(e.payload)).then(
+      (fn) => {
+        if (alive) stops.push(fn);
+        else fn();
+      },
+    );
+    void listen<string>("appdock-background-warning", (e) =>
+      notify(e.payload),
+    ).then((fn) => {
+      if (alive) stops.push(fn);
+      else fn();
+    });
+    const accept = (status: {
+      scan?: import("./types").ScanResult;
+      error?: string;
+      checkedAt?: number;
+    }) => {
+      if (!alive) return;
+      if (status.scan) {
+        setInstalled(status.scan.installed);
+        setUpdatesChecked(status.scan.updatesChecked);
+        setScanWarning(status.scan.warnings.join(" "));
+        setDetectedAt(status.checkedAt || Date.now());
+      }
+      if (status.error) setScanWarning(status.error);
+    };
+    void listen<Parameters<typeof accept>[0]>("appdock-updates", (e) =>
+      accept(e.payload),
+    ).then((fn) => {
+      if (alive) stops.push(fn);
+      else fn();
+    });
+    void feature<{ route?: string; status: Parameters<typeof accept>[0] }>(
+      "background-state",
+    )
+      .then((r) => {
+        accept(r.status);
+        if (r.route) navigate(r.route);
+      })
+      .catch((e) => notify(String(e)));
+    return () => {
+      alive = false;
+      stops.forEach((fn) => fn());
+    };
+  }, [settings.mode]);
+  useEffect(() => {
+    if (!native || settings.mode !== "live") return;
+    void feature("sync-update-rules", {
+      pins: profile.items,
+      exclusions: readStorage("update-exclusions", []),
+      demo: false,
+    }).catch((e) => {
+      if (!String(e).includes("Другая операция")) notify(String(e));
+    });
+  }, [
+    settings.mode,
+    profile.items,
+    nav,
+    rulesRevision,
+    detectedAt,
+    queue.running,
+  ]);
   const refreshedRun = useRef("");
   useEffect(() => {
     const run = queue.runs?.find((r) => r.id === queue.currentRunId);
     if (
       run?.finishedAt &&
+      !queue.running &&
       refreshedRun.current !== run.id &&
       settings.mode === "live"
     ) {
@@ -244,8 +337,13 @@ function App() {
     const id = requestAnimationFrame(() => searchRef.current?.focus());
     return () => cancelAnimationFrame(id);
   }, [nav, focusRequest]);
-  const changeSettings = (patch: Partial<Settings>) =>
-    setSettings((s) => ({ ...s, ...patch }));
+  const changeSettings = (patch: Partial<Settings>) => {
+    if (patch.mode && native) {
+      void invoke("set_runtime_mode", { mode: patch.mode })
+        .then(() => setSettings((s) => ({ ...s, ...patch })))
+        .catch((e) => notify(String(e)));
+    } else setSettings((s) => ({ ...s, ...patch }));
+  };
   const getInstalled = (app: Product) =>
     matchInstalled(app, installed, undefined);
   const toggleApp = (app: Product) => {
@@ -315,6 +413,7 @@ function App() {
     }
   };
   const review = async (downloadOnly = false, explicit?: Selection[]) => {
+    setOfflineReviewRoot(null);
     const current = planRequest.current.begin(),
       mode = settings.mode;
     setRetryContext(null);
@@ -339,6 +438,31 @@ function App() {
       if (current() && modeRef.current === mode) setLoading(false);
     }
   };
+  const reviewOffline = async (
+    items: Selection[],
+    root = offlineReviewRoot,
+  ) => {
+    if (!root || !items.length) return;
+    const current = planRequest.current.begin(),
+      mode = settings.mode;
+    setLoading(true);
+    try {
+      const p = await feature<Plan>(
+        "offline-prepare",
+        { folder: root, items, includedAppIds: items.map((s) => s.appId) },
+        mode,
+      );
+      if (!current() || modeRef.current !== mode) return;
+      setRetryContext(null);
+      setReviewItems(p.items.map((i) => i.selection));
+      setOfflineReviewRoot(root);
+      setPlan(p);
+    } catch (e) {
+      if (current() && modeRef.current === mode) notify(String(e));
+    } finally {
+      if (current() && modeRef.current === mode) setLoading(false);
+    }
+  };
   const launch = async () => {
     if (!plan) return;
     if (plan.mode !== settings.mode) {
@@ -349,6 +473,7 @@ function App() {
     setBusy(true);
     try {
       await api.start(plan.token, settings.mode);
+      setOfflineReviewRoot(null);
       setPlan(null);
       setCartOpen(false);
       setNav("queue");
@@ -411,6 +536,10 @@ function App() {
       );
       if (!current() || modeRef.current !== mode) return;
       setRetryContext({ runId, status, taskId });
+      setOfflineReviewRoot(
+        p.items.flatMap((i) => i.tasks).find((t) => t.offlineRoot)
+          ?.offlineRoot || null,
+      );
       setReviewItems(p.items.map((i) => i.selection));
       setPlan(p);
     } catch (e) {
@@ -495,6 +624,7 @@ function App() {
     settings: "Настройки",
     updates: "Центр обновлений",
     profile: "Профиль компьютера",
+    portability: "Переносимый офлайн-набор",
     downloads: "Полученные файлы",
   };
   const pageDescriptions: Record<string, string> = {
@@ -510,6 +640,7 @@ function App() {
     updates: "Выберите поддерживаемые обновления и проверьте план.",
     profile:
       "Профиль — желаемый состав компьютера. Сравните его с обнаруженными программами.",
+    portability: "Подготовьте проверенные установщики для компьютера без сети.",
     downloads:
       "Полученные файлы — готовые загрузки, их происхождение и проверка.",
   };
@@ -725,6 +856,7 @@ function App() {
               )}
             {nav === "updates" && (
               <UpdatesScreen
+                selectionRequest={updateSelectionRequest}
                 installed={installed}
                 profile={profile.items}
                 mode={settings.mode}
@@ -737,16 +869,40 @@ function App() {
               />
             )}
             {nav === "profile" && (
-              <ProfileScreen
-                checked={settings.mode === "demo" || detectedAt !== null}
-                onScan={() => void scan()}
-                profile={profile}
-                setProfile={setProfile}
-                installed={installed}
-                selection={selection}
+              <>
+                <SettingsTransfer
+                  mode={settings.mode}
+                  running={queue.running}
+                  notify={notify}
+                  onReview={(items) => void review(false, items)}
+                />
+                <ProfileScreen
+                  checked={settings.mode === "demo" || detectedAt !== null}
+                  onScan={() => void scan()}
+                  profile={profile}
+                  setProfile={setProfile}
+                  installed={installed}
+                  selection={selection}
+                  mode={settings.mode}
+                  onReview={(items) => void review(false, items)}
+                  notify={notify}
+                />
+              </>
+            )}
+            {nav === "portability" && (
+              <PortabilityScreen
                 mode={settings.mode}
-                onReview={(items) => void review(false, items)}
+                running={queue.running}
                 notify={notify}
+                onPlan={(p) => {
+                  setOfflineReviewRoot(
+                    p.items.flatMap((i) => i.tasks).find((t) => t.offlineRoot)
+                      ?.offlineRoot || null,
+                  );
+                  setRetryContext(null);
+                  setReviewItems(p.items.map((i) => i.selection));
+                  setPlan(p);
+                }}
               />
             )}
             {nav === "downloads" && (
@@ -852,6 +1008,10 @@ function App() {
                 retryTarget.id,
                 s,
               );
+            else if (returnToPlan && offlineReviewRoot)
+              void reviewOffline(
+                reviewItems.map((i) => (i.appId === s.appId ? s : i)),
+              );
             else if (returnToPlan && retryContext)
               void retry(
                 retryContext.runId,
@@ -881,8 +1041,14 @@ function App() {
           key={plan.token}
           plan={plan}
           settings={settings}
-          busy={busy}
-          onClose={() => !busy && setPlan(null)}
+          busy={busy || loading}
+          onClose={() => {
+            if (!busy) {
+              planRequest.current.invalidate();
+              setLoading(false);
+              setPlan(null);
+            }
+          }}
           onStart={() => void launch()}
           onEdit={(s) => {
             setEditDraft(s);
@@ -894,7 +1060,8 @@ function App() {
             const remaining = reviewItems.filter((s) => s.appId !== id);
             setPlan(null);
             if (remaining.length) {
-              if (retryContext)
+              if (offlineReviewRoot) void reviewOffline(remaining);
+              else if (retryContext)
                 void retry(
                   retryContext.runId,
                   retryContext.status,
@@ -906,7 +1073,8 @@ function App() {
             }
           }}
           onRefresh={() => {
-            if (retryContext)
+            if (offlineReviewRoot) void reviewOffline(reviewItems);
+            else if (retryContext)
               void retry(
                 retryContext.runId,
                 retryContext.status,
@@ -1048,7 +1216,9 @@ function App() {
           <div className="modal-body">
             <p>
               Будут удалены результаты и журналы завершённых задач.
-              Установленные программы останутся на компьютере.
+              Установленные программы останутся на компьютере. Сохранённые части
+              удаляемых прямых загрузок также удалятся, если они не нужны
+              незавершённой задаче. Готовые файлы сохранятся.
             </p>
           </div>
           <div className="modal-footer">

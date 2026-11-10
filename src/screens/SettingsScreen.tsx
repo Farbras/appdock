@@ -1,3 +1,4 @@
+import { AdvancedSettings } from "../components/AdvancedSettings";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -35,6 +36,11 @@ export function SettingsScreen({
 }) {
   return (
     <div className="settings-page">
+      <AdvancedSettings
+        mode={settings.mode}
+        running={queue.running}
+        notify={notify}
+      />
       <section className="settings-section">
         <div className="section-heading">
           <div>

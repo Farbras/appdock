@@ -1,4 +1,6 @@
-use crate::{catalog, models::*, system, winget};
+use crate::{
+    catalog, models::*, system, transfer_control, winget, winget_progress, winget_terminal,
+};
 use serde_json::Value;
 use std::{
     collections::HashSet,
@@ -118,6 +120,11 @@ pub fn build_tasks(items: &[Selection]) -> Result<Vec<Task>, String> {
         catalog::validate(selection)?;
         let parent = uuid::Uuid::new_v4().to_string();
         tasks.push(Task {
+            readiness: None,
+            installation_outcome: None,
+            offline_root: None,
+            failure_stage: None,
+            resume_from: None,
             id: parent.clone(),
             run_id: String::new(),
             dependencies: vec![],
@@ -132,6 +139,8 @@ pub fn build_tasks(items: &[Selection]) -> Result<Vec<Task>, String> {
             log: vec![],
             percent: None,
             download_progress: None,
+            download_paused: false,
+            cancel_requested: false,
             parent_id: None,
             selection: selection.clone(),
             started_at: None,
@@ -331,6 +340,8 @@ impl Engine {
                     t.status = "queued".into();
                     t.percent = None;
                     t.download_progress = None;
+                    t.download_paused = false;
+                    t.cancel_requested = false;
                     t.message="Восстановлено после перезапуска. Перед повтором будет выполнена проверка состояния.".into();
                     t.log.push("Выполнение было прервано. Установщик мог завершиться самостоятельно; повтор требует проверки.".into())
                 }
@@ -380,11 +391,18 @@ impl Engine {
 }
 pub fn update(shared: &Shared, app: &AppHandle, id: &str, status: &str, message: &str) {
     let mut e = lock(shared);
+    let queue_paused = e.queue.paused;
     if let Some(t) = e.queue.tasks.iter_mut().find(|t| t.id == id) {
+        if ["error", "blocked", "cancelled"].contains(&status) {
+            t.failure_stage = Some(t.status.as_str().into());
+        }
         t.last_activity_at = now();
         t.status = status.into();
         t.message = message.into();
-        if matches!(status, "checking" | "downloading" | "queued") {
+        if status == "downloading" && queue_paused {
+            t.download_paused = true;
+        }
+        if matches!(status, "checking" | "downloading" | "installing" | "queued") {
             t.download_progress = None;
         }
         t.percent = if status == "downloaded" {
@@ -396,6 +414,16 @@ pub fn update(shared: &Shared, app: &AppHandle, id: &str, status: &str, message:
         };
         t.log.push(message.into());
         if terminal(status) {
+            if let Some(p) = t.download_progress.as_mut() {
+                p.bytes_per_second = 0.0;
+                p.remaining_seconds = if p.remaining_bytes == Some(0) {
+                    Some(0)
+                } else {
+                    None
+                };
+            }
+            t.download_paused = false;
+            t.cancel_requested = false;
             t.finished_at = Some(now())
         } else if t.started_at.is_none() {
             t.started_at = Some(now())
@@ -423,6 +451,29 @@ pub fn update(shared: &Shared, app: &AppHandle, id: &str, status: &str, message:
         e.queue.storage_error = Some(err);
     }
     let _ = app.emit("queue-changed", &e.queue);
+    let data = e.data_dir.clone();
+    let run = e
+        .queue
+        .tasks
+        .iter()
+        .find(|t| t.id == id)
+        .map(|t| t.run_id.clone())
+        .unwrap_or_else(|| id.into());
+    drop(e);
+    if ["error", "action-required", "reboot-required"].contains(&status) {
+        crate::background::notify(
+            app,
+            &data,
+            &format!("run:{run}:{status}"),
+            200,
+            if status == "error" {
+                "Ошибка задачи AppDock"
+            } else {
+                "AppDock: требуется действие"
+            },
+            "Откройте очередь, чтобы увидеть причину и следующий шаг.",
+        );
+    }
 }
 fn append(shared: &Shared, app: &AppHandle, id: &str, line: &str) {
     let mut e = lock(shared);
@@ -448,6 +499,9 @@ fn append(shared: &Shared, app: &AppHandle, id: &str, line: &str) {
 fn download_progress(shared: &Shared, app: &AppHandle, id: &str, progress: DownloadProgress) {
     let mut e = lock(shared);
     if let Some(task) = e.queue.tasks.iter_mut().find(|t| t.id == id) {
+        if task.download_paused || task.cancel_requested {
+            return;
+        }
         task.last_activity_at = now();
         task.percent = progress.percent();
         task.download_progress = Some(progress);
@@ -456,12 +510,72 @@ fn download_progress(shared: &Shared, app: &AppHandle, id: &str, progress: Downl
     e.queue.updated_at = now();
     let _ = app.emit("queue-changed", &e.queue);
 }
+fn winget_download_progress(
+    shared: &Shared,
+    app: &AppHandle,
+    task: &Task,
+    snapshot: winget_progress::Snapshot,
+) {
+    let mut e = lock(shared);
+    let queue_paused = e.queue.paused;
+    if let Some(saved) = e.queue.tasks.iter_mut().find(|t| t.id == task.id) {
+        let starting = saved.status != "downloading";
+        apply_winget_progress(saved, snapshot);
+        if queue_paused && starting && downloading(saved) {
+            saved.download_paused = true;
+            if let Some(progress) = &mut saved.download_progress {
+                progress.bytes_per_second = 0.0;
+                progress.remaining_seconds = None;
+            }
+        }
+    }
+    e.queue.updated_at = now();
+    let _ = app.emit("queue-changed", &e.queue);
+}
+fn apply_winget_progress(task: &mut Task, snapshot: winget_progress::Snapshot) {
+    if task.cancel_requested || (task.download_paused && !snapshot.complete) {
+        return;
+    }
+    if snapshot.complete {
+        task.download_paused = false;
+    }
+    let (status, message) = if snapshot.complete {
+        if task.action == "download" {
+            ("verifying", "Скачивание завершено. WinGet проверяет файлы.")
+        } else {
+            ("installing", "Скачивание завершено. WinGet выполняет установку; при необходимости подтвердите штатный UAC.")
+        }
+    } else {
+        ("downloading", "WinGet скачивает файлы программы.")
+    };
+    if task.status != "attention" {
+        task.status = status.into();
+        task.message = message.into();
+    }
+    task.last_activity_at = now();
+    task.percent = snapshot.progress.percent();
+    task.download_progress = Some(snapshot.progress);
+}
+fn transfer_request(shared: &Shared, id: &str) -> transfer_control::Request {
+    let e = lock(shared);
+    let Some(task) = e.queue.tasks.iter().find(|t| t.id == id) else {
+        return transfer_control::Request::Run;
+    };
+    if task.cancel_requested {
+        transfer_control::Request::Cancel
+    } else if task.status == "downloading" && task.download_paused {
+        transfer_control::Request::Pause
+    } else {
+        transfer_control::Request::Run
+    }
+}
 pub fn prepare(
     shared: &Shared,
     items: Vec<Selection>,
     skip_current: bool,
     parallel_downloads: usize,
 ) -> Result<Plan, String> {
+    let _operation = crate::managed::exclusive()?;
     if items.is_empty() || items.len() > 100 {
         return Err("Выберите от 1 до 100 программ".into());
     }
@@ -671,6 +785,10 @@ pub fn prepare(
     })
 }
 pub fn start(shared: &Shared, token: &str, app: AppHandle) -> Result<(), String> {
+    let _operation = crate::managed::exclusive()?;
+    if crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("AppDock завершает работу; запустите приложение заново для продолжения".into());
+    }
     {
         let mut e = lock(shared);
         if e.worker_active {
@@ -769,6 +887,14 @@ pub fn prepare_retry(
     if chosen.is_empty() {
         return Err("В выбранном запуске нет задач с этим статусом".into());
     }
+    if let Some(root) = chosen.iter().find_map(|t| t.offline_root.as_deref()) {
+        return crate::offline::plan(
+            shared,
+            std::path::Path::new(root),
+            Some(chosen.iter().map(|t| t.app_id.clone()).collect()),
+            edits,
+        );
+    }
     let mut items: Vec<_> = run
         .selections
         .into_iter()
@@ -799,6 +925,16 @@ pub fn prepare_retry(
         .retain(|t| chosen.iter().any(|c| matches(t, c)));
     let selected = pending.tasks.clone();
     for task in &mut pending.tasks {
+        if task.action == "download" {
+            if let Some(previous) = chosen.iter().find(|c| matches(task, c)) {
+                task.resume_from = Some(
+                    previous
+                        .resume_from
+                        .clone()
+                        .unwrap_or_else(|| previous.id.clone()),
+                );
+            }
+        }
         for dep in &mut task.dependencies {
             if !selected.iter().any(|t| &t.id == dep) {
                 if let Some(template) = generated.iter().find(|t| &t.id == dep) {
@@ -837,14 +973,14 @@ fn run_command(
     task: &Task,
     command: std::process::Command,
 ) -> Result<i32, String> {
-    run_command_monitored(shared, app, task, command, &mut || {})
+    run_command_monitored(shared, app, task, command, &mut |_| {})
 }
 fn run_command_monitored(
     shared: &Shared,
     app: &AppHandle,
     task: &Task,
     mut command: std::process::Command,
-    monitor: &mut dyn FnMut(),
+    monitor: &mut dyn FnMut(std::time::Duration),
 ) -> Result<i32, String> {
     let diagnostic = command
         .get_args()
@@ -885,11 +1021,42 @@ fn run_command_monitored(
     let mut attention = false;
     let direct_download = task.action == "download"
         && catalog::app(&task.app_id).is_ok_and(|a| catalog::direct_download_url(&a).is_some());
+    let mut pause = if direct_download {
+        Some(transfer_control::ProcessPause::new(child.id())?)
+    } else {
+        None
+    };
     let status = loop {
-        monitor();
         if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
             break status;
         }
+        if let Some(pause) = &mut pause {
+            let request = transfer_request(shared, &task.id);
+            if request == transfer_control::Request::Cancel {
+                let _ = pause.set_paused(false);
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = out.join();
+                let _ = err.join();
+                return Err(transfer_control::CANCELLED.into());
+            }
+            if let Err(message) = pause.set_paused(request == transfer_control::Request::Pause) {
+                let _ = child.kill();
+                let _ = child.wait();
+                let _ = out.join();
+                let _ = err.join();
+                return Err(message);
+            }
+            if pause.paused() {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                continue;
+            }
+        }
+        let elapsed = pause
+            .as_ref()
+            .map(|p| p.elapsed())
+            .unwrap_or_else(|| began.elapsed());
+        monitor(elapsed);
         let limit = if diagnostic {
             45
         } else if direct_download {
@@ -899,7 +1066,7 @@ fn run_command_monitored(
         } else {
             1200
         };
-        if began.elapsed().as_secs() > limit && !attention {
+        if elapsed.as_secs() > limit && !attention {
             if diagnostic || task.action == "download" {
                 let _ = child.kill();
                 let _ = child.wait();
@@ -919,8 +1086,65 @@ fn run_command_monitored(
     Ok(status.code().unwrap_or(-1))
 }
 fn execute(shared: &Shared, app: &AppHandle, task: Task) {
-    if let Err(message) = execute_inner(shared, app, &task) {
-        update(shared, app, &task.id, "error", &message)
+    let outcome = execute_inner(shared, app, &task);
+    if outcome.is_ok() && ["install", "extension"].contains(&task.action.as_str()) {
+        let should_check = lock(shared).queue.tasks.iter().any(|t| {
+            t.id == task.id
+                && ["installed", "current", "action-required", "reboot-required"]
+                    .contains(&t.status.as_str())
+        });
+        if should_check {
+            let checked = crate::readiness::check(&task.selection);
+            let mut e = lock(shared);
+            if let Some(t) = e.queue.tasks.iter_mut().find(|t| t.id == task.id) {
+                if t.status == "current" {
+                    t.installation_outcome = Some("skipped".into());
+                }
+                t.readiness = Some(checked);
+            }
+            let _ = e.save();
+            let _ = app.emit("queue-changed", &e.queue);
+        }
+    }
+    if let Err(message) = outcome {
+        if message == "APPDOCK_DOWNLOAD_CLOSED" {
+            update(
+                shared,
+                app,
+                &task.id,
+                "queued",
+                "Загрузка сохранена при закрытии. Продолжите очередь после открытия AppDock.",
+            );
+            return;
+        }
+        if message == transfer_control::CANCELLED {
+            update(
+                shared,
+                app,
+                &task.id,
+                "cancelled",
+                "Скачивание отменено пользователем.",
+            );
+        } else {
+            update(shared, app, &task.id, "error", &message)
+        }
+    }
+    if let Some(parent_id) = &task.parent_id {
+        let parent = lock(shared)
+            .queue
+            .tasks
+            .iter()
+            .find(|t| &t.id == parent_id && ["installed", "current"].contains(&t.status.as_str()))
+            .cloned();
+        if let Some(parent) = parent {
+            let checked = crate::readiness::check(&parent.selection);
+            let mut e = lock(shared);
+            if let Some(t) = e.queue.tasks.iter_mut().find(|t| &t.id == parent_id) {
+                t.readiness = Some(checked);
+            }
+            let _ = e.save();
+            let _ = app.emit("queue-changed", &e.queue);
+        }
     }
 }
 fn run_winget(
@@ -939,7 +1163,64 @@ fn run_winget(
             append(shared, app, &task.id, &format!("WinGet: {args:?}"));
             let mut command = system::command("winget");
             command.args(args);
-            let code = run_command(shared, app, task, command)?;
+            let operation = args
+                .first()
+                .and_then(|a| a.to_str())
+                .is_some_and(|verb| ["install", "upgrade", "download"].contains(&verb));
+            let code = if operation {
+                if task.action == "download" {
+                    update(shared, app, &task.id, "downloading", "WinGet скачивает установщик и проверяет SHA-256 по манифесту. Ожидание данных о загрузке…");
+                } else {
+                    update(shared, app, &task.id, "installing", "WinGet выполняет установку; при необходимости подтвердите штатный UAC. Автоматическая перезагрузка не разрешена.");
+                }
+                let mut tracker = winget_progress::WingetProgress::default();
+                let mut elapsed = std::time::Duration::ZERO;
+                let mut attention = false;
+                let code = winget_terminal::run_controlled(
+                    &command,
+                    || transfer_request(shared, &task.id),
+                    |event| {
+                        match event {
+                            winget_terminal::Event::Output(bytes) => {
+                                tracker.feed(&bytes);
+                                if tracker.completed() {
+                                    if let Some(snapshot) = tracker.poll(elapsed) {
+                                        winget_download_progress(shared, app, task, snapshot);
+                                    }
+                                }
+                                for line in tracker.take_log() {
+                                    append(shared, app, &task.id, &line);
+                                }
+                            }
+                            winget_terminal::Event::Tick(time) => {
+                                elapsed = time;
+                                if let Some(snapshot) = tracker.poll(time) {
+                                    winget_download_progress(shared, app, task, snapshot);
+                                }
+                                if task.action == "download" && time.as_secs() > 600 {
+                                    return Err("Превышено время загрузки (10 минут). Проверьте сеть и повторите через новый план.".into());
+                                }
+                                if time.as_secs() > 1200 && !attention {
+                                    attention = true;
+                                    update(shared, app, &task.id, "attention", "Операция длится более 20 минут. Проверьте UAC и окно установщика. AppDock продолжает наблюдение за процессом; работающий установщик не отменён.");
+                                }
+                            }
+                            winget_terminal::Event::Paused(false) => tracker.reset_speed(),
+                            winget_terminal::Event::Paused(true) => {}
+                        }
+                        Ok(())
+                    },
+                )?;
+                if code == 0 {
+                    tracker.succeed();
+                }
+                if let Some(snapshot) = tracker.poll(elapsed) {
+                    winget_download_progress(shared, app, task, snapshot);
+                }
+                code
+            } else {
+                run_command(shared, app, task, command)?
+            };
             append(
                 shared,
                 app,
@@ -1102,10 +1383,12 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
                 task.name
             ),
         );
-        crate::downloads::download_direct(
+        crate::resumable::direct(
             &data,
             task,
-            |command, monitor| run_command_monitored(shared, app, task, command, monitor),
+            || transfer_request(shared, &task.id),
+            || crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed),
+            crate::background::download_limit,
             |progress| download_progress(shared, app, &task.id, progress),
         )?;
         let name = catalog::direct_download_url(&a)
@@ -1122,6 +1405,40 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
                 "{} скачан. Откройте папку загрузок, подключите {name} и запустите setup.exe.",
                 task.name
             ),
+        );
+        return Ok(());
+    }
+    if let Some(root) = &task.offline_root {
+        update(
+            shared,
+            app,
+            &task.id,
+            "installing",
+            "Проверка доверенного локального EXE и установка без скачивания",
+        );
+        let command = crate::offline::command(std::path::Path::new(root), &data, task)?;
+        let code = run_command(shared, app, task, command)?;
+        if code != 0 && code != 3010 {
+            return Err(format!("Локальный установщик завершился с кодом {code}"));
+        }
+        if let Some(t) = lock(shared)
+            .queue
+            .tasks
+            .iter_mut()
+            .find(|t| t.id == task.id)
+        {
+            t.installation_outcome = Some("installed".into());
+        }
+        update(
+            shared,
+            app,
+            &task.id,
+            if code == 3010 {
+                "reboot-required"
+            } else {
+                "installed"
+            },
+            "Локальный установщик завершён; проверяется готовность",
         );
         return Ok(());
     }
@@ -1243,7 +1560,6 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
         cmd.arg("--download-directory")
             .arg(download)
             .args(["--architecture", &sys.arch]);
-        update(shared,app,&task.id,"downloading","WinGet скачивает установщик и проверяет SHA-256 по манифесту. Процент и скорость не предоставлены адаптером.");
     } else {
         cmd.arg("--silent");
         if task.app_id == "vscode" {
@@ -1307,7 +1623,6 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
             let args=format!("{modify}--wait --passive --norestart --config \"{}\" --includeRecommended --includeOptional",config.display());
             cmd.args(["--override", &args]);
         }
-        update(shared,app,&task.id,"installing","WinGet выполняет установку; при необходимости подтвердите штатный UAC. Автоматическая перезагрузка не разрешена.");
     }
     let code = run_winget(shared, app, task, cmd)?;
     let unsigned = code as u32;
@@ -1346,12 +1661,39 @@ fn execute_inner(shared: &Shared, app: &AppHandle, task: &Task) -> Result<(), St
         "verifying",
         "Проверка обнаружения после завершения установщика",
     );
-    let detected = system::scan(&data)?;
+    if let Some(t) = lock(shared)
+        .queue
+        .tasks
+        .iter_mut()
+        .find(|t| t.id == task.id)
+    {
+        t.installation_outcome = Some(
+            if verb == "upgrade" {
+                "updated"
+            } else {
+                "installed"
+            }
+            .into(),
+        );
+    }
+    let detected = match system::scan(&data) {
+        Ok(v) => v,
+        Err(e) => {
+            append(
+                shared,
+                app,
+                &task.id,
+                &format!("Установщик завершён, обнаружение недоступно: {e}"),
+            );
+            update(shared,app,&task.id,"installed","Установщик завершён успешно. Результат проверки готовности хранится отдельно от обнаружения.");
+            return Ok(());
+        }
+    };
     if !detected
         .iter()
         .any(|i| i.package_id.eq_ignore_ascii_case(&package))
     {
-        update(shared,app,&task.id,"action-required","Установщик завершился успешно, но программа пока не обнаружена. Проверьте приложение и перезапустите проверку.");
+        update(shared,app,&task.id,"installed","Установщик завершился успешно; запись обнаружения пока отсутствует. Выполняется отдельная проверка готовности без переустановки.");
         return Ok(());
     }
     if let Some(found) = detected
@@ -1418,6 +1760,14 @@ pub fn spawn_worker(shared: &Shared, app: AppHandle) {
     }
     let shared = shared.clone();
     std::thread::spawn(move || loop {
+        if crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
+            let mut e = lock(&shared);
+            e.worker_active = false;
+            e.queue.running = false;
+            e.queue.paused = true;
+            let _ = e.save();
+            return;
+        }
         let tasks = {
             let mut e = lock(&shared);
             let queued: Vec<_> = e
@@ -1429,10 +1779,31 @@ pub fn spawn_worker(shared: &Shared, app: AppHandle) {
                 .collect();
             if queued.is_empty() {
                 e.queue.running = false;
+                e.queue.paused = false;
                 e.worker_active = false;
                 finish_run(&mut e.queue);
                 let _ = e.save();
                 let _ = app.emit("queue-changed", &e.queue);
+                let data = e.data_dir.clone();
+                let run = e.queue.current_run_id.clone().unwrap_or_default();
+                let issue = e.queue.tasks.iter().filter(|t| t.run_id == run).any(|t| {
+                    ["error", "action-required", "reboot-required", "blocked"]
+                        .contains(&t.status.as_str())
+                        || t.readiness.as_ref().is_some_and(|r| r.state != "ready")
+                });
+                drop(e);
+                crate::background::notify(
+                    &app,
+                    &data,
+                    &format!("run:{run}"),
+                    200,
+                    if issue {
+                        "Очередь завершена: требуется внимание"
+                    } else {
+                        "Очередь AppDock завершена"
+                    },
+                    "Откройте очередь для итогов и результатов проверки готовности.",
+                );
                 return;
             }
             if e.queue.paused {
@@ -1486,29 +1857,32 @@ pub fn control(
     action: &str,
     task_id: Option<&str>,
 ) -> Result<(), String> {
+    let _operation = if action == "resume" {
+        Some(crate::managed::exclusive()?)
+    } else {
+        None
+    };
+    if action == "resume" && crate::background::CLOSING.load(std::sync::atomic::Ordering::Relaxed) {
+        return Err("AppDock завершает работу".into());
+    }
     let mut should_spawn = false;
     {
         let mut e = lock(shared);
         match action {
-            "pause" => e.queue.paused = true,
+            "pause" => control_transfers(&mut e.queue, action, task_id)?,
             "resume" => {
-                if !e.queue.tasks.iter().any(|t| t.status == "queued") {
-                    return Err("Нет ожидающих задач".into());
-                }
-                e.queue.paused = false;
+                control_transfers(&mut e.queue, action, task_id)?;
                 should_spawn = !e.worker_active;
             }
             "cancel" => {
-                for t in &mut e.queue.tasks {
-                    if t.status == "queued" && task_id.is_none_or(|id| t.id == id) {
-                        t.status = "cancelled".into();
-                        t.message =
-                            "Отменено пользователем. Работающий установщик не прерывается.".into();
-                        t.finished_at = Some(now())
-                    }
-                }
+                control_transfers(&mut e.queue, action, task_id)?;
+                for t in e.queue.tasks.iter().filter(|t|t.status=="cancelled" && task_id.is_none_or(|id|id==t.id)) {crate::downloads::discard_partial(&e.data_dir,t)?;}
                 if !e.worker_active {
-                    e.queue.running = false
+                    e.queue.running = false;
+                    if e.queue.tasks.iter().filter(|t| Some(&t.run_id) == e.queue.current_run_id.as_ref()).all(|t| terminal(&t.status)) {
+                        finish_run(&mut e.queue);
+                        e.queue.paused = false;
+                    }
                 }
             }
             "retry" => return Err("Повтор требует нового плана. Используйте «Повторить ошибки» и подтвердите проверку.".into()),
@@ -1522,7 +1896,7 @@ pub fn control(
                 if e.worker_active {
                     return Err("Сначала завершите очередь".into());
                 }
-                clear_finished(&mut e.queue);
+                let data=e.data_dir.clone();crate::downloads::clear_finished_with_parts(&mut e.queue,&data)?;
             }
             _ => return Err("Неизвестное управление очередью".into()),
         }
@@ -1535,11 +1909,94 @@ pub fn control(
     Ok(())
 }
 
+fn downloading(task: &Task) -> bool {
+    task.status == "downloading"
+        && task
+            .download_progress
+            .as_ref()
+            .is_none_or(|p| p.remaining_bytes != Some(0))
+}
+
+fn control_transfers(queue: &mut Queue, action: &str, task_id: Option<&str>) -> Result<(), String> {
+    if let Some(id) = task_id {
+        let task = queue
+            .tasks
+            .iter()
+            .find(|t| t.id == id)
+            .ok_or("Задача не найдена")?;
+        if Some(&task.run_id) != queue.current_run_id.as_ref() {
+            return Err("Задача не относится к текущему запуску".into());
+        }
+        if action == "cancel" && task.status == "queued" {
+            // Queued operations can be cancelled before starting.
+        } else if !downloading(task) || task.cancel_requested {
+            return Err(
+                "Эта задача больше не скачивается. Работающий установщик не прерывается.".into(),
+            );
+        }
+    }
+    if task_id.is_none() {
+        if action == "pause" {
+            queue.paused = true;
+        }
+        if action == "resume" {
+            if !queue
+                .tasks
+                .iter()
+                .any(|t| Some(&t.run_id) == queue.current_run_id.as_ref() && !terminal(&t.status))
+            {
+                return Err("Нет ожидающих задач или приостановленных загрузок".into());
+            }
+            queue.paused = false;
+        }
+    }
+    for task in &mut queue.tasks {
+        if Some(&task.run_id) != queue.current_run_id.as_ref()
+            || task_id.is_some_and(|id| task.id != id)
+        {
+            continue;
+        }
+        if action == "cancel" && task.status == "queued" {
+            task.status = "cancelled".into();
+            task.message = "Отменено пользователем до запуска".into();
+            task.finished_at = Some(now());
+        } else if downloading(task) && !task.cancel_requested {
+            match action {
+                "pause" => {
+                    task.download_paused = true;
+                    task.message = "Скачивание приостановлено. Нажмите «Продолжить».".into();
+                }
+                "resume" => {
+                    task.download_paused = false;
+                    task.message = "Скачивание продолжается".into();
+                }
+                "cancel" => {
+                    task.cancel_requested = true;
+                    task.download_paused = false;
+                    task.message = "Отмена скачивания…".into();
+                }
+                _ => {}
+            }
+            if let Some(progress) = &mut task.download_progress {
+                progress.bytes_per_second = 0.0;
+                progress.remaining_seconds = None;
+            }
+            task.last_activity_at = now();
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     fn task(status: &str) -> Task {
         Task {
+            readiness: None,
+            installation_outcome: None,
+            offline_root: None,
+            failure_stage: None,
+            resume_from: None,
             run_id: String::new(),
             dependencies: vec![],
             last_activity_at: 0,
@@ -1554,6 +2011,8 @@ mod tests {
             log: vec![],
             percent: None,
             download_progress: None,
+            download_paused: false,
+            cancel_requested: false,
             parent_id: None,
             selection: Selection {
                 app_id: "chrome".into(),
@@ -1564,6 +2023,124 @@ mod tests {
             },
             started_at: None,
             finished_at: None,
+        }
+    }
+    #[test]
+    fn transfer_controls_are_scoped_and_never_cancel_an_installer() {
+        let mut q = Queue::default();
+        q.current_run_id = Some("run".into());
+        q.tasks = ["downloading", "downloading", "installing", "queued"]
+            .iter()
+            .map(|status| {
+                let mut t = task(status);
+                t.run_id = "run".into();
+                if *status == "downloading" {
+                    t.download_progress = Some(DownloadProgress::new(100, Some(1000), 50.0));
+                }
+                t
+            })
+            .collect();
+        let first = q.tasks[0].id.clone();
+        control_transfers(&mut q, "pause", Some(&first)).unwrap();
+        assert!(q.tasks[0].download_paused);
+        assert!(!q.tasks[1].download_paused);
+        assert!(!q.paused);
+        control_transfers(&mut q, "pause", None).unwrap();
+        assert!(q.paused);
+        assert!(q.tasks[1].download_paused);
+        assert!(!q.tasks[2].download_paused);
+        control_transfers(&mut q, "cancel", Some(&first)).unwrap();
+        assert!(q.tasks[0].cancel_requested);
+        assert!(!q.tasks[0].download_paused);
+        assert_eq!(q.tasks[0].status, "downloading");
+        assert!(!q.tasks[1].cancel_requested);
+        control_transfers(&mut q, "cancel", None).unwrap();
+        assert!(q.tasks[1].cancel_requested);
+        assert_eq!(q.tasks[2].status, "installing");
+        assert!(!q.tasks[2].cancel_requested);
+        assert_eq!(q.tasks[3].status, "cancelled");
+        let installer = q.tasks[2].id.clone();
+        assert!(control_transfers(&mut q, "pause", Some(&installer)).is_err());
+    }
+
+    #[test]
+    fn last_active_download_resumes_without_any_queued_tasks() {
+        let mut q = Queue::default();
+        q.current_run_id = Some("run".into());
+        let mut t = task("downloading");
+        t.run_id = "run".into();
+        t.download_progress = Some(DownloadProgress::new(100, Some(1000), 50.0));
+        q.tasks.push(t);
+        control_transfers(&mut q, "pause", None).unwrap();
+        apply_winget_progress(
+            &mut q.tasks[0],
+            winget_progress::Snapshot {
+                progress: DownloadProgress::new(500, Some(1000), 100.0),
+                complete: false,
+            },
+        );
+        assert_eq!(
+            q.tasks[0]
+                .download_progress
+                .as_ref()
+                .unwrap()
+                .downloaded_bytes,
+            100
+        );
+        control_transfers(&mut q, "resume", None).unwrap();
+        assert!(!q.paused);
+        assert!(!q.tasks[0].download_paused);
+        apply_winget_progress(
+            &mut q.tasks[0],
+            winget_progress::Snapshot {
+                progress: DownloadProgress::new(1000, Some(1000), 0.0),
+                complete: true,
+            },
+        );
+        let id = q.tasks[0].id.clone();
+        assert_eq!(q.tasks[0].status, "installing");
+        assert!(control_transfers(&mut q, "cancel", Some(&id)).is_err());
+    }
+
+    #[test]
+    fn winget_transfer_stages_preserve_metrics_for_downloads_and_installations() {
+        for action in ["download", "install"] {
+            let mut t = task("checking");
+            t.action = action.into();
+            apply_winget_progress(
+                &mut t,
+                winget_progress::Snapshot {
+                    progress: DownloadProgress::new(100, Some(400), 50.0),
+                    complete: false,
+                },
+            );
+            assert_eq!(t.status, "downloading");
+            assert_eq!(t.percent, Some(25.0));
+            assert_eq!(
+                t.download_progress.as_ref().unwrap().remaining_seconds,
+                Some(6)
+            );
+            apply_winget_progress(
+                &mut t,
+                winget_progress::Snapshot {
+                    progress: DownloadProgress::new(400, Some(400), 0.0),
+                    complete: true,
+                },
+            );
+            assert_eq!(
+                t.status,
+                if action == "download" {
+                    "verifying"
+                } else {
+                    "installing"
+                }
+            );
+            assert_eq!(t.percent, Some(100.0));
+            assert_eq!(
+                t.download_progress.as_ref().unwrap().remaining_bytes,
+                Some(0)
+            );
+            assert!(t.finished_at.is_none());
         }
     }
     #[test]

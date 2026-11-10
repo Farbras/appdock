@@ -1,7 +1,7 @@
 {
   "name": "appdock",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
@@ -19,6 +19,8 @@
     "format:check": "prettier --check src tests scripts/*.mjs package.json",
     "sources:check": "node scripts/check-sources.mjs",
     "test:ui": "node scripts/ui-smoke.mjs",
+    "test:ui:features": "node scripts/ui-features-smoke.mjs",
+    "test:native:features": "node scripts/native-features-smoke.mjs",
     "test:ui:audit": "node scripts/ui-audit-fixes.mjs",
     "measure:audit": "node scripts/measure-audit.mjs after",
     "measure:startup": "node scripts/measure-startup.mjs"

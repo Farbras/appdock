@@ -51,7 +51,7 @@ async function open(seed = {}, bridge = null, longNames = false) {
       });
     });
   await page.addInitScript(
-    ({ seed, bridge }) => {
+    ({ seed, bridge, products }) => {
       for (const [key, value] of Object.entries(seed))
         localStorage.setItem("appdock:" + key, JSON.stringify(value));
       if (bridge) {
@@ -69,6 +69,32 @@ async function open(seed = {}, bridge = null, longNames = false) {
           transformCallback: () => 1,
           invoke: async (command, args) => {
             window.calls.push({ command, args });
+            if (command === "set_runtime_mode") return null;
+            if (command === "feature") {
+              if (args.op === "catalog-snapshot")
+                return {
+                  apps: structuredClone(products),
+                  status: { revision: 0, configured: false, checkedAt: null },
+                };
+              if (args.op === "background-state")
+                return {
+                  preferences: {
+                    intervalHours: 0,
+                    autostart: false,
+                    closeToTray: false,
+                    notifications: true,
+                    preventSleep: false,
+                    downloadLimitKib: 0,
+                    demo: false,
+                    pins: [],
+                    exclusions: [],
+                  },
+                  status: {},
+                  route: null,
+                };
+              if (args.op === "sync-update-rules") return args.args;
+              throw new Error("Unexpected native feature: " + args.op);
+            }
             if (command.startsWith("plugin:event|")) return 1;
             if (command === "queue_snapshot")
               return {
@@ -109,7 +135,7 @@ async function open(seed = {}, bridge = null, longNames = false) {
         };
       }
     },
-    { seed, bridge },
+    { seed, bridge, products },
   );
   await page.goto("http://127.0.0.1:1420/");
   await page.getByRole("textbox", { name: "Поиск программ" }).waitFor();
@@ -210,9 +236,20 @@ try {
   await page
     .getByRole("heading", { name: "Пример Office 2024.img" })
     .waitFor({ state: "detached" });
-  assert.equal((await page.evaluate(() => window.calls)).length, 0);
+  assert.equal(
+    (
+      await page.evaluate(() =>
+        window.calls.filter(
+          (c) =>
+            c.command !== "set_runtime_mode" &&
+            !(c.command === "feature" && c.args.op === "catalog-snapshot"),
+        ),
+      )
+    ).length,
+    0,
+  );
   record(
-    "F01: native-flag demo folder/delete never invokes native commands; confirmation can be cancelled",
+    "F01: native-flag demo folder/delete never invokes filesystem commands; only initial catalog/mode IPC is allowed; confirmation can be cancelled",
   );
   await context.close();
 
@@ -353,7 +390,7 @@ try {
     .click();
   await page.getByRole("button", { name: "Очистить", exact: true }).click();
   assert.equal(await page.locator(".task-row").count(), 1);
-  await page.locator(".task-row summary").click();
+  await page.locator(".task-row > summary").click();
   await page
     .getByRole("button", { name: "Шаг выполнен", exact: true })
     .waitFor();

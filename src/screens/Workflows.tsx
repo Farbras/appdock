@@ -128,6 +128,7 @@ export function Readiness({
   );
 }
 export function UpdatesScreen({
+  selectionRequest = 0,
   installed,
   profile,
   mode,
@@ -138,6 +139,7 @@ export function UpdatesScreen({
   notify,
   updatesChecked,
 }: {
+  selectionRequest?: number;
   installed: InstalledApp[];
   profile: Selection[];
   mode: Settings["mode"];
@@ -178,6 +180,10 @@ export function UpdatesScreen({
   useEffect(() => {
     setSelected((s) => s.filter((id) => eligibleIds.includes(id)));
   }, [installed, profile, excluded, targets, updatesChecked, scanning]);
+  useEffect(() => {
+    if (selectionRequest && updatesChecked && !scanning)
+      setSelected(eligibleIds);
+  }, [selectionRequest, installed, updatesChecked, scanning]);
   const choose = (id: string, on: boolean) =>
     setSelected((s) =>
       on ? [...new Set([...s, id])] : s.filter((x) => x !== id),
@@ -321,6 +327,7 @@ export function UpdatesScreen({
                         : excluded.filter((id) => id !== a.id);
                       setExcluded(next);
                       safeWriteStorage("update-exclusions", next);
+                      window.dispatchEvent(new Event("appdock-update-rules"));
                       choose(a.id, false);
                     }}
                   />

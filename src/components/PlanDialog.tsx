@@ -31,6 +31,7 @@ export function PlanDialog({
 }) {
   const [ack, setAck] = useState(false);
   const tasks = plan.items.flatMap((i) => i.tasks);
+  const local = tasks.some((t) => t.offlineRoot);
   const counts = Object.entries(
     tasks.reduce(
       (r, t) => ({ ...r, [t.action]: (r[t.action] || 0) + 1 }),
@@ -48,10 +49,14 @@ export function PlanDialog({
             ? "Демонстрация без изменения компьютера"
             : "Рабочий режим"}{" "}
           ·{" "}
-          {settings.skipCurrent
-            ? "Пропускать актуальные версии"
-            : "Проверять обновление установленных"}{" "}
-          · параллельных загрузок: {settings.parallelDownloads}
+          {local
+            ? "Последовательная локальная установка без скачивания"
+            : settings.skipCurrent
+              ? "Пропускать актуальные версии"
+              : "Проверять обновление установленных"}{" "}
+          {!local && (
+            <> · параллельных загрузок: {settings.parallelDownloads}</>
+          )}
         </p>
         <div className="action-counts">
           {counts.map(([a, n]) => (
@@ -151,12 +156,14 @@ export function PlanDialog({
                     <button
                       className="button secondary"
                       onClick={() => onEdit(s)}
+                      disabled={busy}
                     >
                       Изменить параметры
                     </button>
                     <button
                       className="button secondary"
                       onClick={() => onRemove(item.appId)}
+                      disabled={busy}
                     >
                       Убрать из запуска
                     </button>
@@ -167,7 +174,10 @@ export function PlanDialog({
           })}
         </div>
         <p className="muted-text">
-          WinGet: {plan.system.winget || "не обнаружен / демо"} · место:{" "}
+          {local
+            ? "WinGet не используется"
+            : `WinGet: ${plan.system.winget || "не обнаружен / демо"}`}{" "}
+          · место:{" "}
           {plan.system.freeDiskMb == null
             ? "не определено"
             : `${(plan.system.freeDiskMb / 1024).toFixed(1)} ГБ`}{" "}

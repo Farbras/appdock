@@ -1,3 +1,5 @@
+import { initializeCatalog } from "./feature-api";
+import { apps } from "./catalog";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
@@ -21,6 +23,17 @@ const content = profiling ? (
 ) : (
   <App />
 );
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>{content}</React.StrictMode>,
-);
+void initializeCatalog(apps)
+  .then(() => {
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <React.StrictMode>{content}</React.StrictMode>,
+    );
+  })
+  .catch((e) => {
+    const root = document.getElementById("root")!;
+    root.textContent = "Не удалось согласовать каталог с ядром: " + String(e);
+    const retry = document.createElement("button");
+    retry.textContent = "Повторить запуск";
+    retry.onclick = () => location.reload();
+    root.append(retry);
+  });

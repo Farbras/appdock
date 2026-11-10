@@ -1,3 +1,6 @@
+import { TaskReadiness, TaskError } from "../components/TaskResult";
+import { inResultGroup, resultGroups } from "../task-results";
+import { feature } from "../feature-api";
 import { useMemo, useState } from "react";
 import { optionLabel, optionValue, taskCount, outcomeNames } from "../display";
 import { api } from "../api";
@@ -26,6 +29,7 @@ export function RunsScreen({
   onEdit: (task: QueueTask) => void;
   notify: (message: string) => void;
 }) {
+  const [restartTask, setRestartTask] = useState<QueueTask | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [runId, setRunId] = useState("all");
@@ -38,7 +42,10 @@ export function RunsScreen({
       (history ? queue.tasks : currentTasks(queue)).filter(
         (t) =>
           (runId === "all" || t.runId === runId) &&
-          (filter === "all" || t.status === filter) &&
+          (filter === "all" ||
+            t.status === filter ||
+            (filter.startsWith("summary:") &&
+              inResultGroup(t, filter.slice(8)))) &&
           `${t.name} ${t.message} ${t.log.join(" ")}`
             .toLocaleLowerCase("ru")
             .includes(query.toLocaleLowerCase("ru")),
@@ -94,23 +101,33 @@ export function RunsScreen({
             className="button secondary"
             onClick={() => onControl("cancel")}
           >
-            Отменить ожидающие
+            Отменить
           </button>
         </div>
       </div>
-      {queue.running && !queue.paused && (
-        <div
-          className="stage-progress"
-          role="progressbar"
-          aria-label="Выполнение текущего этапа"
-        />
-      )}
+      {queue.running &&
+        !queue.paused &&
+        active.some(
+          (t) =>
+            !terminal(t.status) && t.status !== "queued" && !t.downloadPaused,
+        ) && (
+          <div
+            className="stage-progress"
+            role="progressbar"
+            aria-label="Выполнение текущего этапа"
+          />
+        )}
       {active
         .filter((t) => !terminal(t.status) && t.status !== "queued")
         .map((t) => (
           <p className="inline-note" key={t.id}>
-            {t.name}: {statusNames[t.status]} · последнее сообщение{" "}
-            {date(t.lastActivityAt)}
+            {t.name}:{" "}
+            {t.cancelRequested
+              ? "Отмена…"
+              : t.downloadPaused
+                ? "На паузе"
+                : statusNames[t.status]}{" "}
+            · последнее сообщение {date(t.lastActivityAt)}
             {t.percent == null
               ? " · процент этапа неизвестен"
               : ` · ${t.percent}%`}
@@ -122,6 +139,39 @@ export function RunsScreen({
             width: `${active.length ? (done / active.length) * 100 : 0}%`,
           }}
         />
+      </div>
+      {queue.paused &&
+        !queue.running &&
+        active.some((t) => t.status === "queued") && (
+          <p className="inline-note">
+            Восстановлены незавершённые задачи. Нажмите «Продолжить», чтобы
+            проверить состояние и возобновить очередь. Прямые загрузки
+            используют сохранённые части только после подтверждения Range и
+            идентичности файла сервером. WinGet начинает свою операцию заново.
+          </p>
+        )}
+      <div className="action-counts" aria-label="Итог запуска">
+        {resultGroups.map((group, i) => (
+          <button
+            className="button secondary"
+            key={group}
+            onClick={() => {
+              setFilter("summary:" + group);
+              setPage(0);
+            }}
+          >
+            {
+              [
+                "Установлено",
+                "Обновлено",
+                "Пропущено",
+                "Ошибки",
+                "Требует действий",
+              ][i]
+            }
+            : {active.filter((t) => inResultGroup(t, group)).length}
+          </button>
+        ))}
       </div>
       <div className="action-counts">
         {[
@@ -163,6 +213,19 @@ export function RunsScreen({
           }}
         >
           <option value="all">Все результаты</option>
+          {resultGroups.map((g, i) => (
+            <option key={g} value={"summary:" + g}>
+              {
+                [
+                  "Установлено",
+                  "Обновлено",
+                  "Пропущено",
+                  "Ошибки",
+                  "Требует действий",
+                ][i]
+              }
+            </option>
+          ))}
           {Object.entries(statusNames).map(([id, name]) => (
             <option key={id} value={id}>
               {name}
@@ -284,13 +347,38 @@ export function RunsScreen({
                           <div className="task-content">
                             <strong>{task.name}</strong>
                             <span>{task.message}</span>
-                            <DownloadStatus task={task} />
+                            {task.readiness && (
+                              <span>
+                                {
+                                  {
+                                    ready: "Готово к работе",
+                                    action: "Установлено, требуется действие",
+                                    unknown: "Не удалось проверить",
+                                  }[task.readiness.state]
+                                }{" "}
+                                · {task.readiness.reason}
+                              </span>
+                            )}
+                            <DownloadStatus task={task} onControl={onControl} />
                           </div>
                           <span className={`task-status ${task.status}`}>
-                            {statusNames[task.status]}
+                            {task.cancelRequested
+                              ? "Отмена…"
+                              : task.downloadPaused
+                                ? "На паузе"
+                                : statusNames[task.status]}
                           </span>
                         </summary>
                         <div className="task-details">
+                          {["error", "blocked", "cancelled"].includes(
+                            task.status,
+                          ) && <TaskError task={task} />}
+                          <TaskReadiness
+                            task={task}
+                            mode={mode}
+                            running={queue.running}
+                            notify={notify}
+                          />
                           <p>
                             {actionNames[task.action]} · начало{" "}
                             {date(task.startedAt)} · завершение{" "}
@@ -411,7 +499,22 @@ export function RunsScreen({
                               </button>
                             )}
                           </div>
-                          <pre>{task.log.join("\n") || "Журнал пуст"}</pre>
+                          {task.action === "download" &&
+                            ["error", "cancelled", "queued"].includes(
+                              task.status,
+                            ) && (
+                              <button
+                                className="button secondary"
+                                disabled={queue.running}
+                                onClick={() => setRestartTask(task)}
+                              >
+                                Скачать заново
+                              </button>
+                            )}
+                          <details>
+                            <summary>Технические подробности</summary>
+                            <pre>{task.log.join("\n") || "Журнал пуст"}</pre>
+                          </details>
                         </div>
                       </details>
                     ))}
@@ -426,10 +529,44 @@ export function RunsScreen({
         </p>
       )}
       <p className="inline-note">
-        Пауза откладывает следующие задачи. Отмена касается ожидающих задач;
-        работающий установщик завершается штатно. Закрытие приложения с
-        работающим установщиком откладывается.
+        Пауза останавливает текущие скачивания и откладывает следующие задачи.
+        Кнопки у программы управляют только её скачиванием. Отмена останавливает
+        загрузки и отменяет ожидающие задачи; работающий установщик завершается
+        штатно. Закрытие приложения с работающим установщиком откладывается.
       </p>
+      {restartTask && (
+        <Modal
+          title="Начать загрузку заново"
+          onClose={() => setRestartTask(null)}
+        >
+          <div className="modal-body">
+            <p>
+              Удалить сохранённые незавершённые части «{restartTask.name}»?
+              Готовые файлы сохранятся. Затем используйте существующий повтор с
+              просмотром плана.
+            </p>
+          </div>
+          <div className="modal-footer">
+            <button
+              className="button primary"
+              onClick={() =>
+                void feature<{ message: string }>(
+                  "restart-download",
+                  { taskId: restartTask.id },
+                  mode,
+                )
+                  .then((r) => {
+                    notify(r.message);
+                    setRestartTask(null);
+                  })
+                  .catch((e) => notify(String(e)))
+              }
+            >
+              Удалить незавершённые части
+            </button>
+          </div>
+        </Modal>
+      )}
       {preview !== null && (
         <Modal
           title="Предварительный просмотр отчёта"

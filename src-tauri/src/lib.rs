@@ -1,9 +1,20 @@
+mod background;
 mod catalog;
+mod catalog_update;
 mod downloads;
 mod engine;
+mod features;
+mod managed;
 mod models;
+mod offline;
+mod preferences;
+mod readiness;
+mod resumable;
 mod system;
+mod transfer_control;
 mod winget;
+mod winget_progress;
+mod winget_terminal;
 use engine::Shared;
 use models::*;
 use tauri::{Manager, State};
@@ -16,10 +27,22 @@ async fn system_info() -> Result<SystemInfo, String> {
 }
 #[tauri::command]
 async fn scan_installed(state: State<'_, Shared>) -> Result<ScanResult, String> {
-    let data = engine::lock(&state).data_dir.clone();
-    tauri::async_runtime::spawn_blocking(move || system::scan_report(&data))
-        .await
-        .map_err(|e| e.to_string())?
+    let shared = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = managed::OPERATIONS
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let data = {
+            let e = engine::lock(&shared);
+            if e.worker_active {
+                return Err("Обнаружение отложено до завершения очереди".into());
+            }
+            e.data_dir.clone()
+        };
+        system::scan_report(&data)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 #[tauri::command]
 fn queue_snapshot(state: State<'_, Shared>) -> Queue {
@@ -56,6 +79,10 @@ async fn verify_manual(
 ) -> Result<(), String> {
     let shared = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
+        let _guard = managed::exclusive()?;
+        if engine::lock(&shared).worker_active {
+            return Err("Дождитесь завершения очереди".into());
+        }
         let (task, data) = {
             let e = engine::lock(&shared);
             (
@@ -131,7 +158,7 @@ async fn choose_download_folder(state: State<'_, Shared>, mode: String) -> Resul
         let path=value.as_str().filter(|p| !p.is_empty()).ok_or("Выбор папки отменён")?;
         let folder=std::path::PathBuf::from(path); if !folder.is_absolute() || !folder.is_dir() { return Err("Выберите существующую абсолютную папку".into()); }
         let e = engine::lock(&shared);
-        if e.worker_active {return Err("Дождитесь завершения операций с файлами".into());}
+        if e.worker_active || e.queue.tasks.iter().any(|t|!terminal(&t.status)) {return Err("Завершите или отмените незавершённую очередь перед сменой папки".into());}
         downloads::set_folder(&e.data_dir, &folder, &mode)?; Ok(path.into())
     }).await.map_err(|e|e.to_string())?
 }
@@ -206,9 +233,38 @@ fn check_port(port: u16) -> Result<bool, String> {
     system::port_available(port)
 }
 
+#[tauri::command]
+async fn feature(
+    state: State<'_, Shared>,
+    app: tauri::AppHandle,
+    op: String,
+    args: serde_json::Value,
+    mode: String,
+) -> Result<serde_json::Value, String> {
+    let shared = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || features::execute(&shared, &app, &op, args, &mode))
+        .await
+        .map_err(|e| e.to_string())?
+}
+#[tauri::command]
+fn set_runtime_mode(state: State<'_, Shared>, mode: String) -> Result<(), String> {
+    if !["demo", "live"].contains(&mode.as_str()) {
+        return Err("Неизвестный режим".into());
+    }
+    if background::DEMO.load(std::sync::atomic::Ordering::Relaxed) == (mode == "demo") {
+        return Ok(());
+    }
+    let _guard = managed::exclusive()?;
+    if engine::lock(&state).worker_active {
+        return Err("Дождитесь завершения очереди перед сменой режима".into());
+    }
+    background::DEMO.store(mode == "demo", std::sync::atomic::Ordering::Relaxed);
+    Ok(())
+}
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_single_instance::init(|app, _, _| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.unminimize();
@@ -218,18 +274,40 @@ pub fn run() {
         }))
         .setup(|app| {
             let path = app.path().app_local_data_dir()?;
-            app.manage(std::sync::Arc::new(std::sync::Mutex::new(
-                engine::Engine::load(path),
-            )));
+            #[cfg(debug_assertions)]
+            let path = std::env::var_os("APPDOCK_TEST_DATA_DIR")
+                .map(std::path::PathBuf::from)
+                .filter(|p| p.is_absolute())
+                .unwrap_or(path);
+            let catalog_warning = catalog_update::initialize(&path);
+            let mut engine = engine::Engine::load(path);
+            if let Some(w) = catalog_warning {
+                engine.queue.storage_error = Some(w);
+            }
+            app.manage(std::sync::Arc::new(std::sync::Mutex::new(engine)));
+            background::setup(app.handle())?;
+            if std::env::args().any(|a| a == "--background") {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.hide();
+                }
+            }
             Ok(())
         })
-        .on_window_event(|window,event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. }=event {
-                let state=window.state::<Shared>(); let mut e=engine::lock(&state);
-                if e.worker_active && e.queue.tasks.iter().any(|t| !terminal(&t.status) && t.status != "queued") { e.queue.paused=true; e.queue.storage_error=Some("Закрытие отложено: дождитесь текущего установщика. Очередь приостановлена; ожидающие задачи можно отменить.".into()); api.prevent_close(); let _=tauri::Emitter::emit(window,"queue-changed",&e.queue); }
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let state = window.state::<Shared>();
+                let data = engine::lock(&state).data_dir.clone();
+                if background::load(&data).close_to_tray {
+                    let _ = window.hide();
+                } else {
+                    background::request_exit(window.app_handle());
+                }
             }
         })
         .invoke_handler(tauri::generate_handler![
+            feature,
+            set_runtime_mode,
             system_info,
             scan_installed,
             queue_snapshot,
@@ -238,8 +316,13 @@ pub fn run() {
             queue_control,
             open_source,
             open_downloads,
-            check_port
-            ,prepare_retry, verify_manual, downloads_inventory, remove_download, choose_download_folder, save_report
+            check_port,
+            prepare_retry,
+            verify_manual,
+            downloads_inventory,
+            remove_download,
+            choose_download_folder,
+            save_report
         ])
         .run(tauri::generate_context!())
         .expect("Не удалось запустить AppDock");

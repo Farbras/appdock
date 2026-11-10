@@ -99,6 +99,11 @@ export interface DownloadProgress {
   remainingSeconds: number | null;
 }
 export interface QueueTask {
+  readiness?: ReadinessResult | null;
+  installationOutcome?: "installed" | "updated" | "skipped" | null;
+  failureStage?: string | null;
+  offlineRoot?: string | null;
+  resumeFrom?: string | null;
   runId?: string;
   dependencies?: string[];
   lastActivityAt?: number;
@@ -113,10 +118,20 @@ export interface QueueTask {
   log: string[];
   percent: number | null;
   downloadProgress?: DownloadProgress | null;
+  downloadPaused?: boolean;
+  cancelRequested?: boolean;
   parentId?: string | null;
   selection: Selection;
   startedAt?: number | null;
   finishedAt?: number | null;
+}
+export interface ReadinessResult {
+  state: "ready" | "action" | "unknown";
+  reason: string;
+  nextStep: string;
+  version: string | null;
+  checkedAt: number;
+  canLaunch: boolean;
 }
 export interface QueueState {
   schemaVersion?: number;

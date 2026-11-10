@@ -44,6 +44,7 @@ export const navItems = [
   ["installed", "Установленные", Monitor],
   ["updates", "Обновления", RefreshCw],
   ["profile", "Профиль ПК", Monitor],
+  ["portability", "Офлайн-набор", Package],
   ["downloads", "Полученные файлы", FolderOpen],
   ["queue", "Загрузки и установка", ArrowDownToLine],
   ["presets", "Наборы", Boxes],

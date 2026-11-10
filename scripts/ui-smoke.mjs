@@ -194,12 +194,70 @@ try {
   );
   await page.screenshot({ path: "artifacts/plan-v020.png" });
   await run(page);
+  const chromeProgress = page.getByRole("progressbar", {
+    name: "Скачивание Google Chrome",
+    exact: true,
+  });
+  await chromeProgress.waitFor();
+  check(
+    Number(await chromeProgress.getAttribute("value")) > 0,
+    "Installation shows the real download stage in demo",
+  );
+  const chromeStatus = page
+    .locator(".download-status")
+    .filter({ has: chromeProgress });
+  await page
+    .getByRole("button", { name: "Пауза: Google Chrome", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Продолжить: Google Chrome", exact: true })
+    .waitFor();
+  const pausedValue = await chromeProgress.getAttribute("value");
+  await page.waitForTimeout(700);
+  check(
+    (await chromeProgress.getAttribute("value")) === pausedValue,
+    "Pause freezes the active transfer",
+  );
+  check(
+    (await page.locator(".task-row").first().getAttribute("open")) === null,
+    "Download buttons do not toggle task details",
+  );
+  await page.setViewportSize({ width: 1020, height: 720 });
+  await chromeStatus.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "artifacts/download-paused-1020.png" });
+  await page
+    .getByRole("button", { name: "Продолжить: Google Chrome", exact: true })
+    .click();
+  await page.setViewportSize({ width: 1500, height: 960 });
+  for (const label of ["Скачано:", "Осталось:", "Скорость:", "До завершения:"])
+    check(
+      (await chromeStatus.textContent()).includes(label),
+      `Installation metric: ${label}`,
+    );
+  await page.screenshot({ path: "artifacts/install-download-progress.png" });
+  await page.setViewportSize({ width: 1020, height: 720 });
+  check(
+    await chromeStatus.evaluate((e) => e.scrollWidth <= e.clientWidth),
+    "Installation download metrics fit the minimum window width",
+  );
+  await chromeStatus.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: "artifacts/install-download-progress-1020.png",
+  });
+  await page.setViewportSize({ width: 1500, height: 960 });
   await page.waitForFunction(() => {
     const q = JSON.parse(localStorage.getItem("appdock:demo-queue") || "null");
     return q?.data && !q.data.running;
   });
+  check(
+    (await chromeProgress.getAttribute("value")) === "100",
+    "Completed installer download keeps 100%",
+  );
   check((await page.locator(".task-row").count()) >= 5, "Run tasks");
   record("new user → exact plan → demo run");
+  record(
+    "active download → pause freezes bytes → resume completes the same task",
+  );
   await page.getByRole("button", { name: "Настройки", exact: true }).click();
   await page.keyboard.press("Control+k");
   await page.getByRole("textbox", { name: "Поиск программ" }).waitFor();
@@ -238,6 +296,33 @@ try {
   );
   await page.screenshot({ path: "artifacts/zoom125-v020.png" });
   record("Ctrl+K from settings; 1020×700; 125% scale");
+  await context.close();
+  ({ page, context } = await open({ selection: [selection("chrome")] }));
+  await page
+    .getByRole("button", { name: "Проверить план", exact: true })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Проверим всё перед запуском" })
+    .waitFor();
+  await run(page);
+  await page
+    .getByRole("button", { name: "Пауза: Google Chrome", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Продолжить: Google Chrome", exact: true })
+    .waitFor();
+  await page
+    .getByRole("button", { name: "Отменить: Google Chrome", exact: true })
+    .click();
+  await page.waitForFunction(() => {
+    const q = JSON.parse(
+      localStorage.getItem("appdock:demo-queue") || "null",
+    )?.data;
+    return q && !q.running && q.tasks[0]?.status === "cancelled";
+  });
+  record(
+    "paused active download → cancel → terminal cancellation without installation",
+  );
   await context.close();
   // Error task corrected and retried, preserving original cancelled/manual records.
   const id = "old-run";
@@ -287,7 +372,7 @@ try {
     },
   }));
   await page.getByRole("button", { name: "История", exact: true }).click();
-  await page.locator(".task-row").first().locator("summary").click();
+  await page.locator(".task-row").first().locator(":scope > summary").click();
   await page
     .getByRole("button", { name: "Изменить параметры", exact: true })
     .click();
@@ -332,7 +417,7 @@ try {
   );
   await page.getByRole("button", { name: "История", exact: true }).click();
   const manual = page.locator(".task-row").filter({ hasText: "PostgreSQL" });
-  await manual.locator("summary").click();
+  await manual.locator(":scope > summary").click();
   await page.getByRole("button", { name: "Шаг выполнен", exact: true }).click();
   check(
     await manual
